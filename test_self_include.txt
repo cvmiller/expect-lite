@@ -1,0 +1,60 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+
+#
+# Test: 	Test bash here doc
+#		
+# Assumptions:	bash
+# Platforms: 	anywhere bash runs
+#
+
+$include_run=/tmp/include.tcl
+$include_loop=/tmp/include_loop.txt
+
+@5
+; === Create the file using bash "here doc"
+>umask 0
+>cat > $include_run <<'+++'
+>#!/usr/bin/expect
+>set loop_end [lindex $argv 0]
+>for {set count 0} {$count < $loop_end} {incr count} {
+>	 puts "; === Send a packet \$counter with scapy ==="
+>	 puts " "
+>	 puts ">grep key \$tmr_file | cut -b \$tmr_ipv4sa |  head -\$counter | tail -1"
+>	 puts "+\$tmr_ipv4sa_addr=\n(0x\[0-9a-fA-F\]+)"
+>	 puts ">\$scapy 2> /dev/null"
+>	 puts ">a=Ether(src=\"\$macsa\",dst=\"\$macda\")/IP(src=\"\$tmr_ipv4sa_addr\", dst=\"\$ipv4da\")/\$PAD60/\$FCS"
+>	 puts ">sendp(a, iface=\"\$dut_if1\")"
+>	 puts "<Sent 1 packet"
+>	 puts ">^D"
+>	 puts ">>"
+>	 puts ">"
+>	 puts "!inc_var counter"
+>	 puts ">"
+>
+>
+>
+>}
+>puts "Pau"
+>+++
+; === now look at the file
+>cat $include_run
+
+; === change permissions
+>chmod u+x $include_run
+
+; === Run the file
+>$include_run 2
+<Pau
+
+>
+
+#Pau!

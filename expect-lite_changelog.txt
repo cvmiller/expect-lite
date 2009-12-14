@@ -1,0 +1,603 @@
+##################################################################################
+#
+#  Copyright (C) Freescale Semiconductor, Inc. 2005-2006
+#
+#  See the file "license.terms" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+##################################################################################
+
+Expect-lite (was CLI Validate Setup Script)
+Script logs into Tempest, sends command file, while validating commands
+	fails if validation fails with return code 1 (0=passed)
+
+by Craig Miller 19 Jan 2005
+
+Command Arguments:
+	<Remote-Host|IP>
+	<command_file>
+	<user_directory>
+	[additional constants, see usage]
+
+
+Updated 1 March 2005
+	Added result codes to align with Vince's Regression wrapper (stub.tst)
+	Added ssh access (not all tempests permit root access via telnet
+
+Updated 3 March 2005 (Girl's Day in Japan)
+	Added swy_ctrl path to be passed via cli arg
+	General clean up, and removal of unused vars and procs
+
+Updated 8 March 2005
+	Added zLogin Proc to handle retry on logins
+
+Updated 9 March 2005
+	Updated zLogin to make it a bit smarter in logging in
+
+Updated 16 March 2005
+	Added ^] to quit a telnet session
+
+Updated 31 March 2005
+	Improved where a `;' comment prints (closer to the next send line)
+
+Updated 12 May 2005
+	Added Expect Line when test Fails - making it easier to understand failure
+	Moved printing of expect timeout notification 
+
+Updated 17 May 2005
+	Added General control char send facility. Send control chars with >^B
+	Added Var substitution facility. Vars are defined $var=value
+		Vars can't have spaces, but can have '_' or '-'
+
+Updated 2 June 2005
+	Added 'catch' protection to gracefully handle spawn/connection errors
+
+Updated 16 June 2005
+	Updated timeout value (@) to accept leading space i.e. '@ 5'
+		This permits use of Vars in timeout i.e. '@ $mytimeout'
+
+Updated 17 June 2005
+	Added concept of "include file"
+		Include files will be read from same directory as cmd_file
+		Include files share the same Var space as the cmd_file
+
+Updated 13 Sept 2005
+	Added protection (via catch) on '>' send strings to ensure connection to tempest is still good
+		Script terminates with a friendly message if connection is gone
+
+Updated 18 Oct 2005
+	Added Construct of Constants which are passed on the command line (as args > 3)
+		Usage is now: usage: cli_validate_setup.tcl <tempest_IP> <command_file> [<swy_install_dir>/swy] [const1=value1] [const2=value2] ...
+	Added var value can begin with '[' this permits ranges such as [4-6]
+
+Updated 13 Dec 2005
+	Fixed bug with unknown vars (such as $f intended for a shell script)
+	Now cli_validate passes unknown vars to command line
+
+Updated 13 Dec 2005
+	Added ability to connect to co-sim by detecting 192.168.10.1 address and using telnet access
+
+Updated Feb 2005
+	Changed to only login as normal user rather than root
+	Removed trailing "/swy" to swyprefix
+	Removed ability to connect to co-sim by detecting 192.168.10.1 address
+
+
+Updated 14 March 2006
+	Changed name to expect-lite
+	Updated usage to reflect new name
+
+Updated 11 April 2006
+	Added Dynamically assigned Vars with the first char of the line is '+'
+		Must have Parens () to capture the value of the variable
+	Usage +$myvar=not captured text (captured text)
+		+$myvar=not captured text ([a-zA-z0-9]+)
+		+$hostname=(came[a-z\-0-9]+|temp[a-z\-0-9]+)
+	Added Static Var parser which allows spaces in variable value
+
+Updated 13 April 2006 
+	Added RTL mode - multiples all timeouts by value of constant rtl
+		Specify rtl=<value> on command line (which defines the constant)
+
+Updated 3 May 2006
+	Changed expect timeout - when user sets to 0, inserts a 50 ms delay (in wait_for_prompt)
+		this prevents command line buffer overflow
+
+Updated 16 May 2006
+	Added built-in constant $arg0 which holds expect-lite script name
+
+Updated 17 May 2006
+	Fixed bug in Dynamic Var - now \n &\r's are stripped out of var capture value
+	Added 50ms wait in Dynamic Var capture, allowing slow target to respond
+ 
+Updated 18 May 2006
+	Reworked entire Var system - now parses vars without spaces (ie. $var1$var2)
+		Also Vars are allowed in defining other static vars (ie. $var1=litteral/$var3/stuff)
+		Vars will not be derefenced on lines starting with '#' or '+'
+
+Updated 23 May 2006
+	Fixed bug in new Var system - was not catching end of Var with chars '(' ')'
+		Added first non-var char detection (rather than last checked)
+
+Updated 25 May 2006
+	Fixed bug in new Var system - did not correctly ignore empty vars (ie. !@#$%^&*()_+-= )
+
+Updated 21 June 2006
+	Added '>>' to send line out without first waiting for a prompt. 
+		This is useful when creating text files on the fly with cat (ie. >cat > myfile.txt)
+
+Updated 7 Sept 2006
+	Added ignoring an include file named "NONE" 
+	This permits the following code using a bash if statement:
+		 >if  [ $manarch = i386 ]; then  
+		 >echo "test_include.txt"
+		 >else 
+		 >echo "" 
+		 >fi
+		 +$INCLUDE=\n([0-9a-zA-Z\._]+)
+
+		 ~$INCLUDE
+	If the variable $manarch is not set to i386, then nothing will be echoed, 
+		$INCLUDE will be set to "NONE"
+	The include action '~$INCLUDE' will now try to include the file NONE, which will be ignored, 
+	and the script will continue
+
+Updated 13 Sept 2006
+	Added Dynamic Var to be set with another Var  
+		>$search_pattern=\n([0-9a-zA-Z\._]+)
+		>+$INCLUDE=$search_pattern
+	This permits creating more generic capture files (with search_pattern set at top of test)
+
+
+Updated 3 Oct 2006
+	Added detection of coloured prompt - print message to encourage user to not use 
+	In function wait_for_prompt added '.{0,9}' to -re, which may allow coloured prompts
+
+	General clean up comments
+
+	Fixed bug with potential unbalanced parens (i.e. '<abc(def')
+		Now all parens and square-brackets are escaped if unbalanced parens 
+		or square backets are detected
+	
+	Added 10ms delay when sending lines with '>>'. This gives the remote host time to catchup.
+
+
+Updated 18 Oct 2006
+	Updated "unbalanced parens" routine to handle braces (i.e. '{}') as well
+
+Updated 19 Oct 2006
+	Implemented beginings of permitting execution of "Real Expect(tm)" commands using the '!'
+		Funtionality provided to assist expect-lite, not replace it
+		Limitations:
+			Extremely limited protection on expect-lite internal variables
+			Limited crash protection, expect-lite runs "Expect" commands in a 'catch'
+			No support for altering expect-lite behaviour (i.e. can't change include file names) 
+		Access expect-lite internal Constants and Vars
+			!set arch $Cnamespace(manarch)
+			!set pwd $unamespace(pwd)
+		Access to Branching with line continuation
+			!if { $arch == "ppc" } { 		\
+			!	puts "\narch is $arch\n" 	\
+			!}							\
+			!
+		Access to "Real Expect(tm)" send & expect commands
+			!send "ls\n"
+			!expect -re   "test" { puts "got test"} "rand2" { puts "got rand" } default {puts "\ngot nothing"}
+		Access to Fail the test by calling _el_fail_test, which gives return code of 1
+			!_el_fail_test 
+
+
+Updated 21 Oct 2006
+	Continued improvement of Embedded Expect(tm)
+		Removed requirement for line continuation
+			Now Expect is collected in "islands" and executed after "island shore" is reached 
+				The island shore is defined by lines starting with: > >> < ; @ ~ + $
+				Blank and comments lines do not an island make
+		Limitations:
+			Expect Vars now protected, however, Expect code becomes islands (can't share vars across islands)
+			Expect has limited access to expect-lite vars (only Constants, Vars, and timeout)
+			Protected Vars, do not support use of "global vars", ("upvar glovalvar localvar" should be used)
+
+Updated 23 Oct 2006
+	Continued improvement of Embedded Expect(tm)
+		Tested with TCL functions: creating proc's and sourcing TCL files: Passed
+		Limitations:
+			No support for global key word (in Embedded Expect(tm)) - 
+			Will issue a warning if global is detected
+			switch statement not supported (won't take ';' in statement)
+
+Updated 29 Oct 2006
+	Continued improvement of Embedded Expect(tm)
+		Removed island environement limitation on Embedded Expect(tm)
+			Although Expect code is still evaluated at each "shore", 
+			vars, and procs are global across islands
+		Limited support for Globals
+			Because of var protection, vars defined at top level are not automatically global
+			To declare a var at top level as global use "set ::<var> <value>"
+				The double colon '::' makes var global (this is a TCL standard)
+			Then use the global keyword as usual in proc's
+			This removes some of the var protection, but it may be adaquate
+
+
+Updated 10 Nov 2006
+	Changed CLI processing. Removed requirement for first 3 arguments
+	Now all arguments are passed in the var=value format, in any order
+		Required arguments are remote_host= cmd_file= or r= c=
+			user_dir= or u=
+		Additional args will become expect-lite constants
+	Also expect-lite can obtain argument info from the shell environment
+		EL_REMOTE_HOST
+		EL_CMD_FILE
+		EL_USER_DIR
+
+Updated 28 Nov 2006
+	Additional limitation of Embedded Expect(tm)
+		expect lines must be on one line 
+		e.g. expect  -re   "tmp" { puts "got tmp"} "rand" { puts "got rand" } default {puts "\ngot nothing"}
+
+Updated 1 Dec 2006	version 2.2.0
+	Added NOT Expect: Searches expect buffer for string, if found fails test
+	This feature permits searching for errors which may only occationally occur
+	Examples:
+		Fail if date output includes Dec
+			>date
+			-<Dec
+		Fail if command output has the value of this or that
+			>id
+			-<(this|that)
+		Fail device doesn't exist 
+			>ls -l /dev/linux
+			-<No such file
+		This feature does not clear the expect input buffer, and should 
+		be used before a valid expect.  e.g.ttyS2 will still be found
+			>ls -1 /dev/ttyS*
+			-<ttyX
+			<ttyS2
+	Limitations:
+		When used in conjuction with an expect '<' only output after the 
+		successful '<' will searched. e.g. ttyS1 will not be found 
+			> ls -1 /dev/ttyS*
+			<ttyS2
+			-<ttyS1
+
+Updated 5 Dec 2006	version 2.2.1
+	Removed Dynamic Var Capture limitation of 1 capture per command sent
+		Utilizing -notransfer, the expect input buffer is not consumed by 
+			Dynamic Variable Capture
+		As with NOT expect, use Dyn Var Capture BEFORE a valid expect
+	Example:
+		>env | sort
+		+$home=\nHOME=([a-z/]+)
+		+$shell=\nSHELL=([a-z/]+)
+		<TERM=xterm
+
+Updated 18 Dec 2006
+	Added BSD-Style Licensing Info
+
+Update 12 April 2007 	version 2.2.3d
+	Added Conditional processing, supporting a if/then/else statement using ?
+		e.g. ?cond?action:else_action
+	Conditional tests of '==', '!=' '>=', '<=', '>', '<' are supported
+	Example:
+		? $name==craig ? >echo "hello123"
+		?$name!=$telephone?; === NE; Print var name:$name
+		? $name != $telephone ? $var1=$name
+		? $age > 30 ? >echo "old age" :: >echo "young age"
+	Actions/else_actions can be any expect-lite command line
+
+Updated 18 April 2007	version 2.3.0d1
+	Added Concept of Labels, and "jump to label"
+	Labels are defined as lines beginning with '%' e.g. %skip2next_section
+	If a conditional has a label as the 'action' statement, an implied 
+		"jump to label" will be performed e.g. ?$a==b?%skip2next_section
+	Limitations:
+		Jump to label is limited to jumping foward in the script (no looping)
+	Example: (first echo line will not be executed, if $arch==ppc)
+		? $arch==ppc ?%skip2ppc
+		> echo "not in ppc"
+		%skip2ppc
+		> echo "in ppc"
+	
+Updated 26 April 2007	version 2.3.0d5
+	Added optional "if" or "IF" to conditional for better readability of scripts
+		e.g. ?IF cond?action::else_action
+	Added feature to allow leading white space, permitting indentation
+		This feature makes if/jump-to-label blocks easier to read
+
+Updated 8 May 2007	version 2.3.0d8
+	Added quick (unbuffered) printable comment. Lines beginning with ';;'
+		will be printed out to the screen right away with no "extra" new lines
+		Used to print help, or other multiline messages to console
+	Example:
+		;; This is help line 1
+		;; This is help line 2
+		
+Updated 31 May 2007 version 2.3.1
+	Fixed bug when label was indented (script ran to end)
+	
+
+Updated 8 June 2007 version 2.3.1.d
+	Added 2 pass variable dereferencing. Now vars can be defined from
+		other variables.
+	Example:
+		$var1=test
+		$counter=1
+		$new_var=$var$counter		($new_var will equal 'test')
+	
+	Added concept of 'fail_script'. Used to clean up after a test failure
+		By declaring an include script with '*~<filename>' the include 
+		script will be run when the main script detects a failure.
+	Example:
+		*~cleanup.inc
+	Script debugging use. By including a script which sets success flag,
+		the main script will never fail, but will continue. Using the 
+		expect 'interact' feature will allow the script developer to
+		fix things while the script is running.
+	Example in *~debug.inc
+		!interact +++ return
+		!set _el(success) 1
+
+
+Updated 5 Sept 2007 version 2.3.1d4
+	Include file now allows absolute path (by checking first
+		character of filename is '/')
+		If not, the relative path to running script will be used
+	Applies to Fail Include Script as well
+		
+7 Sept 2007 version 2.4.0
+	Same as version 2.3.1.d4 - released as open source
+		see http://expect-lite.sourceforge.net/
+		
+Updated 9 Oct 2007 version 2.4.0.d1
+	Static variables may be blank i.e. $myvar=
+		Or start with a space i.e. $myvar= this test
+	ssh_key method will use $user if not blank
+		This permits the login user to be different from the user running
+		the script
+
+Updated 16 Oct 2007 version 2.4.0.d2
+	Fixed bug in conditional, a control char could not be sent as action
+		eg. ?if $a != 1 ? >^C
+		Now this is supported
+	
+Updated 28 Oct 2007 version 3.0.0d1
+	Changed entire command script read subsystem
+		Previous system read directly from script file
+		New system reads script file into buffer, which can be
+			randomly accessed
+		This permits looping! (realistcally only repeat loops)
+			Added infinite loop protection
+	Example:
+		; ======== Incrementing Loop ========
+		$max=5
+		$count=3
+		%REPEAT_INC_LOOP
+		# increment variable
+		+$count
+		# stop the run away loop
+		>echo $count
+		-<7
+		?if $count <= $max ?%REPEAT_INC_LOOP
+	
+	Added variable increment and decrement to support looping
+	Example:
+		+$var
+		-$var
+		
+Updated 31 Oct 2007 version 3.0.1
+	Fixed bug in infinite loop handling (script just died)
+		Now script will fail, and the fail_script will be called if defined
+	Fixed bug in _el_buffer (fail upon reading empty command script file)
+	Fixed bug in Expect-Not (did not call fail_script)
+
+Updated 1 Nov 2007 version 3.0.2
+	Fixed bug in Fail_Script handling 
+		(original script would continue running, give Passed as result)
+		
+Updated 4 Nov 2007 version 3.0.3
+	Added remote_host=none which permits using expect-lite without
+		loging into a remote host. Best used for trying out 
+		expect-lite without the fuss of setting up ssh_keys and such
+		Not all functions supported (eg. '>>' )
+	Added Installation & Quick Start Guide documentation
+	
+Updated 30 Nov 2007 version 3.0.4
+	Fixed bug #1839620 dynamic variables only support "$ " prompt
+		Specifically added "% " to the list of prompts
+		
+Updated 14 Dec 2007 version 3.0.5d2
+	Fixed bug, where line 2 of the script was not executed
+		
+Updated 1 Feb 2008 version 3.0.6d1
+	Added 2 pass variable dereferencing in var assignments
+		ie. $some_var=$dut_if$count
+			Where $dut_if0 is previously defined and $count=0
+		
+Updated 13 Feb 2008 version 3.0.6d2
+	Fixed bug in jump to label, proc _el_buffer did not strip leading 
+		white space causing search to wrap and fail
+		Only occured if %LABEL was indented (with white space)
+
+Updated 14 Feb 2008 version 3.0.6d3
+	Added 'math variable' permitting math operations
+		ie. =$answer*$five/2.0
+		Supports arithmetic operators:  + = * / %
+			and bitwise operators: << >> & | ^
+		Result is always assigned to the 'math variable'
+		
+Updated 21 Feb 2008 version 3.1.0d2
+	Added pseudo arrays by permitting dereferencing of variables on left
+		side of equals assignment statement, except first variable name
+	Example:
+		$two=2
+		$array$two=value
+		; === show value of $array2
+	Limitation:
+		Additional variables on left side (ie. $two) must only contain
+			legal variable characters [A-Za-z0-9_]
+			
+Updated 28 March 2008 version 3.1.1d1
+	Added command line arguments to permit passing login user and password
+		Recommend using ssh keys, but the user may still be different than
+			the user running the script. 
+		Using the password option is inherently insecure, as the password
+			is in the clear (anyone can read it)
+	Example:
+		./expect-lite r=somehost c=somescript u=<username> p=<user_password>
+		
+
+Updated 4 June 2008 version 3.1.2
+	Changed order of arg parsing to set Env Vars first
+		Based on comment in review: http://www.linux.com/feature/128384
+	Now Env Vars can be set, and expect-lite invoked with no args
+	
+Updated 7 July 2008 version 3.1.3
+	Added Tips and Techniques Guide online
+	Added -v or --verbose option - Displays match data & buffer
+	
+
+Updated 6 August 2008 version 3.1.4
+	Fixed bug in dyn var array assignment (ie. +$this$count=\n([a-z]+)
+	expect-lite output is getting chatty
+		Changed default WARN=0 (turn off warnings)
+	Changed -v to show warnings, conditionals & dyn var assignments
+		-vv|--verbose options now display expect data & buffer
+	
+Updated 2 September 2008 version 3.1.4d5
+	Fixed bug when embedded expect set an expect-lite variable right before
+		it is used by expect-lite, variable would not be dereferenced.
+	e.g. 
+		!randomize r_windowsize_muliplier 0.3 2.5
+		=$last_enqueuenumber + 2 * $r_windowsize_muliplier
+	Embedded expect now calls _el_deref_line before continuing
+	
+Updated 23 September 2008 version 3.1.4d6
+	Enhanced -vv to show "find/in" of dynamic variable capture in addition
+		to expect
+		
+Updated 1 Oct 2008 version 3.1.4d7
+	Fixed bug in telnet access, and ssh access
+		Passed argument user_password was not accepted, now fixed
+	
+Updated 20 Oct 2008 version 3.1.4
+	Release version of d7
+	Added self_test* scripts
+		self_test_conditional.txt  self_test_math.txt  self_test_var_deref.txt
+	
+
+Updated 27 Oct 2008 version 3.1.5d2
+	Added regex-based user defined prompt (udp) */my_prompt $/
+		Clear udp by *//
+		Scope is global, including include files
+
+New Branch 27 Nov 2008 version 3.1.6d1
+	Added support for more expect-lite directives
+	*FAIL, *TERM (stops without fail)
+	**SHELL=<shell>
+	
+Released 1 Dec 2008 version 3.1.5
+o	Self executing (masquerade) expect-lite scripts
+o	User Defined Prompt
+	
+
+Released 19 Jan 2009 version 3.5.0
+o	User Defined Prompt & Dynamic Variables - May need to fix
+	Fixed - but UDF's are harder to define than thought
+o	cli -v -vv overide of script logging directives 
+o	Added directives: *FAIL, *TERM (no fail) 
+	*INTERACT		a shell which provides interaction - done
+	add directives *NOWARN *WARN *NODEBUG *DEBUG - Done
+o	add *SHOW VARS (what else can be "shown") - done d14
+		*SHOW LAST - shows current line in script
+o	*FORK <name>
+	Permits access to multiple spawn_ids (spawn to a shell)
+		Includes additional debugging info with --v - done
+o	Add better prompt initialization (for other shells, like tcsh with bold in prompt)
+		Set $prompt or $PS1 to sane values - done
+		**SHELL=<shell> directive - sets shell	
+			Allow to blank			
+		Should this be a configure vs runtime directive? configure only
+		Not supported in include scripts
+o	Differenciate between WARN and INFO
+		If, Dyn-Var should be INFOs 
+		Test FAIL/PASS should be INFO
+
+
+Updated 27 Jan 2009 v3.5.1.d1
+	Fixed bug in labels, trailing spaces would not be trimmed
+	Worded IF INFO statement, now is eval:TRUE|FALSE
+	
+Released 21 May 2009 version 3.5.1
+	No changes, just published 3.5.1.d1
+	
+
+Updated 29 Sept 2009 version 3.5.2b1
+	Made sending Control Charactors more consistant
+		Now use >>^<char> or  >^<char>
+
+
+------------ Future Versions --------------------------
+
+
+Version 3.5.0
+o	User Defined Prompt & Dynamic Variables - May need to fix
+	Fixed - but UDF's are harder to define than thought
+		May need additional documentation - done
+	Add more doc about using *FORK in INTERACT (tips doc?)
+
+o	cli -v -vv overide of script logging directives - done
+
+o	make _el_fail_test an expect-lite directive: *FAIL, *TERM (no fail) - done
+	*INTERACT		a shell which provides interaction - done
+	add directives *NOWARN *WARN *NODEBUG *DEBUG - Done
+
+o	add *SHOW VARS (what else can be "shown") - done d14
+		*SHOW LAST - shows current line in script
+
+o	*FORK <name>
+	Permits access to multiple spawn_ids (spawn to a shell)
+		Includes additional debugging info with --v - done
+	
+o	Add better prompt initialization (for other shells, like tcsh with bold in prompt)
+		Set $prompt or $PS1 to sane values - done
+		**SHELL=<shell> directive - sets shell	
+			Allow to blank			
+		Should this be a configure vs runtime directive? configure only
+		Not supported in include scripts
+		
+o	set sane prompt at login to remote host - done
+	Added better prompt wait at login - done
+
+o	Differenciate between WARN and INFO
+		If, Dyn-Var should be INFOs - done
+		Test FAIL/PASS should be INFOs? - done d14
+
+o	Update Documentation 
+	Tips and Techniques - replace with *INTERACT, discuss Instant-Interact - done
+	Quick Start Guide - update with Directives in fine tuning section - done
+		ie. *WARN
+	Explain more how *FORK works. Discuss where the new session begins.	(implementation details) - done d14
+
+		
+Future
+o	Update for more config directives (put in own proc)
+
+o	Self checking code - increments WARNs and checks count at end
+		May not need with self_self_tests
+		
+o	*PASS (sets $_el(success) to 1) - not in 3.2.0
+	
+o	Directive: *INTERACT		a shell which provides interaction
+		Allows expect-lite commands (to switch sessions) - add later
+		Create interact function
+			simulates expect interact
+			Uses send & expect (wait for prompt) - reads from stdin
+			interprets commands via _el_script_exec "|command"
+		write separately from expect-lite to test
+
+o	Add *LAST - prints out last 5 lines of expect-lite script - shows where user is
+
+		
+o	Other Directives: delay_wait_for_host, connect_method
+
+

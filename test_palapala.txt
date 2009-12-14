@@ -1,0 +1,12 @@
+@5
+>telnet palapala
+<Welcome
+>>
+>access
+>admin
+<Local
+>show ip
+>show if
+>
+>exit
+>

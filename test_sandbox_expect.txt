@@ -1,0 +1,46 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: expect-lite.html
+
+#
+#	test of Embedded Expect commands
+#
+
+#~mod_common.inc
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+$TIMEOUT=6
+@$TIMEOUT
+>id
+<(craig|cvmiller|ruut)
+
+$tmp=/proj/regression/tmp/generalRegression/tc_gzip_reserve.elt/
+$junk=orbit-root
+$junk2=$junk/some/path
+
+> cd $tmp
+> pwd
+>
+!#
+!puts "\nhello"
+!puts "EL->$user_namespace(junk2)"
+!puts "Expect timeout is: $timeout"
+>
+>
+!set junk2 "this other space"
+!puts "\nEL1->$user_namespace(junk2)"
+!set user_namespace(junk2) "this space"
+!puts "EL2->$user_namespace(junk2)"
+!puts "EL3->$junk2"
+>
+; == $junk2
+>
+
+
+#pau

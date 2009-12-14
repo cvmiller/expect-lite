@@ -1,0 +1,544 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+
+#
+#	PE Minimal L3 Path Test - Port 1 to Port 2
+#
+#	Options: interact=yes shutdown_only=yes tcp_test_only=yes
+#
+#    Linux1  <=== LAN =====>                   ISS Linux                 <==== WAN =====> Linux2
+# 192.168.80.1                    192.168.80.2   190.168.20.2                192.168.20.1
+
+# 	=== Test steps as follows ===
+# 
+# 	Assumptions: 
+#		Simulation is already running, and not running on tempest-030
+#		SETUP.elt has been run (which initializes dptest)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+
+
+
+########## Defaults for variables
+$knob=k2
+
+$interact=yes
+$tcp_test_only=no
+$shutdown_only=no
+
+########## Source env and common variables
+~mod_common.inc
+
+# fail script called when script fails
+*~$quit_dp
+*~debug.inc
+
+#allow core files
+>ulimit unlimited
+>
+
+########## Program Vars
+
+# dptest cli menu helper vars
+$table=/msg/table
+$build=/msg/builder
+$stream=/msg/stream
+$pcm=/msg/pcm
+$frameflow=/reg/frameflow
+
+# screen with logging turned on (-L)
+$screen_options= -h 200 -L
+# screen with 200 line scrollback
+#$screen_options= -h 200
+
+$screen_dptest=DPTEST
+$screen_linux1_host=LINUX1_HOST
+$screen_dut=DUT
+
+$linux1_host=tempest-018
+$linux1_rtap_ip_network=192.168.80
+$linux1_rtap_ip=$linux1_rtap_ip_network.1
+
+$linux2_local_tap_ip_network=192.168.20
+
+# initial value of counter
+$counter=1
+
+# Define random function
+!proc random { start end } {
+!       set range [ expr $end - $start ]
+!       return [expr int(rand()*$range) + $start]
+!}
+
+
+?if $tcp_test_only==yes? %TCP_SETUP_TEST
+
+?if $shutdown_only==yes? %SHUTDOWN
+
+############## Start dptest with basic config
+; === Start screen for dptest
+> screen -S $screen_dptest $screen_options
+>>
+
+; === Launching DPTest ===
+@180
+>$cfg_path/dptest $dptest_options  --server $cosim_ip --config $swroot/user/verification/dptest/sample_profile -$knob
+-<DPTest is not connected to DUT
+-<Unable to connect to DP proxy agent server on test platform
+#<dp_init
+#-<failed
+<Done programming parse classify context
+>help
+<system
+
+@20
+; === Checking if msg menu is available ===
+>?
+
+<msg - PE control stream messaging menu
+
+>msg
+
+; === Checking if builder & table sub-menus menu are available ===
+>?
+<builder - PE object builder menu
+<table - PE table access type menu
+
+; === Clear tables ===
+>$table/clear 
+<Success
+>
+
+; === Enable Programmable Keys ===
+>/reg/key/config
+<Success
+>
+
+
+>/reg/ctms/xb 96 
+>/reg/frameflow/enable 0
+>/reg/frameflow/trim 0
+>/reg/frameflow/enable 1
+>/reg/frameflow/trim 1
+>/reg/ctms/pcb 64
+>
+
+
+; === Pop out of $screen_dptest
+>
+>^A
+>^D
+>>
+
+############## Get RTL Host and Ports
+; === get rtl_host and port from Linux2 host
+>netstat -an | egrep '1234|4567' | grep ESTABLISHED | cut -b49-66 | head -1
++$sim_ip=\n([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}):
++$tap_port=\n[0-9.]+:([0-9]{1,5})
+>sleep 1
+>
+# add 1 to the port number (because Khanh says so)
++$tap_port
+
+############## Connect to Linux1 Host
+; === Start screen for linux1 host
+> screen -S $screen_linux1_host $screen_options
+>>
+
+>ssh $linux1_host
+>
+>killall remote_tap
+$tap_ip=$linux1_rtap_ip
+
+
+; === Configure remote_tap
+## use sudo permission 
+>echo "/proj/tools/dev-tools/scripts/remote_tap -i $tap_ip -s $sim_ip -p $tap_port -m 1 -t r0"
+>sudo /proj/tools/dev-tools/scripts/remote_tap -i $tap_ip -s $sim_ip -p $tap_port -m 1 -t r0&
+>sleep 10
+>sudo route add -net $linux2_local_tap_ip_network.0/24 gw $linux1_rtap_ip_network.2 
+>
+; === Display the routing table
+>route -n
+>
+
+; === Pop out of $screen_linux1_host
+>
+>^A
+>^D
+>>
+
+
+############## Connect to DUT
+
+; === Start screen for DUT
+@120
+> screen -S $screen_dut $screen_options
+>>
+~$cosim_connect
+>insmod /mnt/kernel/driver/ke_nic/ke_nic.ko 
+
+>$dut_path/ke_nic_program 2 
+<Using knob
+>ifconfig eth0 $linux2_local_tap_ip_network.2
+>ifconfig eth1 $linux1_rtap_ip_network.2
+>
+# drop into interactive mode? Press "+++" to continue
+?IF $interact==yes ? !interact +++ return
+>>
+; === start ipfwd application
+@120
+>$dut_path/fwdv4 -k2 -dinfo -dtest --lan eth1 --wan eth0
+<using dumb terminal settings
+>
+
+
+
+; === Pop out of $screen_dut
+>
+>^A
+>^D
+>>
+>
+############## Test NAT connection
+%TCP_SETUP_TEST
+############## Connect to Linux1 Host
+; === Start screen for linux1 host
+> screen -r $screen_linux1_host 
+>>
+
+; === Ping the NAT Gateway IP from Linux1 Host
+# This confirms the remote_tap tunnel is up and running
+>ping -c 3 $linux1_rtap_ip_network.2
+<3 packets transmitted
+>
+
+
+; === Test NAT connection to linux1 host
+$nat_timeout=90
+@$nat_timeout
+
+#telnet to ssh port 22
+#>telnet $linux1_rtap_ip_network.2 22
+>telnet $linux2_local_tap_ip_network.1 22
+<SSH
+>>quit
+>>
+<Protocol mismatch
+<Connection closed by foreign host
+>
+
+; === Pause to look around
+>
+# $scapy 2> /dev/null
+# p=sr(IP(dst="192.168.20.1")/TCP(dport=[22,113]),iface="r0")
+# p
+# ans,unans=_
+# ans.summary()
+>
+>nc -v -w $nat_timeout -n -p 7777 192.168.20.1 111
+<open
+>^C
+
+
+# drop into interactive mode? Press "+++" to continue
+?IF $interact==yes ? !interact +++ return
+>>
+
+# Check that things work here.
+
+; === Start TCP session and pop out of $screen_linux1_host
+>
+>telnet $linux2_local_tap_ip_network.1 113
+>^A
+>^D
+>>
+
+
+
+; === connect to screen for DUT and check that tcp forwarding has been setup
+> screen -r $screen_dut
+<TCP setup successfully
+<\[LAN\] PCB:
+<\[WAN\] PCB:
+>>
+
+
+#[402]TCP setup successfully
+#[LAN] PCB: 0000003e TxStream: 00000026 AuxStream: 00000025 stats: 0001 0004
+#[WAN] PCB: 00000030 TxStream: 00000020 AuxStream: 00000025 stats: 0003 0002
+
+; === Query stats
+30
+>fwdinfo
+<\[LAN\]PCB  TxStream  AuxStream  \[WAN\]PCB  TxStream  AuxStream
+<[0-9a-f]{8}  [0-9a-f]{8}  [0-9a-f]{8}
+>
+
+#>fwdinfo
+#[LAN]PCB  TxStream  AuxStream  [WAN]PCB  TxStream  AuxStream
+#0000003e  00000026  00000025   00000030  00000020  00000025
+
+
+>fwdstat
+<Proto  \[LAN\]Addr:Port => Addr:Port     \[WAN\]Addr:Port <= Addr:Port
+#<6[ \t]+[0-9a-f:]{11,14}[ \t]+[0-9a-f]{8}:113
+>
+#>fwdstat
+#Proto  [LAN]Addr:Port => Addr:Port     [WAN]Addr:Port <= Addr:Port
+#  6   c0a85001:39332  c0a81401:22      c0a81401:22     c0a81402:32772
+
+
+
+; === Pause to look around
+# drop into interactive mode? Press "+++" to continue
+?IF $interact==yes ? !interact +++ return
+>>
+
+# Check that things work here.
+
+; === Pop out of $screen_dut
+>
+>^A
+>^D
+>>
+>
+############## Connect to Linux1 Host
+; === connect to screen for linux1 host
+> screen -r $screen_linux1_host 
+>>
+; === quit tcp test telnet
+>^]
+>quit
+>
+
+; === Pop out of $screen_linux1_host 
+>
+>^A
+>^D
+>>
+
+
+
+
+
+
+%SHUTDOWN
+
+############## Clean up and quit Screens
+; === connect to screen for DUT
+@90
+> screen -r $screen_dut
+>>
+>
+>quit
+>
+
+>rmmod ke_nic
+>
+~$cosim_disconnect
+>
+# exit screen
+>exit
+<screen is terminating
+>
+
+; === connect to screen for dptest
+> screen -r $screen_dptest
+>>
+; === quit dptest
+>/pkt_log/count all
+>/pkt_log/decode all
+>
+@120
+>
+>quit
+; === Check that dptest is at the prompt, if not, send ^C and kill it
+>
+# look for $swroot prompt, if not found send ^C
++$last_line=($swroot)
+?if $last_line == $swroot ? > :: >^C
+>
+# exit screen
+>exit
+<screen is terminating
+>
+
+; === connect to screen for linux1 host
+@20
+>
+> screen -r $screen_linux1_host
+>>
+#>killall remote_tap
+>
+; === bring remote_tap to foreground and kill it
+>jobs
+>fg
+<remote_tap
+>^C
+>
+# exit remote host
+> exit
+# exit screen
+>exit
+<screen is terminating
+>
+
+
+
+
+
+
+# ############## Bridging configuration
+# 
+# ; === Building a stream ===
+# >
+# >$stream/alloc %bridge_str2
+# 
+# 
+# ; === Building a RTC ===
+# >
+# #rtc $rtc_name dac/gr/stateful/stateless cc/0-2**24/pfa %stream/0/%pcb
+# >$build/rtc $bridge_rtc1 dac append %bridge_str2
+# <Adding rtc:
+# 
+# 
+# ; === Building a result #1===
+# >
+# #result $result_name $rtc_name vio domain  %stats_group/0 %police_group/0 plan_name/0-255 afe/0
+# >$build/result $bridge_result1 $bridge_rtc1 0 0 0 0 mini_plan 0
+# <Adding result:
+# +$bridge_result_key=\n(0x[0-9A-F]+)
+# 
+# #
+# # Add port table, yielding append to stream of successful
+# #
+# #
+# 
+# ; === Build port table $counter ===
+# # 0xFF=tap1
+# $port_id=0xFF
+# 
+# #key $key_name kcc ktp_fields...
+# >$build/key $port_k$counter port_ktp $port_id
+# +$port_key=\n0x00([0-9A-F]+)
+# 
+# >$table/remove mini_sd  $port_k$counter
+# >
+# >$table/insert mini_sd  $bridge_result1 $port_k$counter
+# <(Success|Error rc=2)
+# >
+# >$table/search mini_sd  $port_k$counter
+# <Result:
+# <$bridge_result_key
+# <Key:
+# <$port_key
+# >
+# 
+# # increment counter
+# !inc_var counter
+# 
+# 
+# 
+# ; === Build sd and cc for port 2
+# >
+# $work_queue_port2=0x30
+# #sd $sd_name wq_elig wq_timeout timeout_en timerq elig_is_ssd elig_if_csd elig_len scg_en ct_0 ct_1 ct_2 vbg_id
+# #>$build/sd $port_sd2 0x30 0x30 0 0 1 1 1 0 0 0
+# >$build/sd $port_sd2 $work_queue_port2 $work_queue_port2 0 0 1 1 1 0 0 0
+# <Adding sd:
+# 
+# #cc $cc_name ipv4/ipv6/vlan prefetch $ip_stat/0 $rtc/$ttc credit surplus mtu %xb/0 $pscc/0
+# #cc $cc_name ipv4/ipv6/vlan prefetch(0-127) unicast/multicast/broadcast cvg(0-7) $ip_stat/0-4095 $ttc credit(0-32767) surplus(0-65535) mtu(0-32767) %xb/0 $pscc/0 
+# >$build/cc $port_cc2 vlan 0 unicast 0 0 $null_ttc 0 0 0 0 0 0
+# <Adding cc:
+# 
+# ; === Set the stream sd & cc  and Schedule ===
+# >
+# #set %stream_name sd/pd/cc $sd_name/$pd_name/$cc_name
+# >$stream/set %bridge_str2 sd $port_sd2
+# <Success=0
+# 
+# >$stream/set  %bridge_str2 cc $port_cc2
+# <Success=0
+# 
+# >$stream/schedule %bridge_str2
+# 
+# # see block guide "Parse & Classify Internal Memory Map"
+# >$pcm/dump
+# <FF0
+# 
+# ; === enable frameflows 0 & 1
+# $frameflow_num=0
+# ~$ff_enable
+# 
+# $frameflow_num=1
+# ~$ff_enable
+# 
+# 
+# # drop into interactive mode? Press "+++" to continue
+# ?IF $interact==yes ? !interact +++ return
+# >>
+# 
+# >
+# ; === Suspend DPTest
+# >
+# >system bash
+# >>
+# >
+# ; === Check that interfaces are enabled
+# ~$cosim_connect
+# 
+# #>$dut_path/dp_util set_reg PE 0x608 0x01010000
+# >$dut_path/dp_util get_reg PE 0x608
+# #>$dut_path/dp_util set_reg PE 0x400 0x01010000
+# >$dut_path/dp_util get_reg PE 0x400
+# >
+# # ~$cosim_suspend
+# >exit
+# >
+# 
+# >
+# @30
+# ; === Send Packet from port 1 to port 2
+# >
+# # Set up Parameters for sending/receiving a packet
+# $mac_da=00:04:23:b2:f6:39
+# $mac_sa=00:11:43:d2:5d:08
+# $port_if_tx=$dut_if1
+# $port_if_rx=$dut_if2
+# 
+# # Call Send/Receive Packet script
+# ~tx_rx_bridge.inc
+# >
+# 
+# @180
+# ; === quit DPTest nicely
+# >exit
+# >>
+# >
+# >quit
+# >
+
+
+>
+~$end_test
+>
+#pau!
+

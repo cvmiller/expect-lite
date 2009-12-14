@@ -1,0 +1,878 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1">
+  <meta name="AUTHOR" content="Craig Miller">
+  <style>
+	h2 {
+		background-color:#CCCCCC;}
+	h4 {
+		font-size:1.6em;
+		background-color:#CCCCee;}
+
+	pre {
+ 		background-color:#f0f0f0;}
+body {
+   //background-image: url("bluestrip.gif");
+   //background-position: top left;
+   //background-repeat: repeat-y;
+   margin-left: 1%;
+   margin-right: 1%;
+}
+
+  </style>
+  <title>expect-lite.html</title>
+</head>
+<body>
+<h1 style="text-align: center;">Expect-Lite</h1>
+<h3 style="text-align: center;">Making Expect scripting Simple</h3>
+<div style="text-align: center;"><big><big><big><span
+ style="font-weight: bold;">Training</span></big></big></big><br>
+</div>
+<br>
+<hr style="width: 100%; height: 2px;">
+<h2>Introduction</h2>
+What is expect-lite? expect-lite is a wrapper for expect, created to
+make expect programming even easier. The wrapper permits the creation
+of expect script command files by using a special character(s) at
+the
+beginning of each line to indicate the expect-lite action.<br>
+<br>
+Basic expect-lite scripts can be created by simply cutting and pasting
+text from a terminal window into a script, and adding '&gt;' '&lt;'
+characters. It is single threaded and therefore limited to what a
+person could do in one (1) terminal
+window (or xterm).<br>
+<br>
+Expect-lite is targeted at the verification testing environment, and
+will produce a
+Pass/Fail result at the end of the script. However, its use is not
+limited to this environment. <br>
+<br>
+<h2>Features</h2>
+Expect-lite has many features which make expect-style script writing
+easy. Such as:<br>
+<ul>
+  <li><span style="font-weight: bold;">Automatic login</span> to remote
+host (supporting telnet, ssh with password, and ssh with keys)</li>
+  <li><span style="font-weight: bold;">Simplicity</span> using one
+character for send and expect '&gt;' '&lt;' <br>
+This creates many lines of expect with minimal "code"<br>
+  </li>
+  <li><span style="font-weight: bold;">Regular expression</span>
+(regex) evaluation in expected results</li>
+  <li style="font-weight: bold;">Static and Dynamic Variables</li>
+  <li><span style="font-weight: bold;">Constants</span>, passed on the
+command line which override variables in the script</li>
+  <li style="font-weight: bold;">Leverages Bash shell <span
+ style="font-weight: normal;">with variable pass-through</span><br>
+  </li>
+  <li><span style="font-weight: bold;">Include mechanism</span> to read
+other script files (sourcing)</li>
+  <li><span style="font-weight: bold;">Embedded Expect</span> - using
+native expect embedded in an expect-lite script</li>
+  <li><span style="font-weight: bold;">Not Expect</span> - a feature to
+look for unexpected text/strings</li>
+  <li><span style="font-weight: bold;">Conditional Branching</span> a
+if/then/else with a c-like syntax</li>
+  <li><span style="font-weight: bold;">Simple looping</span> using
+conditional branching, a repeat loop can be constructed with infinite
+loop protection</li>
+</ul>
+<br>
+<h2>Automatic Login<br>
+</h2>
+Based on the command line arguments passed, expect-lite will do the
+following:<br>
+<ul>
+  <li>Automatically log into the remote host via telnet or ssh (if ssh
+keys have been
+previously setup)</li>
+  <li>Change directory to the passed directory (if included)</li>
+</ul>
+<br>
+In the following example of expect-lite: <br>
+<pre>./expect-lite remote_host=remote-host-018 cmd_file=basic_ping_test.elt user_dir=/etc</pre>
+<br>
+expect-lite will log into remote-host-018, change directory to /etc/
+and
+begin to send commands from basic_ping_test.elt to the remote-host. The
+parameters of remote_host and cmd_file are required, as expect-lite
+must know what host to log into, and what script (aka command file) to
+run.<br>
+<br>
+<h2><a name="special_characters"></a>Special Characters - The basics<br>
+</h2>
+Expect-lite interprets the following special characters at the
+beginning of each line in the script as:<br>
+<dl>
+  <dd>
+    <table style="text-align: left; width: 80%;" border="1"
+ cellpadding="2" cellspacing="2">
+      <tbody>
+        <tr>
+          <td style="vertical-align: top; font-weight: bold;">Char<br>
+          </td>
+          <td style="vertical-align: top; font-weight: bold;">Action<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">&gt;<br>
+          </td>
+          <td style="vertical-align: top;">send string to the remote
+host</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">&lt;<br>
+          </td>
+          <td style="vertical-align: top;">string/regex<span
+ style="font-weight: bold;"> MUST</span> be
+received from the remote host in the alloted timeout or the script will
+FAIL!</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">-&lt;<br>
+          </td>
+          <td style="vertical-align: top;">if string/regex<span
+ style="font-weight: bold;"> IS</span>
+received from the remote host the script will
+FAIL! (see <a href="#not_expect">Not Expect</a>)<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">#<br>
+          </td>
+          <td style="vertical-align: top;">used to indicate comment
+lines,
+and have no effect</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">;<br>
+          </td>
+          <td style="vertical-align: top;">are also used to indicate
+comment lines, but are printed to
+stdout (for logging)</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">@<br>
+          </td>
+          <td style="vertical-align: top;">changes the expect timeout
+value in seconds<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">$<br>
+          </td>
+          <td style="vertical-align: top;">indicates a static variable
+which is defined at script
+invocation (see <a href="expect-lite.html#variables">variables</a> for
+details)</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">~filename<br>
+          </td>
+          <td style="vertical-align: top;">includes a expect-lite
+automation file, useful
+for creation of common var files, or 'subprograms/subroutines'</td>
+        </tr>
+        <tr>
+          <td align="undefined" valign="undefined">*~filename</td>
+          <td align="undefined" valign="undefined">includes a fail
+script, which is run if the main script fails (see <a
+ href="#fail_script">fail script</a>)</td>
+        </tr>
+      </tbody>
+    </table>
+  </dd>
+</dl>
+<br>
+<ul>
+</ul>
+Blank lines or lines
+starting with any non-special character are allowed to make the script
+file more readable. <br>
+<br>
+Sometimes control characters must be sent to the host. Currently all
+control characters are supported (from ^@ to ^\):<br>
+<ul>
+  <li>^C or break, when it is desired to stop a running program e.g.
+&gt;^C</li>
+  <li>^] or escape from telnet, e.g. &gt;^] This will bring the
+script
+to the telnet prompt, then use: &gt;quit</li>
+  <li>^&lt;any char&gt; will send a control character to the
+remote-host,
+such as ^D to logout</li>
+</ul>
+Control characters must be the first two characters on the line
+(e.g.[^][A-Z]). The sequence of ^C anywhere else in the line will not
+be interpreted as a control-C, but rather the two characters '^' 'C'.<br>
+<br>
+<h2><a name="variables"></a>Using Variables</h2>
+Expect-lite supports two types of variables:<br>
+<ul>
+  <li>Static, which are bound at invocation<br>
+  </li>
+  <li>Dynamic, which are bound during execution of the script<br>
+  </li>
+</ul>
+Lines starting with a '$' indicate variables which are assigned and set
+at script invocation, and therefore are static. In expect-lite variable
+names will always be preceded with a '$'.<br>
+<br>
+Sometimes it is desirable to bind a variable during the execution of
+the script. Dynamic variables fill this need by utilizing Expect's
+built-in regex capture mechanism. Only the portion of the match inside
+the parenthesis will be bound to the variable. The format of the line
+is as follows: <br>
+<pre>+$somevar=text that is not put into the var (text which is put into the var)</pre>
+<br>
+Dynamic Variables are always bound to Expect output, meaning text which
+is returned from the remote host. Therefore something must be sent to
+the remote host, before text can be returned. A typical usage would be:<br>
+<pre>&gt; command<br>+$myvar=command output (capture value) more command output</pre>
+<br>
+If the value of the var is successfully captured then expect-lite will
+print:<br>
+<pre>Assigned Var:somevar=sometext which is put into the var</pre>
+<br>
+If, however the dynamic var is not successfully captured, expect-lite
+will print:<br>
+<pre>Assigned Var:somevar=__NO_STRING_CAPTURED__</pre>
+Avoid using an overly general capture as it will tend to capture too
+much, or the wrong info. e.g:<br>
+<pre>&gt; command<br>+$myvar=\n(.*)<br></pre>
+Instead use a specific capture when possible. When capturing
+the current directory, the current directory will always start with
+'/', and the path will
+be made up of a known character set:<br>
+<pre>&gt; echo $PWD<br>+$mypwd=\n(/[a-zA-Z0-9/\-_]+)<br></pre>
+<br>
+Expect-lite will print to stdout the value of the assigned variable,
+assisting the script writer in understanding the value that is bound to
+the variable during runtime. The value of "__NO_STRING_CAPTURED__"
+indicates that the
+regex pattern used did not match the return data. It is best to start
+using this feature with short scripts targeted at capturing the desired
+information. <a href="#dyn_var_example">Examples</a> can be found in
+the example section of this
+readme.<br>
+<br>
+<h3>Constants</h3>
+Expect-lite Constants are represented as variables which are passed
+into expect-lite at runtime. Constants will override any script
+variable already defined inside the script, are immutable, and
+cannot be changed. Constants can be used to change the behaviour of the
+script.<br>
+<br>
+For example, one might invoke the following test as:<br>
+<pre>./expect-lite remote_host=remote-host-018 cmd_file=basic_ping_test.elt user_dir=/etc local_eth=eth2</pre>
+<br>
+Inside the script basic_ping_test.txt any reference to $local_eth would
+be set to eth2, thus allowing the script actions to be changed based on
+the constant passed at invocation. Constants will override any script
+variable already defined inside the script.<br>
+<br>
+<h3>Shell Variables</h3>
+Expect-lite allows the use of shell variables, which can be more
+powerful than the built-in variable mechanism. However shell variables
+will only be resolved by the shell. For example, assigning current
+working directory to a shell var:<br>
+<pre>&gt; PWD=`pwd`<br>&gt; echo $PWD</pre>
+However, the following test would fail, since $PWD is a shell variable,
+not an expect-lite variable:<br>
+<pre>&gt; PWD=`pwd`<br>&gt;pwd<br>&lt; $PWD<br></pre>
+Shell variables (or environment variables) must be dereferenced by the
+shell. Similarly, expect-lite variables must be dereferenced by
+expect-lite.<br>
+<br>
+It is possible to read a shell variable into an expect-lite variable by
+using the dynamic variable method:<br>
+<pre>&gt; echo $PWD<br>+$mypwd=\n(/[a-zA-Z0-9/\-_]+)<br></pre>
+Or capture the date and time in a format which can be appended to file
+names, giving them uniqueness.<br>
+<pre># date stamp of script run time<br>&gt;echo `date +_%Y_%m_%d_%H-%M-%S`<br>+$DATE=\n(_[0-9_-]+)<br><br></pre>
+<br>
+<h2>Test Failure?!?</h2>
+When will expect-lite fail a test? It will only fail a test when an
+expected result (after issuing a command) does not appear in the
+specified timeout period. For example in the following command file:<br>
+<pre>$ip_addr=192.168.10.99<br>&gt;/sbin/ifconfig eth0 $ip_addr<br>&gt;/sbin/ifconfig eth0 <br>&lt; $ip_addr<br></pre>
+The first line will be sent (blindly), since there is no expected
+return. On line 3, the ifconfig command is sent again, and the script
+is looking for a desired result of&nbsp; 192.168.10.99 (using the var
+$ip_addr). If for some reason the ip address is different than ip
+address was returned, the script would fail.<br>
+<br>
+<span style="font-weight: bold;"><a name="not_expect"></a>Not Expect</span><br>
+A test can also fail should text appear that is unexpected (such as an
+error). This does not clear the <a
+ href="expect-lite_training.html#expect_buffer">expect input
+buffer</a>, and should be used before a valid expect.<br>
+<br>
+For example: Fail device doesn't exist <br>
+<pre>&gt;ls -l /dev/linux<br>-&lt;No such file<br></pre>
+In another example: We don't like Mondays <br>
+<pre>; === fail if today is 'Monday'<br>&gt;date  +%A<br>-&lt;Monday<br></pre>
+Since the expect input buffer is not consumed, valid expects can still
+be performed. in the following example, ttyS2 will still be found.<br>
+<pre>&gt;ls -1 /dev/ttyS*<br>-&lt;ttyX<br>&lt;ttyS2<br></pre>
+It is recommended that <span style="font-style: italic;">Not Expect </span>lines<span
+ style="font-style: italic;"> </span>be used before valid expect lines.<br>
+<br>
+<h4><a name="exercise_1"></a>Exercise 1a<br>
+</h4>
+Create an expect-lite script which only uses the constructs learned so
+far, with your favorite editor. Expect-lite script names typically have
+the extension 'elt' but can be anything.<br>
+<br>
+In this script:<br>
+<ul>
+  <li>Create a temporary file. Use a
+variable for the temporary file name. <span style="font-style: italic;">Extra
+Credit:</span> append date to temporary file name to make it unique.<br>
+  </li>
+  <li>Place the words 'peter' 'paul' 'mary' and other words of your
+choosing on separate lines in the temporary file</li>
+  <li>grep the word 'mary' from the file, and expect it. <br>
+  </li>
+  <li>wc the file and expect the correct number of lines</li>
+  <li>Be sure to add many printable comments, allowing the log reader
+understand what is happening<br>
+  </li>
+</ul>
+Testing the script. You will need ssh keys setup to allow you to log
+into a host without being challenged for a password. Once this is done,
+type the following:<br>
+<pre>expect-lite r=tempest-008 c=&lt;your_script&gt;</pre>
+Does the script pass? Where was the temporary
+file created?
+<h4><a name="exercise_1"></a>Exercise 1b<br>
+</h4>
+Build upon the previous expect-lite script using the constructs learned
+so
+far.&nbsp; It is easier to write expect-lite scripts using two windows,
+one for editing, and one for running the script.<br>
+<br>
+In this script:<br>
+<ul>
+  <li>After creating the temporary file, change the expect string
+'mary' with the variable $name.<br>
+  </li>
+  <li>grep the word 'mary' from the file, and expect it, using the
+variable '$name' for 'mary'<br>
+  </li>
+  <li>Be sure to add many printable comments, allowing the log reader
+understand what is happening</li>
+  <li>Test your script with a constant, which will change the value of
+'mary'
+to 'peter'</li>
+</ul>
+Change the value of 'mary'
+to 'peter' using a constant.<br>
+<pre>expect-lite r=tempest-019 c=&lt;your_script&gt; name=peter</pre>
+Does the script still pass? Does it find peter? <br>
+<small><small><a href="#implementation_details">skip part 2</a></small></small><br>
+<h2><a name="include_files"></a>Include Files</h2>
+Include files are a quick way to develop script snippets which can be
+included into larger scripts or to include a common variable file. When
+an include file is executed, it is as if the file were just pasted into
+the script file, and therefore has access to the variable space of the
+main
+script, and can modify that variable space as well. In this example, a
+common variable file is "sourced":<br>
+<pre># Source common variable file<br>~asic_vars.inc<br></pre>
+<br>
+Common functions, such as telnet'ing to the DUT, are a good use of
+include files:<br>
+<pre>; === Connect to DUT <br>~dut_connect.inc<br></pre>
+Include filenames can also be assigned in a variable, such that the
+files can be declared at the top of the script but used later within
+the script. For example:<br>
+<pre># Source Var file to be used<br>$asic_include=asic_vars.inc<br>...<br>~$asic_include<br></pre>
+<span style="font-weight: bold;"><a name="fail_script"></a>Fail Script</span><br>
+<br>
+The purpose of the fail script is to clean up after the failed script,
+reseting times, deleting temporary files and such. It is a special
+include script which is declared near the top of the script:<br>
+<pre>*~clean_up.inc</pre>
+Should the script fail, the fail script will be "sourced".&nbsp;<br>
+<br>
+The scope of the fail script is always local to the running script.
+This allows normal include scripts to declare a separate fail script
+from the main script. Thus enabling a different clean up mechanism for
+the include script.<br>
+<br>
+The fail script mechanism can also be used for script development. Once
+the script fails, it is possible to drop expect-lite into interactive
+mode allowing the script developer to interact the DUT interactively
+with
+debug.inc in the following example:<br>
+<pre>; Press '+++' to end interactive session<br>&gt;<br>!interact +++ return<br>&gt;<br># allow script to continue<br>!set _el(continue) 1<br>&gt;<br>; === Continuing Script<br>&gt;</pre>
+The above debug fail script places the developer into interactive mode.
+Once the developer has completed with interactive mode, '+++' is typed
+and the script continues. In this particular example, a flag is
+set&nbsp;_el(continue), which will allow the main script to continue as
+if
+there were no failure.<br>
+<br>
+<h2>Use of Regex in expect-lite</h2>
+Support of regular expressions in expect-lite are limited by:<br>
+<ol>
+  <li>Support of regex in standard expect (e.g. including anchors,
+char-classes and repeats)<br>
+  </li>
+  <li>Support of regex meta characters (e.g. \t \n are supported,
+\d
+is not)</li>
+  <li>Expect-lite only evaluates lines using regex which begin with
+'&lt;'&nbsp; '-&lt;' and '+' <br>
+  </li>
+</ol>
+As an example, a range of numbers is valid for an IP address.
+The following would permit the last octet of the IP address to be 2
+digits, but not 3.<br>
+<pre>&gt; /sbin/ifconfig eth0<br>&lt;inet addr:10\.29\.200\.[0-9][0-9][ ]</pre>
+The periods are preceded by a backslash to indicate to regex that a
+period must be returned rather than the regex dot '.' which indicates
+any character.<br>
+<br>
+Because regex is always enabled for expected results, some 'escaping'
+of characters must be done when using '&lt;'. The following characters
+must be escaped with a backslash to convey their literal meaning:<br>
+<br>
+<table style="text-align: left; width: 35%; margin-left: 40px;"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;">Example<br>
+      </td>
+      <td style="vertical-align: top; font-weight: bold;">Escaped<br>
+      </td>
+      <td style="vertical-align: top; font-weight: bold;">Character<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; width: 20%;">(abc)</td>
+      <td style="vertical-align: top; width: 20%;">\(abc\)</td>
+      <td style="vertical-align: top;">parentheses</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">[abc] <br>
+      </td>
+      <td style="vertical-align: top;">\[abc\]&nbsp; <br>
+      </td>
+      <td style="vertical-align: top;"> square brackets</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">\ <br>
+      </td>
+      <td style="vertical-align: top;">\\ <br>
+      </td>
+      <td style="vertical-align: top;">backslash</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">.</td>
+      <td style="vertical-align: top;">\. <br>
+      </td>
+      <td style="vertical-align: top;">period</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">$</td>
+      <td style="vertical-align: top;">\$ <br>
+      </td>
+      <td style="vertical-align: top;">dollar
+sign</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2>Examples of Expect-lite</h2>
+Below are some examples to better illustrate what can be accomplished
+with expect-lite:<br>
+<br>
+Setting the IP address on a secondary interface of the remote host (be
+sure to escape the dot's in the IP address)<br>
+<pre>$local_eth=eth1<br>$ip_addr=192\.168\.10\.2<br># change timeout value to 10 sec<br>@10<br>&gt;ifconfig $local_eth $ip_addr<br>#check to ensure that we set the right IP address<br>&gt;ifconfig<br>&lt;$ip_addr<br></pre>
+Starting a telnet to another host<br>
+<pre>@2<br>&gt;telnet remote-host-018<br>&lt;login<br>&gt;root<br>&lt;assword<br>&gt;secret_password<br># issue a command once logged in<br>&gt;pwd<br>&gt;^]<br>&gt;quit<br><br></pre>
+Starting a ssh session to another host<br>
+<pre>&gt;ssh root@host-021<br>&lt;assword:<br>&gt;secret_password<br># issue a command once logged in<br>&gt;ls<br>&gt;exit<br><br></pre>
+<a name="screen_example"></a>Use of 'screen' command to keep a command
+alive after test completes<br>
+<pre>; ==== Use Screen command for to keep application running ====<br>&gt;screen <br>&gt;  $pmm  <br># Check that HW is alive<br>&gt;ping<br>&lt;Successfully pinged the PM H/W<br>; ==== Keep pmm application active, and detach from this screen<br>&gt;^A<br>&gt;^D<br>&lt;detached<br>&gt;<br></pre>
+<a name="dyn_var_example"></a>Assigning a dynamic variable $host using
+regex to capture the hostname
+from 'uname -a' command<br>
+<pre>&gt;uname -a<br>+$host=Linux ([a-z\-0-9]+)<br>Assigned Var:host=remote-host-008<br>&gt;<br></pre>
+<a name="temp_file_example"></a>Create a temporary file with unique
+name including script name and date<br>
+<pre># date stamp of script run time<br>&gt;echo `date +_%Y_%m_%d_%H-%M-%S`<br>+$DATE=\n(_[0-9_-]+)<br><br>$temp_file=$arg0$DATE<br>; === Create a temp file using bash "here doc" method<br>&gt;cat &gt; $temp_file &lt;&lt;'+++'<br>&gt;line 1<br>&gt;line 2<br>&gt;+++<br>&gt;<br></pre>
+Assigning multiple dynamic variables using regex to capture environment
+variables $HOME and $SHELL, while expecting $TERM=xterm<br>
+<pre>&gt;env | sort<br>+$home=\nHOME=([a-z/]+)<br>+$shell=\nSHELL=([a-z/]+)<br>&lt;TERM=xterm<br>Assigned Var:home=/home/joe<br>Assigned Var:shell=/bin/bash<br>&gt;<br></pre>
+Manage multiple Screen commands with a dynamic variable and regex
+capture<br>
+<pre># show the last screen in the list <br>&gt;screen -list | grep pts | sort | tail -1<br># regex capture to dynamically assign the result to var $myscreen<br>+$myscreen=([0-9]+\.pts.[0-9]+.[a-z\- 0-9]+)<br># connect to $myscreen<br>&gt; screen -r $myscreen<br># inside existing screen, kick it to get a prompt<br>&gt;^M<br>&gt; sleep 3<br>&gt; ls<br>&gt;<br>&gt;^A<br>&gt;^D<br>&lt;detached<br>&gt;<br></pre>
+Using Regex in expect-lite to allow multiple responses<br>
+<pre>&gt;id<br># allow either groups users or wheel<br>&lt;(users|wheel)<br></pre>
+<br>
+<h2><a name="conditional"></a>Using Conditionals &amp; Labels<br>
+</h2>
+Conditional (if/then/else) statements are natively supported in
+expect-lite. The conditional uses a c-style syntax with a question mark
+(?) at the beginning of the line, and double colon to indicate the else
+statement, using the format ?cond?action::else_action<br>
+<br>
+Although spaces are not required around the conditional characters (?
+and ::), it is recommended for ease of reading. The comparison
+operators are: '==',&nbsp; '!=' ,'&gt;=',&nbsp; '&lt;=',&nbsp; '&gt;'
+and '&lt;'. If the compared values can be evaluated as a numbers, then
+larger and less than will yield expected results. A simple conditional
+example:<br>
+<pre>$age=56<br>? $age &gt;= 55 ? &gt;echo "freedom at 55!" :: &gt; echo "keep working!"<br></pre>
+In the above example if $age is larger than or equal to 55 then the
+action 'echo "freedom at 55!". If $age is less than 55 then the action
+'echo "keep working!"' will be sent.<br>
+<br>
+Each action or else_action is as if it began on a separate line. Since
+in the above example '&gt;' is used (e.g. &gt;echo) the echo line will
+be sent to the remote host. Any expect-lite action (see <a
+ href="expect-lite_training.html#special_characters">Special Characters</a>)
+can be placed after
+the second question mark. For example, an <a
+ href="expect-lite_training.html#include_files">include
+file</a> may be executed based on a conditional:<br>
+<pre>$platform=ppc<br>? $platform == i386 ? ~connect_i386.inc :: ~connect_ppc.inc<br></pre>
+In order to make log files more understandable, a message will be
+printed when a conditional is evaluated, such as:<br>
+<pre>If: expr { "ppc" == "i386" } |then ~connect_i386.inc|else  ~connect_ppc.inc|result0<br></pre>
+The message prints: what was evaluated (expr { "ppc" == "i386"
+}),&nbsp; 'then', and 'else' actions, as well as a result (0=false)<br>
+<br>
+<a name="label"></a><span style="font-weight: bold;">Labels</span><br>
+<br>
+Conditionals are limited to a single line. Sometimes this is too
+limiting, as it would be nice to have several commands be executed
+based on the success of a conditional. To support this, the concept of <span
+ style="font-weight: bold;">labels</span> has been introduced. A label
+is defined as having the first character a '%'. Although the label line
+itself does nothing, it provides a location to the conditional to <span
+ style="font-style: italic;">Jump To Label</span>. The following is a
+simple example of using a conditional in conjunction with a label:<br>
+<pre>$kmodules_inserted=true<br>? $kmodules_inserted == false ? %SKIP_CHECK_KMODS<br>&gt;lsmod | grep nfs<br>&lt;nfsd<br>&lt;exportfs<br>&lt;sunrpc<br>%SKIP_CHECK_KMODS<br></pre>
+When a label is the action of a conditional, there is an implied <span
+ style="font-style: italic;">Jump to Label</span>. Lines between the
+conditional and the label will be skipped. The <span
+ style="font-style: italic;">Jump to Label</span> action is no longer
+limited to only
+jumping forward. (see <a href="expect-lite_training.html#looping">Looping
+with Conditionals</a>)<br>
+<br>
+Multiple labels with the same name are permitted. For example, a
+conditional action may be <span style="font-style: italic;">Jump to
+Label</span> %SKIP. Although multiple labels of %SKIP may occur in the
+script, in this example, expect-lite will jump to the next line
+containing %SKIP. Of course it is easier for the script reader if
+clearer label names are used. Labels may contain spaces, as in this
+example:<br>
+<pre>; === Test conditional jump to label<br>? $jump == true ?%move along, nothing to see<br>&gt;echo "1"<br>&gt;echo "2"<br>&gt;echo "3"<br>%move along, nothing to see<br></pre>
+To assist reading the logs, the action <span
+ style="font-style: italic;">Jump to Label</span> will generate a
+message to standard out (captured in the log). From the above example,
+the following would be printed:<br>
+<pre>Jumping to label:%move along, nothing to see<br></pre>
+<br>
+<h2><a name="looping"></a>Looping with Conditionals &amp; Labels<br>
+</h2>
+Simple looping is now supported by allowing <span
+ style="font-style: italic;">jump to label</span> backwards. The Repeat
+Loop is the easiest loop to implement:<br>
+<pre>; ======== Incrementing Loop ========<br>$max=5<br>$count=3<br>%REPEAT_INC_LOOP<br>&gt;echo $count<br># increment variable<br>+$count<br>?if $count &lt;= $max ?%REPEAT_INC_LOOP<br></pre>
+Because of <span style="font-style: italic;">jump to label</span> can
+jump backwards, it is important to assign <span
+ style="font-style: italic;">unique</span>
+looping labels, such as %REPEAT_INC_LOOP. Unexpected results will occur
+if non-unique loop label names are used. Non-looping labels, as
+illustrated in the previous section, are not required to be unique.<br>
+<br>
+Also included in the above example is incrementing an expect-lite
+variable: +$count<br>
+This will add 1 to the value of $count. If $count is not an integer,
+the value of $count will remain unchanged (can't add 1 to a string).<br>
+<br>
+<a name="infinite_loop"></a>As part of the looping enhancement, there
+is <span style="font-style: italic;">infinite loop protection</span>.
+The maximum amount of looping is&nbsp;defined in expect-lite itself
+with the variable _el_infinite_loop. This value is decremented with
+each iteration of all loops for the entire script. Typically this would
+be in the range of 100 to 1000 to be safe. For example, if a complex
+expect-lite script had 4 loops each with 100 iterations, the
+_el_infinite_loop should be set larger than 400.<br>
+<br>
+<h2><a name="ex2"></a>Troubleshooting<br>
+</h2>
+Expect-lite mimics a person typing commands at a terminal, and checking
+the results. When the script is not performing as expected, it is
+usually a timing problem, where the result hasn't returned in time, or
+the script continued unexpectedly. Quite often timing problems can be
+solved by adding a '&gt;' which will send an empty line (as if the
+person had typed &lt;return&gt;), but there is an implied "wait for
+prompt" as well, which slows down the script.<br>
+<pre>; === drop into interactive mode? Press "+++" to continue<br>?IF $interact==yes ? !interact +++ return<br>&gt;&gt;<br>&gt;<br>@60<br>; === quit dptest<br>&gt;<br>&gt;quit<br>&gt;<br></pre>
+<br>
+<h4><a name="exercise_2"></a>Exercise 2<br>
+</h4>
+Create an expect-lite script which uses most of the constructs learned
+so
+far, with your favorite editor. <br>
+<br>
+In this script:<br>
+<ul>
+  <li>use the constant 'platform' will change the behaviour of the
+script using conditionals (platform can equal 'ppc' or 'i386')</li>
+  <ul>
+    <li>platform 'ppc' will use an include file<br>
+    </li>
+  </ul>
+  <li>create a loop and a counting variable (up or down)</li>
+  <ul>
+    <li>In the loop include 'sleep 1' which will slow it down a bit</li>
+    <li>In the loop use the counting variable to query 'ifconfig ethX',
+expect the word 'encap' for each interface<br>
+    </li>
+  </ul>
+  <li>set 3 dynamic variables from the shell environment for
+HOME,&nbsp; SHELL, INPUTRC</li>
+  <ul>
+    <li>cat INPUTRC and expect the words 'delete', 'quote', and
+'insert' in that order<br>
+    </li>
+  </ul>
+  <li>Be sure to add many printable comments, allowing the log reader
+understand what is happening</li>
+</ul>
+Test your script with a 'platform' constant:<br>
+<pre>expect-lite r=tempest-019 c=&lt;your_script&gt; platform=ppc</pre>
+And<br>
+<pre>expect-lite r=tempest-019 c=&lt;your_script&gt; platform=i386</pre>
+<br>
+How does the script change between platform=ppc and platform=i386? How
+many interfaces are there? Why does the order of expect '&lt;' matter?<br>
+<br>
+<br>
+<h2><a name="implementation_details"></a>Implementation Details</h2>
+<h3>Variables</h3>
+Variable names must be restricted to the following set of characters
+[A-Za-z0-9_]. Variable values may include spaces, and quoting is not
+required nor permitted. For example:<br>
+<pre>$bell=For whom the bell tolls<br>&gt;echo $bell<br>For whom the bell tolls<br><br></pre>
+<h3><a name="implied_prompt"></a>Implied "wait for prompt"</h3>
+Using the '&gt;' character implies waiting for the prompt before
+sending the command. The definition of a shell prompt a: $, #, % or
+&gt;. It is often useful to follow a '&lt;' with a
+'&gt;' for force the script to wait for the prompt:<br>
+<pre>&gt; $some_long_command<br>&lt;critical value<br># wait for prompt<br>&gt;<br></pre>
+It may be useful to create files on the fly which will be used in the
+test. Since expect-lite does not read/write files directly, this
+function can be done with the linux command 'cat' and the <span
+ style="font-style: italic;">bash here doc</span> method. Creating a
+regex
+file for example:<br>
+<pre>; ==== Create Test File on the fly<br>&gt; cat &gt; $regex_test_file &lt;&lt; '+++'<br>&gt;T00001/a(?$XL.*)/tag=0x08000001<br>&gt;T00002/b(?$XR.*)/tag=0x08000002<br>&gt;T00003/c(?$XO[0-7]*)/tag=0x08000003<br>&gt;T00004/d(?$XH[0-9A-F]*)/tag=0x08000004<br>&gt;T00005/e(?$XD[0-9]*)/tag=0x08000005<br>&gt;+++<br>&gt;<br></pre>
+In the above example the script initiates a cat to a file (referenced
+by $regex_test_file ). Normally the '&gt;' would be used to send lines
+to the remote host. However, there is an inherent "wait for prompt",
+which will politely wait for the next line. The last '&gt;' is there to
+wait for the prompt to return
+after the cat command.<br>
+<br>
+<h3><a name="expect_buffer"></a>Expect Input Buffer<br>
+</h3>
+Expect by default places strings that are sent back (from the remote
+host) into an expect buffer ($expect_out(buffer)). Expect-lite
+leverages this built in function, and uses it to perform multiple
+searches through the buffer when using the '&lt;' , '+&lt;' or '-&lt;'
+actions. The actions '&gt;' and '&gt;&gt;' will clear expect buffer to
+prevent spurious matches.<br>
+<br>
+<h2><a name="special_chars_all"></a>All of the Special Characters<br>
+</h2>
+Expect-lite interprets the following special characters at the
+beginning of each line in the script as:<br>
+<dl>
+  <dd>
+    <table style="text-align: left; width: 80%;" border="1"
+ cellpadding="2" cellspacing="2">
+      <tbody>
+        <tr>
+          <td style="vertical-align: top; font-weight: bold;">Char<br>
+          </td>
+          <td style="vertical-align: top; font-weight: bold;">Action<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">&gt;<br>
+          </td>
+          <td style="vertical-align: top;">send string to the remote
+host</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">&gt;&gt;<br>
+          </td>
+          <td style="vertical-align: top;">send string to remote host,
+without waiting for prompt
+(see <a href="expect-lite.html#implied_prompt">implementation details</a>)</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">&lt;<br>
+          </td>
+          <td style="vertical-align: top;">string/regex<span
+ style="font-weight: bold;"> MUST</span> be
+received from the remote host in the alloted timeout or the script will
+FAIL!</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">-&lt;<br>
+          </td>
+          <td style="vertical-align: top;">if string/regex<span
+ style="font-weight: bold;"> IS</span>
+received from the remote host the script will
+FAIL! (see <a href="expect-lite.html#not_expect">Not Expect</a>)<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">#<br>
+          </td>
+          <td style="vertical-align: top;">used to indicate comment
+lines,
+and have no effect</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">;<br>
+          </td>
+          <td style="vertical-align: top;">are also used to indicate
+comment lines, but are printed to
+stdout (for logging)</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">;;<br>
+          </td>
+          <td style="vertical-align: top;">similar to above, but no
+extra newlines are printed (useful for printing script help)<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">@<br>
+          </td>
+          <td style="vertical-align: top;">changes the expect timeout
+value in seconds<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">$<br>
+          </td>
+          <td style="vertical-align: top;">indicates a static variable
+which is defined at script
+invocation (see <a href="expect-lite.html#variables">variables</a> for
+details)</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">+<br>
+          </td>
+          <td style="vertical-align: top;">used to add a variable
+dynamically&nbsp; (see <a href="expect-lite.html#variables">variables</a>)</td>
+        </tr>
+        <tr>
+          <td align="undefined" valign="undefined">+$var</td>
+          <td align="undefined" valign="undefined">increment value of
+$var by 1 (see <a href="expect-lite.html#looping">repeat loop</a>)</td>
+        </tr>
+        <tr>
+          <td align="undefined" valign="undefined">-$var</td>
+          <td align="undefined" valign="undefined">decrement value of
+$var by 1</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">~filename<br>
+          </td>
+          <td style="vertical-align: top;">includes a expect-lite
+automation file, useful
+for creation of common var files, or 'subprograms/subroutines'</td>
+        </tr>
+        <tr>
+          <td align="undefined" valign="undefined">*~filename</td>
+          <td align="undefined" valign="undefined">includes a fail
+script, which is run if the main script fails (see <a
+ href="expect-lite.html#fail_script">fail script</a>)</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">!<br>
+          </td>
+          <td style="vertical-align: top;">indicates an embedded expect
+line (see <a href="expect-lite.html#embedded_expect">embedded expect</a>)</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">?<br>
+          </td>
+          <td style="vertical-align: top;">c-style if/then/else in the
+format ?cond?action::else_action (see conditionals)<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">%<br>
+          </td>
+          <td style="vertical-align: top;">label - used for jumping to
+labels (see conditionals)<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </dd>
+</dl>
+<br>
+<h2>Summary</h2>
+Expect-lite can be used to quickly create automated tests. It can
+collapse complicated tests into a single command line. It can also be
+used in nightly regression testing, performing simple functional
+tests providing confidence that core functionality has not been broken
+by the previous day's submissions.<br>
+<br>
+Here are some tips on script writing:<br>
+<ul>
+  <li>Use reasonable timeouts, if 30 seconds is needed to get a
+response, set the timeout at 45 or 60 seconds, not 600.</li>
+  <ul>
+    <li>There is no cost to changing the timeout, timeout values can
+also be variables<br>
+    </li>
+  </ul>
+  <li>Beware of expect-lite using regex, when creating lines like:
+&lt;0.005 secs (5 micro secs)</li>
+  <ul>
+    <li>The parentheses is used by the regex engine, instead escape
+these characters: &lt;0.005 secs \(5 micro secs\)</li>
+  </ul>
+  <li>Use the expect character '&lt;' often. Check for valid results
+when possible. A script which expects nothing will never fail!</li>
+  <li>Use printable comments ';' often. Think of it as writing yourself
+a note, it will make reading log files much easier.<br>
+  </li>
+</ul>
+<br>
+<h2>Why Expect-lite</h2>
+Expect-lite was written so you don't have to learn expect.<br>
+<br>
+<br>
+<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">14
+November 2007<br>
+</span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span
+ style="font-style: italic;"><br>
+</span><br>
+<small><span style="font-style: italic;">this document for version 3.0.0</span><br
+ style="font-style: italic;">
+</small>
+<br>
+</body>
+</html>

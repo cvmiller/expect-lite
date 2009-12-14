@@ -1,0 +1,96 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+# Test left-side variable dereference (requires version 3.10 or later)
+#
+#
+#
+#
+@3
+
+# quick regression check of the old style vars
+$first=this is a regression test line
+;; === string is: $first
+
+
+$one=ONE
+$two=two
+$three=3
+$gen$one=this is the first
+$gen$two=this is the second
+$gen$three=this is the third
+;; === string is: $gen$one
+;; === string is: $gen$two
+;; === string is: $gen$three
+
+?if $gen$two == this is the second ? >echo Good :: >echo FAIL
+<Good
+
+
+######################## include random and array functions 
+~tcl_functions.inc
+
+
+$max=14
+; ======== Small Loop ========
+$count=8
+$hex=ff
+%REPEAT_SMALL_LOOP
+	;; === loop $count
+	!randomize x1 0 63
+	!bitwise x1 << 2
+	!randomize x2 0 255
+	!randomize x3 0 255
+	!randomize x4 0 255
+	!randomize x5 0 255
+	!randomize x6 0 255
+
+	!dec2hex x1
+	!dec2hex x2
+	!dec2hex x3
+	!dec2hex x4
+	!dec2hex x5
+	!dec2hex x6
+	!randomize inport 1 4
+
+	>
+	$port_in_$count=$inport
+	$mac_da$count=$x1:$x2:$x3:$x4:$x5:$x6
+	
+	#check assignments
+	$gen$count=test$count
+	?if $gen$count == test$count ? >echo Good :: >echo FAIL
+	<Good
+	>echo $port_in_$count
+	<[1-4]
+	
+	# increment variable
+	+$count
+	>
+?if $count < $max ?%REPEAT_SMALL_LOOP
+
+; == show #3 items of parray: $port_in_10	$mac_da10
+>
+
+!show_all_vars mac_da
+>
+>sleep 1
+
+
+
+#pau!
+
+
+
+
+
+
+

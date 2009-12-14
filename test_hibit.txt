@@ -1,0 +1,45 @@
+# How to use this file
+#  Lines that begin with '>' are sent to the tempest
+#  Lines that begin with '<' _MUST_ be received from the tempest, or this config script will fail
+#  Lines beginning with # are comment lines, and have no effect
+#  Lines beginning with ; are printable (in stdout) comments, and have no other effect
+#  Lines beginning with @ change the expect timeout value
+
+#
+#	test of Dynamic Var
+#
+
+~mod_common.inc
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+@5
+>id
+<craig
+
+@1
+; ==== Create Test File
+##### Paste in Regex lines below ####
+> cat > $local_char_test_file
+
+
+# Options Tests
+>
+#>test1 /\x00/tag=0x08000127 set=10  
+>>name/á/tag=0x08000127
+#>test8 /\x00/tag=0x08000127 set=10  
+
+>
+>^D
+##### Paste in Regex lines above ####
+
+@5
+
+
+> sed -i -e 's/\xc3\xa1/\xe1/' $local_char_test_file
+> hexdump $local_char_test_file
+
+> od -c $local_char_test_file
+
+>
+#pau

@@ -1,0 +1,41 @@
+
+# How to use this file
+#  Lines that begin with '>' are sent to the tempest
+#  Lines that begin with '<' _MUST_ be received from the tempest, or this config script will fail
+#  Lines beginning with # are comment lines, and have no effect
+#  Lines beginning with ; are printable (in stdout) comments, and have no other effect
+#  Lines beginning with @ change the expect timeout value
+
+#
+#	Common Vars
+#
+~mod_common.inc
+
+$BLANK=xterm
+
+; ==== Connect to Mac
+~mac_connect.inc
+
+>id
+<root
+>cd $mount_point
+>pwd
+
+~cosim_disconnect.inc
+
+>hostname
+; ==== $BLANK
+
+>if  [ $manarch = ppc ]; then  
+>echo "test_include.txt" 
+>else echo "" 
+>fi
+
++$INCLUDE=\n(.*)
+~$INCLUDE
+
+
+
+>ls
+>
+#Pau!

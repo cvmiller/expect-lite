@@ -1,0 +1,78 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: http://lancelot.am.freescale.net/~craig/Docs/expect-lite.html
+
+
+
+#
+#	test managing of screens implemented in expect-lite
+#
+
+@3
+
+
+; ==== Check for screen on the remote host
+> which screen
+<screen
+
+; ==== Start up 2 screens ====
+
+# setup screens 
+# screen 1
+> screen 
+> echo "screen 1"
+>
+>^A
+>^D
+<detached
+
+# screen 2
+> screen 
+> echo "screen 2"
+>
+>^A
+>^D
+<detached
+
+; === Show screens started
+>screen -list
+<Detached
+<Detached
+
+; ==== List screens and capture screen references
+>screen -list | grep pts | sort | head -1
++$myscreen1=([0-9]+\.pts.[0-9]+.[a-z\- 0-9]+)
+>screen -list | grep pts | sort | tail -1
++$myscreen2=([0-9]+\.pts.[0-9]+.[a-z\- 0-9]+)
+
+; ==== Enter screen2, ping and sleep, then detach
+> screen -r $myscreen2
+# inside existing screen, kick it to get a prompt
+>^M
+>
+>ping -c 2 localhost
++$packet_tx=([0-9]+) packets transmitted
+> sleep 2
+>
+>^A
+>^D
+<detached
+
+; === Show packets transmitted inside screen: packet_tx=$packet_tx
+
+; ==== Kill all those screens and clean up
+>killall screen
+>ps ax | grep screen
+
+>
+
+
+
+#Wait for test to end (return of prompt)
+>
+#Pau!

@@ -1,0 +1,64 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+#	test of incrementing in expect-lite
+#	and self tested (where possible)
+
+
+
+
+; ==== Define functions ====
+!proc inc_var { var } {
+!	incr ::user_namespace($var)
+!}
+>
+
+
+; ==== Set Timeout ====
+@4
+
+; ==== Static Varible Tests ====
+$name=craig
+$telephone=723-9161
+$var1=var1
+$var2=var2
+$age=25
+
+; === Show all Vars Defined
+!set var_list [array names user_namespace]
+!set var_list_sorted [lsort $var_list]
+!foreach i $var_list_sorted {
+!	puts "Var:$i \t\t\Value:$user_namespace($i)"
+!}
+>
+
+
+; $testing_$age
+!inc_var age
+>
+; $testing_$age
+!inc_var age
+>
+; $testing_$age
+!inc_var age
+>
+; $testing_$age
+!inc_var age
+>
+
+
+
+
+; ==== All Pau!
+>
+#Pau!
+
+

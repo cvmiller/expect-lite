@@ -1,0 +1,43 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: http://lancelot.am.freescale.net/~craig/Docs/expect-lite.html
+
+#
+#	test of Dynamic Var
+#
+
+#~mod_common.inc
+
+$manarch=i386
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+@5
+>id
+#<craig|cmiller
+
+$tmp=/proj/regression/tmp/generalRegression/tc_gzip_reserve.elt/
+$junk=orbit-root
+$junk2=$junk/some/path
+
+> cd $tmp
+> pwd
+
+
+>if  [ $manarch = i386 ]; then  
+>echo "test_include.txt"
+>else 
+>echo "" 
+>fi
++$INCLUDE=\n([0-9a-zA-Z\._]+)
+
+~$INCLUDE
+
+>echo "Returned from include file"
+>
+#pau

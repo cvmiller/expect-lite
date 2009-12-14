@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# make this auto-runnable! 
+# Little bootstrap bash script to run kick start expect-lite script
+# Convert --parms to expect-lite param=value format
+PARAMS=`echo $* | /bin/sed -r 's;--([a-z]+) ([0-9a-zA-Z]+);\1=\2;g'`
+echo $PARAMS
+expect-lite r=none c=$0 $PARAMS
+exit $?
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+#	FORK Directive Test
+#
+#
+#
+#	Requires expect-lite version 3.5.0
+#
+
+
+$fork_session=MY_HOST
+$fork_session2=MY_2nd_HOST
+
+
+>pwd
++$PWD=\n(/[a-zA-Z0-9/_-]+)
+
+@10
+*FORK $fork_session
+; ======== "SESSION 1a"
+>
+# show fork status
+*FORK
+>cd /tmp
+>mkdir $fork_session
+>cd $fork_session
+>
+>sleep 1; pwd
+#negative test
+*FORK this and that
+>
+*FORK
+>
+
+
+*FORK $fork_session2
+;========== "SESSION 2a"
+>mkdir -p /tmp/session2
+>cd /tmp/session2
+>pwd
+</tmp/session2
+>
+>hostname
+>sleep 2
+>
+
+
+
+
+*FORK $fork_session
+;========== "SESSION 1b"
+>
+>pwd
+</tmp/$fork_session
+
+
+*FORK $fork_session2
+; ======== "SESSION 2b"
+>>pwd
+</tmp/session2
+>cd /tmp
+# remove temp directory
+>rmdir session2
+>
+
+*FORK $fork_session
+;========== "SESSION 1c"
+>pwd
+>cd /tmp/
+>rmdir /tmp/$fork_session
+>
+
+*FORK default
+; ======== "SESSION 0a"
+>>pwd
+<$PWD
+
+>
+; === check session
+*FORK
+>
+
+#pau!

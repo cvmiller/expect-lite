@@ -1,0 +1,41 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: http://lancelot.am.freescale.net/~craig/Docs/expect-lite.html
+
+#
+#	test of long timeout with Dynamic Var
+#
+
+
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+@10
+>id
+<(joe|craig|cmiller)
+
+# use a bash loop
+>MAXCOUNT=20
+>COUNTER=1
+>until [  $COUNTER -eq $MAXCOUNT ]; do
+>        echo SECOND $COUNTER
+>        sleep 1
+>        let COUNTER+=1
+>done
++capture=\nSECOND ([0-9]+)
+
+; ==== Captured:$capture
+
+	>echo TADA; sleep 30
+	+capture=\n([A-Z]+)
+
+; ==== Captured:$capture
+
+
+>
+#pau

@@ -1,0 +1,177 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: http://lancelot.am.freescale.net/~craig/Docs/expect-lite.html
+
+#
+#	test of Embedded Expect commands
+#
+
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+@5
+>id
+<(craig|cvmiller)
+
+$tmp=/tmp/
+$junk=orbit-root
+$junk2=$junk/some/path
+
+> cd $tmp
+> pwd
+
+
+# Useful Embedded Expect Functions
+# Define random function to be used in testing
+!proc random { start end } {
+!	set range [ expr $end - $start ]
+!	return [expr int(rand()*$range) + $start]
+!}
+!
+# Define Match function with similar command as expect-lite and expect-lite failure mechanism
+!proc < { str } {
+#!	puts $str
+!	expect  -re $str { return } timeout { puts "\n\tExpect Failed:$str"; _el_fail_test }
+!}
+# Send function with similar command as expect-lite
+!proc > { str } {
+!	wait_for_prompt
+!	send "$str\n"
+!}
+# Define function to NOT match passed string. If found FAIL test
+!proc !< { str } {
+#	Grab all text to prompt
+!	expect ".* $"
+!	catch { set ebuffer $expect_out(buffer)} 
+!	if {[string first $str $ebuffer] != -1 } {
+!		puts "=============================Found $str =========================="
+!		_el_fail_test 
+!	}
+#	Send out a return to kick a new prompt
+!	send "\n"
+!}
+
+
+
+
+>
+!#
+!puts "\nhello"
+!puts "EL->$user_namespace(junk2)"
+!puts "Expect timeout is: $timeout"
+>
+; ==== Set up a var
+!set arch $::cli_namespace(manarch)
+
+!if { $arch == "ppc" } { 				
+!	puts "\narch IS $arch\n"				
+! } else {							
+!	puts "\narch is NOT ppc, but $arch\n"	
+!	_el_fail_test						
+! }									
+!
+#; ==== and more expect lines
+
+!set line ">echo too bad"
+!puts "EL->$::user_namespace(junk2)"
+!puts "Expect timeout is: $::timeout"
+!send "ls\n"
+!expect -re   "tmp" { puts "got tmp"} "rand" { puts "got rand" } default {puts "\ngot nothing"}
+
+; === Short TCL Test with globals
+
+!set ::TEST "Globals!"
+!set ruleFile "rule.txt"
+!proc global_test {} {
+!	global TEST
+!	upvar ruleFile lruleFile
+	
+!	set scanResult 0
+!	puts "Got there \n"
+!	puts "Got $lruleFile"
+!	puts "Globals:$TEST"
+!}
+!# Main 
+!global_test
+!
+>
+# print tuples in a list (such as 0xFF 123)
+!proc print_tuple_str { str } {
+!	set len [llength $str]
+!	set i 0
+!	while {$i < $len} {
+!		set tag [lindex $str $i]
+!		incr i
+!		set count [lindex $str $i]
+!		incr i
+!		puts "$tag\t$count"
+!	}
+!}
+
+; === Example of upvar instead of globals
+!set globalstr "Func printstr"
+!
+!proc printstr { str } {
+!	upvar globalstr _globalstr
+!	regsub -all ";" $str "" str
+!	set mystring [join $str "\n"]
+!	puts $_globalstr
+!	puts $mystring
+!}
+!
+!set mylist { 
+! "this"
+! "that"
+! "another"
+! "EVENT \"login\""
+! }
+! 
+!printstr $mylist
+
+>
+; === For Loop calling function defined in a different Embedded Expect Island
+!for {set j 1} {$j<6} {incr j} {
+!	if {$j == 1}   {set type "1"  }   
+!	if {$j == 2}	{set type "2"  }
+!	if {$j == 3}	{set type "3"  }
+!	if {$j == 4}	{set type "4"  }
+!	if {$j == 5}	{set type "5"  }
+!	
+!	printstr $type 
+!}
+!set mylist { 
+! "two"
+! "three"
+! "four"
+! }
+!printstr $mylist
+>
+; ==== Test access to expect-lite variables
+
+$TMP=test
+!puts "1->$cli_namespace(manarch)"
+!set TEST $user_namespace(TMP)
+!puts "2->$TEST"
+!if {$cli_namespace(manarch) == "ppc"} {
+!	set TEST "end_test.inc"
+!	puts "3->$TEST"
+!}
+!set user_namespace(TMP) $TEST
+!puts "4->$user_namespace(TMP),$TEST"
+>
+
+; == Show the value of TMP:$TMP
+>
+#~$TEST
+
+
+>
+> echo "All Pau\\"
+>
+
+#pau

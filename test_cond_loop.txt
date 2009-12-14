@@ -1,0 +1,116 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+#	test of Conditionals looping in expect-lite
+#	and self tested (where possible)
+
+;
+;; ========================================
+;; ===========TOP OF SCRIPT ===============
+;; ========================================
+
+*~test_help.txt
+
+; ==== Set Timeout ====
+@4
+
+; ==== Static Varible Tests ====
+$name=craig
+$telephone=723-9161
+$var1=var1
+$var2=var2
+$age=5
+$loop2=10
+
+# decrement variable
+!proc decr { var } {
+!	incr $var -1
+!	return $var
+!}
+
+>
+; === Conditional Equals	? $name == craig ?>echo "hello123"
+? $name == craig ?>echo "hello123"
+<hello123
+>
+>echo $name $telephone
+
+; ======== Decrementing ZZ Loop ============
+
+# do a loop!
+%REPEAT_LOOP
+
+! incr user_namespace(age) -1
+>
+; == age=$age
+> echo ZZ$age
+-<ZZ-1
+
+?if $age > 0 ?%REPEAT_LOOP
+
+>echo "Pau"
+>
+; ======== Decrementing YY Loop =============
+# do another loop!
+# Keep loop labels UNIQUE!
+%REPEAT_LOOP2
+
+# decrement variable
+-$loop2
+>
+; == loop2=$loop2
+# stop the run away loop
+> echo $loop2
+-<-1
+
+?if $loop2 > 0 ?%REPEAT_LOOP2
+
+
+; ======== Incrementing Loop ========
+$max=10
+$count=3
+%REPEAT_INC_LOOP
+
+# increment variable
++$count
+# stop the run away loop
+>echo $count
+#-<7
+
+?if $count <= $max ?%REPEAT_INC_LOOP
+
+>
+; ======= Test incrementing string ======
+$junk=test
++$junk
+; === junk is $junk
+>
+
+# #while loop - very convoluted, recommend repeat loop
+# $counter=0
+# $max=10
+# %WHILE_START
+# ?if $counter >= $max?%END_WHILE
+# ! incr user_namespace(counter) 
+# >echo ZZ$counter
+# -<ZZ11
+# #always jump to WHILE_START
+# ?1==1?%WHILE_START
+# %END_WHILE
+
+>pwd
+>echo "123"
+<123
+
+
+
+; === Pau!
+>

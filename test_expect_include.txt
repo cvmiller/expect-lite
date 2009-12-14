@@ -1,0 +1,10 @@
+# test include file
+
+!set mytest "Hello"
+!puts $mytest
+!proc printit {var } {
+!	puts "printit:$var"
+!}
+!
+
+#pau

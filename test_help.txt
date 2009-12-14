@@ -1,0 +1,94 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+
+#
+# Test: 	Test Help - shows help if swroot is not defined on cli
+#		
+# Assumptions:	
+# Platforms: 	i386 & CDS & Mac Linux
+#
+
+
+$swroot=NONE
+
+!proc printstr { str } {
+!	set TERM_BLUE {[1;37;44m}
+!	set TERM_NORM {[0m}
+!	regsub -all ";" $str "" str
+!	set mystring [join $str "\n"]
+!	puts "\n$TERM_BLUE$mystring$TERM_NORM"
+!}
+
+!set help_text {
+!" rtl.elt: a Simple Sanity Script for RTL and DP software"
+!" Usage: expect-lite r=localhost c=rtl.elt swroot=<path/to/sw> "
+!" "
+!" additional options: "
+!"   co_rtl_dir=<path/to/rtl/proj>	Path to RTL, default: /local/$USER"
+!"   rtl_delete=yes	Deletes rtl in rtl directory and does a fresh checkout"
+!"   dp_delete=yes	Deletes dp software tree and does a fresh checkout"
+!"   "
+
+!}
+!
+>
+
+# Show help if swroot has not been defined
+?IF $swroot == NONE ? :: %NO_HELP_TEXT
+>
+>
+; === Show Help ===
+; === Show Help ===
+
+# This help uses printable comments (unbuffered)
+# start blue text
+;;[1;37;44m
+;; rtl.elt: a Simple Sanity Script for RTL and DP software
+;; Usage: expect-lite r=localhost c=rtl.elt swroot=<path/to/sw> 
+;; 
+;; additional options: 
+;;   co_rtl_dir=<path/to/rtl/proj>	Path to RTL, default: /local/$USER
+;;   rtl_delete=yes	Deletes rtl in rtl directory and does a fresh checkout
+;;   dp_delete=yes	Deletes dp software tree and does a fresh checkout
+# end blue text
+;;[0m
+>
+
+! _el_fail_test
+%NO_HELP_TEXT
+
+$FCS=Padding("1234")
+
+; === Show all Vars Defined
+!set var_list [array names user_namespace]
+!set var_list_sorted [lsort $var_list]
+!foreach i $var_list_sorted {
+!	puts "Var:$i \t\t\Value:$user_namespace($i)"
+!}
+>
+
+; =================================
+; === Press '+++' to exit interactive session
+!interact +++ return
+>
+; === Script is continuing
+; =================================
+
+
+; === Show all Const Defined
+!set var_list [array names cli_namespace]
+!set var_list_sorted [lsort $var_list]
+!foreach i $var_list_sorted {
+!	puts "Var:$i \t\t\Value:$cli_namespace($i)"
+!}
+>
+
+#Pau!

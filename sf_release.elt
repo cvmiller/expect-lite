@@ -1,0 +1,59 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+
+
+# assumes expect-lite has already been copied to shell.sf.net
+$VERSION=3.1.2
+$CVS_COMMENT1=Fixed support for Env Vars
+$CVS_COMMENT2=Based on comment in review: http://www.linux.com/feature/128384
+$CVS_COMMENT3=
+
+>cd expect-lite.proj/
+>mv expect-lite expect-lite.old
+>mv ../2expect-lite expect-lite
+
+>diff expect-lite expect-lite.old > expect-lite.diff 
+>rm expect-lite.old
+
+>cd ..
+
+>tar cvzf expect-lite_$VERSION.tar.gz expect-lite.proj/
+
+# now upload the file
+>ftp upload.sourceforge.net
+<upload.sourceforge.net:cvmiller
+>anonymous
+<Password:
+>cvmiller@gmail.com
+>cd incoming
+>bin
+>put expect-lite_$VERSION.tar.gz
+>bye
+
+# update CVS
+@1
+>cd expect-lite.CVS/expect-lite/
+>cp ../../expect-lite.proj/expect-lite .
+>cvs commit
+# inside vi
+>i
+>$CVS_COMMENT1
+>$CVS_COMMENT2
+>$CVS_COMMENT3
+>^[
+>ZZ
+<done
+
+
+#pau!
+
+
+

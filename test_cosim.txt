@@ -1,0 +1,38 @@
+# Assume we start in /etc/swy directory
+# How to use this file
+#  Lines that begin with '>' are sent to the tempest
+#  Lines that begin with '<' _MUST_ be received from the tempest, or this config script will fail
+#  Lines beginning with # are comment lines, and have no effect
+#  Lines beginning with ; are printable (in stdout) comments, and have no other effect
+#  Lines beginning with @ change the expect timeout value
+
+#
+#	test of co-sim
+#
+
+# Som Vars
+$COSIM=192.168.10.1
+
+@2
+# Log into the Co-Sim
+#>telnet $COSIM
+#<ogin
+#>root
+@15
+>
+
+
+>id
+<root
+
+>ls /
+>mkdir /mnt/ppc
+
+>cat /proc/cpuinfo
+<Freescale Dummy Division
+
+>
+
+#Pau!
+
+

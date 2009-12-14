@@ -1,0 +1,130 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	$ assign a static variable
+#	+$ assign a dynamic variable (based on expect capture)
+#	! Embedded Expect commands
+# For more info see: expect-lite.html
+
+#
+#	To run this script: 
+#		expect-lite remote_host=localhost cmd_file=expect-lite_sample_script.elt
+#	or 
+#		expect-lite r=localhost c=expect-lite_sample_script.elt
+#
+
+
+
+; ==== Set Timeout ====
+@10
+
+; ==== Static Varible Tests ====
+$name=craig
+$telephone=723-9161
+
+>
+>echo $name $telephone
+>
+
+
+; ==== Dynamic Variable Tests ====
+>ping -c 2 localhost
++$packet_rx=([0-9]+) received
+
+>echo $packet_rx
+
+>/sbin/lsmod
++$nfsd_size=nfsd[ \t]+([0-9]+)[ \t]+[0-9]
+
+>env | sort
++$home=\nHOME=([a-z/]+)
++$shell=\nSHELL=([a-z/]+)
+<TERM=xterm
+
+
+>uname -a
++$host=Linux ([a-z\-0-9]+)
+>
+
+>hostname
++$hostname=(came[a-z\-0-9]+|temp[a-z\-0-9]+)
+
+
+>echo "0$USER"
++$user=0([a-z]+)
+
+>
+
+> /sbin/ifconfig eth0
++$host_addr=inet addr:([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})
+
+
+@10
+; ==== Dynamic Variables and Shell Variables ====
+> bash
+> SHDATE=`date +_%Y_%m_%d_%H:%M:%S`
+
+
+# Create expect-lite DATE Var
+>
+> echo $SHDATE
++$DATE=\n(_.*)
+
+
+
+; ==== Dynamic Variables managing screen ====
+
+# setup screens 
+# screen 1
+> screen 
+>
+>^A
+>^D
+<detached
+
+# screen 2
+> screen 
+>
+>^A
+>^D
+<detached
+
+; === Show screens setup
+>screen -list
+<Detached
+<Detached
+
+; ==== List screens and capture screen references
+>screen -list | grep pts | sort | head -1
++$myscreen1=([0-9]+\.pts.[0-9]+.[a-z\- 0-9]+)
+>screen -list | grep pts | sort | tail -1
++$myscreen2=([0-9]+\.pts.[0-9]+.[a-z\- 0-9]+)
+
+; ==== Enter screen2, ping and sleep, then detach
+> screen -r $myscreen2
+# inside existing screen, kick it to get a prompt
+>^M
+>
+>ping -c 2 localhost
++$packet_tx=([0-9]+) packets transmitted
+> sleep 2
+>
+>^A
+>^D
+<detached
+
+; === Show packets transmitted inside screen: packet_tx=$packet_tx
+
+; ==== Kill all those screens and clean up
+>killall screen
+>ps ax | grep screen
+
+>
+
+>
+#Pau!
+
+

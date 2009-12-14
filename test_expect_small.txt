@@ -1,0 +1,7 @@
+# test expect include
+
+~test_expect_include.txt
+> echo "start"
+! puts $mytest
+! printit "End"
+> echo "done"

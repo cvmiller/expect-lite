@@ -1,0 +1,70 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: expect-lite.html
+
+
+#
+#	test of 2 pass var dereference
+#	Also tests fail script include (and conditional fail script)
+#
+
+# fail script
+#*~test_interact.inc
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+@2
+>id
+-<(joe|fred)
+
+; ==== Define functions ====
+!proc inc_var { var } {
+!	incr ::user_namespace($var)
+!}
+!set _el(test) "main"
+>
+# initial value of counter
+$counter=0
+
+~test_include.txt
+
+$mac_sa0=00:04:23:b2:f6:39
+$mac_sa1=00:11:43:d2:5d:08
+
+; === Build bridge table entries $counter
+
+$mac1=$mac_sa$counter
+
+>echo $mac_sa$counter
+>echo "hello"
+
+?IF $counter == 0 ? *~test_interact.inc
+
+>echo $mac1 
+>echo $TERM
+>
+# test 'dash' demarcation
+>echo $mac_sa0-$counter
+
+# increment counter
+!inc_var counter
+>
+
+; === Build bridge table entries $counter
+
+>echo $mac_sa$counter
+<$mac_sa$counter
+
+>echo "good bye"
+
+$tap_logs=/tmp/tap*
+
+>echo $tap_logs
+
+>
+#pau

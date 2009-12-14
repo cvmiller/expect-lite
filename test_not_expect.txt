@@ -1,0 +1,58 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: http://lancelot.am.freescale.net/~craig/Docs/expect-lite.html
+
+#
+#	test NOT expect feature using the '-<'
+#	This test _should_ fail on Friday
+#
+
+
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+@5
+>id
+<joe|craig|cmiller
+
+>id
+<(joe|craig|cmiller)
+
+#> echo "fred"
+
+
+; === don't expect joe or fred
+>id
+<(craig|cmiller)
+-<(joe|fred)
+
+; === fail if module include pm*
+>lsmod
+-<pm_*
+<ext3
+<ext3
+
+
+; === Won't find on ttyS1
+> ls -1 /dev/ttyS*
+<ttyS2
+-<ttyS1
+
+#!exp_internal 1
+
+; === Finds ttyS2
+> ls -1 /dev/ttyS*
+-<ttyS7x
+<ttyS2
+
+; === fail if date is 'Fri'
+>date  +%A
+-<Friday
+
+>
+#pau

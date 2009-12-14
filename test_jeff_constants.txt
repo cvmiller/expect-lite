@@ -1,0 +1,34 @@
+#
+#	CoSim Vars
+#
+# Constant variables.
+
+# 
+$root_tmp_mount_point=vega:/vol/vol0/proj/regression/tmp
+
+# Root directory for ppc debug execatbles.
+$ppc_debug_root_dir=/mnt/pm/user/bin/ppc/debug
+
+# Root directory for deflate file, relative to sw/
+$full_deflate_dir_path=pm/user/verification/regression/fullblock/deflate
+
+# PPC Execatables 
+$dma_util=$ppc_debug_root_dir/dma_util
+$fsgzip=$ppc_debug_root_dir/fsgzip
+$scanner_test=$ppc_debug_root_dir/scanner_test
+
+# put the current directory at the front of the search path
+$deflate_dir=deflate
+$root_dir=/proj/regression/tmp/
+$root_ppc_dir=/net/tmp/
+$root_deflate_tmp_dir=$root_dir$deflate_dir
+$root_ppc_deflate_tmp_dir=$root_ppc_dir$deflate_dir
+
+# Sanity check...make sure correct version of expect
+> echo $root_ppc_deflate_tmp_dir
+<$root_ppc_dir$deflate_dir
+
+>
+#Pau!
+
+

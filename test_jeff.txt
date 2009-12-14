@@ -1,0 +1,40 @@
+# How to use this file
+#  Lines that begin with '>' are sent to the tempest
+#  Lines that begin with '<' _MUST_ be received from the tempest, or this config script will fail
+#  Lines beginning with # are comment lines, and have no effect
+#  Lines beginning with ; are printable (in stdout) comments, and have no other effect
+#  Lines beginning with @ change the expect timeout value
+
+#
+#	test of Dynamic Var
+#
+
+#~mod_common.inc
+
+# Custom Prompt
+*/\(gdb\) $|\(abc\) $|login:|assword:/
+
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+@2
+>id
+#<(joe|fred)
+
+$tmp=/proj/regression/tmp/generalRegression/tc_gzip_reserve.elt/
+$junk=orbit-root
+$junk2=$junk/some/path
+
+#> cd $tmp
+> pwd
+
+>gdb
+>help
+>quit
+>
+# remove custom prompt
+*//
+>sleep 1
+>pwd
+>
+#pau

@@ -1,0 +1,164 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+# Test left-side variable dereference (requires version 3.10 or later)
+#	Self tested functionality
+#
+#
+#
+
+# Turn on warnings
+!set ::WARN 1
+
+
+@3
+
+# quick regression check of the old style vars
+$first=this is a regression test line
+;; === string is: $first
+
+
+$one=ONE
+$two=two
+$three=3
+$four=four
+$gen$one=this is the first
+$gen$two=this is the second
+$gen$three=this is the third
+;; === string is: $gen$one
+;; === string is: $gen$two
+;; === string is: $gen$three
+
+#self check
+?if $gen$two == this is the second ? >echo Good :: >echo FAIL
+<\nGood
+
+; === Test new Var Functionality ===
+
+; === Test assignment var into array var
+$test
+$count=0
+$test$count=TEST
+
+# self test
+?if $test$count != TEST ? >echo FAIL :: >echo Good
+<\nGood
+
+; === Test increment var 
++$count
+;; === count $count
+# self test
+?if $count != 1 ? >echo FAIL :: >echo Good
+<\nGood
+
+
+; === Test capture var into array var (fails in version pre-3.1.4)
+
+$test_string=this is a test
+# capture item
+>echo $test_string
++$item$count=\n(t[ 0-9a-zA-Z._-]+)$
+>
+# self test
+?if $item$count != $test_string ? >echo FAIL :: >echo Good
+<\nGood
+
+; === Test new Var Functionality in Loop with Randomness ===
+
+
+######################## include random and array functions 
+~tcl_functions.inc
+
+
+$max=14
+; ======== Small Loop ========
+$count=8
+%REPEAT_SMALL_LOOP
+	;; === loop $count
+	!randomize x1 0 63
+	!bitwise x1 << 2
+	!randomize x2 0 255
+	!randomize x3 0 255
+	!randomize x4 0 255
+	!randomize x5 0 255
+	!randomize x6 0 255
+
+	!dec2hex x1
+	!dec2hex x2
+	!dec2hex x3
+	!dec2hex x4
+	!dec2hex x5
+	!dec2hex x6
+	!randomize inport 1 4
+
+	>
+	$port_in_$count=$inport
+	$mac_da$count=$x1:$x2:$x3:$x4:$x5:$x6
+	
+	#check assignments
+	$gen$count=test$count
+	# self check
+	?if $gen$count == test$count ? >echo Good :: >echo FAIL
+	<\nGood
+	>echo $port_in_$count
+	<[1-4]
+	
+	# increment variable
+	+$count
+	>
+?if $count < $max ?%REPEAT_SMALL_LOOP
+
+; == show #3 items of parray: $port_in_10	$mac_da10
+>
+
+!show_all_vars mac_da
+>
+
+# multiple var deref, will only deref var $gen$one if followed by non-var char
+; === Multiple var dereference
+$ABC=$gen$one $two$three$four
+; $ABC
+?if $ABC == this is the first two3four ? >echo Good :: >echo FAIL
+<\nGood
+
+; === Dynamic Variable with custom prompt
+; === Requires version 3.2.0 or later
+# make sure we are using bash
+>bash
+*/myprompt $/
+>export PS1="myprompt "
+>
+>echo here
+>echo there
+>echo "hear"
++$catch=\n(hear)
+<hear
+>
+# may fail on slow machines
+?if $catch == hear ? >echo Good :: >echo FAIL
+#<\nGood
+
+
+
+
+
+>sleep 1
+
+#~show_vars.inc
+
+#pau!
+
+
+
+
+
+
+

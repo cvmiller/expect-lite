@@ -1,0 +1,22 @@
+#
+#	CoSim Vars
+#
+# Constant variables.
+
+# 
+$rtl_path=/local/$USER
+
+
+>echo $rtl
++$check=\n.+(proj)
+
+?if $check == __NO_STRING_CAPTURED__ ? $rtl=$rtl_path/proj :: $rtl=$rtl_path
+
+; === echo $rtl
+>
+
+
+
+#Pau!
+
+

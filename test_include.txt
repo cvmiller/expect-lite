@@ -1,0 +1,7 @@
+# include File
+!set user_namespace(el_script) $cmd_file
+>
+; === Script: $el_script
+$HELLO=Hi There
+> echo $HELLO
+<There

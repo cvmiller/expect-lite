@@ -1,0 +1,97 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+
+#
+#	Determine nfs mount point for cosim/HW
+#
+#	Supports nfs mount points of /u/user, /local/user, /proj/regression/PM/
+#	
+#
+#
+#
+
+>
+############# validate path to the sw tree
+>pwd
++$sw_path=\n(/[/a-zA-Z0-9_\-]+)
+>
+# sanity check of swroot
+? $sw_path == $swroot ? %ENDIF
+; === swroot incorrect received $swroot, should be $sw_path
+!_el_fail_test
+%ENDIF
+
+############# set defaults
+$nfs_mount=otc-filer1:/vol/vol1/$sw_path
+$result=NONE
+
+############# if "local" is in swroot
+# is /local/ in swroot?
+>echo $sw_path
++$test=\n.*(/local/).*
+?IF $test != /local/ ? %ENDIF
+	; === calculate "local" mount
+	# get user id
+	>id
+	+$nfsuser=\nuid=[0-9]+\(([a-z]+)\)
+	# mount host (such as camelot)
+	>ypmatch $nfsuser auto.local | cut -d ":" -f 1
+	+$ypmount=\n(c[a-z\-0-9]+)
+	>
+	# get last part of sw_dir
+	>echo $sw_path
+	+$trailing_path=\n/local/([a-z0-9]+/[a-z/A-Z\-_0-9]+)
+
+	$nfs_mount=$ypmount:/localdisk/$trailing_path
+
+	; === Show "local" mount $nfs_mount
+
+%ENDIF
+
+############# if "home" is in swroot
+# is /u/ in swroot?
+>echo $swroot
++$test=\n.*(/u/).*
+?IF $test != /u/ ? %ENDIF
+	; === calculate "home" mount
+	### get last part of sw_dir
+	>echo $sw_path
+	+$trailing_path=\n/u/([a-z/A-Z]+)
+
+	# get user id
+	>id
+	+$nfsuser=\nuid=[0-9]+\(([a-z0-9]+)\)
+	# mount host (such as otc-filer)
+	>ypmatch $nfsuser auto.home 
+	+$ypmount=\n([a-z\-0-9:/A-Z]+)&
+
+	### special cases (such as craig & paul)
+	?IF $ypmount != __NO_STRING_CAPTURED__ ? %ENDIF_ypmount
+		+$ypmount=\n(o[a-z\-0-9:/A-Z]+)
+		# get last part of sw_dir
+		>echo $sw_path
+		+$trailing_path=\n/u/[a-z0-9]+(/[a-z/A-Z\-_0-9]+)
+	%ENDIF_ypmount
+
+	$nfs_mount=$ypmount$trailing_path
+
+	; === Show "home" mount $nfs_mount
+%ENDIF
+
+
+; === Using nfs_mount: $nfs_mount
+
+
+; ==== All Pau!
+>
+#Pau!
+
+

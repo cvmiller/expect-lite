@@ -1,0 +1,30 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+
+#
+# Test: 	Test bash here doc
+#		
+# Assumptions:	bash
+# Platforms: 	anywhere bash runs
+#
+
+; === Create the file using bash "here doc"
+>cat > junk <<'+++'
+>2+3
+>3+4
+>quit
+>+++
+; === now look at the file
+>cat junk
+
+>
+
+#Pau!

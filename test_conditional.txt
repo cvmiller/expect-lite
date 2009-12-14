@@ -1,0 +1,210 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+#	test of Conditionals implemented in expect-lite
+#	and self tested (where possible)
+
+
+
+
+; ==== Set Timeout ====
+@4
+
+; ==== Static Varible Tests ====
+$name=craig
+$telephone=723-9161
+$var1=var1
+$var2=var2
+$age=25
+
+>
+; === Conditional Equals	? $name == craig ?>echo "hello123"
+? $name == craig ?>echo "hello123"
+<hello123
+>
+>echo $name $telephone
+
+; === Conditional Not-Equals	? $name!=$telephone?; === NE; Print var name:$name
+>
+? $name!=$telephone?; === NE; Print var name:$name
+
+%dont_echo
+
+#>echo "here" 
+
+; === Conditional new var assignment	? $name != $telephone ?  $a=$telephone
+? $name != $telephone ?  $a=$telephone
+
+>echo "Print var a:$a "
+<Print var a:723-9161
+
+
+>
+>
+; === Conditional var re-assignment	?$name!=$telephone?$var1=$name
+>
+?$name!=$telephone?$var1=$name
+>
+>echo "Print var var1:$var1 "
+<Print var var1:craig
+>
+; === Compare numbers larger or equal	?$age <= 25 ? >echo "new age"
+?$age <= 25 ? >echo "new age"
+<new age
+
+; === Compare numbers	?$age < 30 ? >echo "old age"
+?$age<30 ? >echo "old age"
+<old age
+
+; === Bad operator numbers	?$age % 30 ? >echo "Warning"
+?$age % 30 ? >echo "bad stuff"
+>
+>
+
+; === Compare numbers with else (and spaces)	?$age > 30 ? >echo "old age" :: > echo "new age"
+? $age > 30 ? >echo "old age" :: > echo "new age"
+<new age
+
+; === Compare numbers with else	?30>$age? >echo "old age" :: > echo "new age"
+?30>$age?>echo "old age"::> echo "new age"
+#<old age
+>
+
+$check_ext=true
+; === Capture with expect	? $check_ext == true ?+$module=^([a-z]+).+ext3
+>
+>lsmod
+?$check_ext==true?+$module=^([a-z]+).+ext3
+>
+; === show capture $module
+>
+
+; === Capture with expect and colons
+$check_ext=true
+>cat /etc/passwd | grep nobody
+? $check_ext == true ?+$module1=:99:99:([A-Za-z]+):       :: ; ==== or not
+>echo $module1
+<Nobody
+
+; === Reassign vars
+$age=35
+; === new age is $age
+>
+>echo "55"
++$age=\n([0-9]+)
+
+?$age>=55?>echo "Freedom at $age"::>echo "Keep on working"
+<Freedom at $age
+
+; === Test conditional jump with label with spaces
+?$age==55?%move along, nothing to see
+>echo " Skipper"
+>echo "2"
+>echo "3"
+%move along, nothing to see
+
+
+; === Test conditional jump with indentation
+?$age!=55?%move along, nothing to see
+	>
+	>echo " Skipper"
+	>echo "2"
+	>echo "3"
+	<3
+	>
+%move along, nothing to see
+
+; === Test conditional include
+?$age==55?~test_include.txt
+
+; === Test conditional jump
+?$age==55?%SKIP2_AGE55
+>echo " Skipper"
+>echo "2"
+>echo "3"
+%SKIP2_AGE55
+>
+>echo "Pau"
+<Pau
+
+$empty=0
+>
+? $empty == 0?; Empty is |$empty |
+
+$a=a
+$b=a
+?if $a!=$b ?>echo "$a $b"
+
+$name=Joe Blow
+?if$name==Joe Blow?>echo "Found $name"
+<Found $name
+
+; === Testing that var1 is equal to var2
+?IF $var1 == craig ? %CONT ::! _el_fail_test
+%CONT
+
+# reproduce bug, where eval is false, but -s fouls up expect-lite
+$PID=23682
+; === Test using a flag in cond action statement
+?IF no == craig ? >kill -s INT $PID
+>
+
+; === Test making assignments in action and else_action
+?IF no == craig ? $var1=$name :: $var2=$age
+> echo $var1 $var2
+<craig 55
+$var2=Zero
+?IF $name != no ?$var1=TRUE::$var2=FALSE
+>echo $var1 $var2
+<TRUE Zero
+
+
+; === Test making assignments in only else_action
+?IF no == craig ? >echo "not here" :: $var2=$telephone
+-<here
+> echo $var1 $var2
+<TRUE 723-9161
+
+; === Test nesting of ifs
+?IF $name == craig ? >echo "not here" :: ? $var1 == TRUE ? >echo "nested ifs"
+<nested ifs
+>
+
+; === issue ^C from if statement
+$one=1
+>time sleep 3
+?IF $one != 0 ? >^C
+-<command not found
+>
+
+; === issue simple commmand as action
+$one=1
+?IF$one!=0?>pwd
+-<command not found
+>
+
+; === Compare numbers with else	?30>$age? >echo "old age" :: > echo "new age"
+?IF30>$age?>echo "old age"::>echo "new age"
+<new age
+>
+
+
+
+; === Test skip to non-existant label
+?IF $name == Joe Blow ? %SKIP_TO_NOWHERE
+>echo "skip this line"
+
+
+; ==== All Pau!
+>
+#Pau!
+
+

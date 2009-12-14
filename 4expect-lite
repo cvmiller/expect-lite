@@ -1,0 +1,1107 @@
+#!/usr/bin/expect 
+# Expect-lite (was CLI Validate Setup Script)
+# Script logs into Tempest, sends command file, while validating commands
+#	fails if validation fails with return code 1 (0=passed)
+#
+# by Craig Miller 19 Jan 2005
+#
+# Command Arguments:
+#	<TempestName|IP>
+#	<command_file>
+#	<user_directory>
+#	[additional constants, see usage]
+#
+#
+# Updated 1 March 2005
+#	Added result codes to align with Vince's Regression wrapper (stub.tst)
+#	Added ssh access (not all tempests permit root access via telnet
+#
+# Updated 3 March 2005 (Girl's Day in Japan)
+#	Added swy_ctrl path to be passed via cli arg
+#	General clean up, and removal of unused vars and procs
+#
+# Updated 8 March 2005
+#	Added zLogin Proc to handle retry on logins
+#
+# Updated 9 March 2005
+#	Updated zLogin to make it a bit smarter in logging in
+#
+# Updated 16 March 2005
+#	Added ^] to quit a telnet session
+#
+# Updated 31 March 2005
+#	Improved where a `;' comment prints (closer to the next send line)
+#
+# Updated 12 May 2005
+# 	Added Expect Line when test Fails - making it easier to understand failure
+#	Moved printing of expect timeout notification 
+#
+# Updated 17 May 2005
+#	Added General control char send facility. Send control chars with >^B
+#	Added Var substitution facility. Vars are defined $var=value
+#		Vars can't have spaces, but can have '_' or '-'
+#
+# Updated 2 June 2005
+#	Added 'catch' protection to gracefully handle spawn/connection errors
+#
+# Updated 16 June 2005
+#	Updated timeout value (@) to accept leading space i.e. '@ 5'
+#		This permits use of Vars in timeout i.e. '@ $mytimeout'
+#
+# Updated 17 June 2005
+#	Added concept of "include file"
+#		Include files will be read from same directory as cmd_file
+#		Include files share the same Var space as the cmd_file
+#
+# Updated 13 Sept 2005
+#	Added protection (via catch) on '>' send strings to ensure connection to tempest is still good
+#		Script terminates with a friendly message if connection is gone
+#
+# Updated 18 Oct 2005
+#	Added Construct of Constants which are passed on the command line (as args > 3)
+#		Usage is now: usage: cli_validate_setup.tcl <tempest_IP> <command_file> [<swy_install_dir>/swy] [const1=value1] [const2=value2] ...
+#	Added var value can begin with '[' this permits ranges such as [4-6]
+#
+# Updated 13 Dec 2005
+#	Fixed bug with unknown vars (such as $f intended for a shell script)
+#	Now cli_validate passes unknown vars to command line
+#
+# Updated 13 Dec 2005
+#	Added ability to connect to co-sim by detecting 192.168.10.1 address and using telnet access
+#
+# Updated Feb 2005
+#	Changed to only login as normal user rather than root
+#	Removed trailing "/swy" to swyprefix
+#	Removed ability to connect to co-sim by detecting 192.168.10.1 address
+#
+#
+# Updated 14 March 2006
+#	Changed name to expect-lite
+#	Updated usage to reflect new name
+#
+# Updated 11 April 2006
+#	Added Dynamically assigned Vars with the first char of the line is '+'
+#		Must have Parens () to capture the value of the variable
+#	Usage +$myvar=not captured text (captured text)
+#		+$myvar=not captured text ([a-zA-z0-9]+)
+#		+$hostname=(came[a-z\-0-9]+|temp[a-z\-0-9]+)
+#	Added Static Var parser which allows spaces in variable value
+#
+# Updated 13 April 2006 
+#	Added RTL mode - multiples all timeouts by value of constant rtl
+#		Specify rtl=<value> on command line (which defines the constant)
+#
+# Updated 3 May 2006
+#	Changed expect timeout - when user sets to 0, inserts a 50 ms delay (in wait_for_prompt)
+#		this prevents command line buffer overflow
+#
+# Updated 16 May 2006
+#	Added built-in constant $arg0 which holds expect-lite script name
+#
+# Updated 17 May 2006
+#	Fixed bug in Dynamic Var - now \n &\r's are stripped out of var capture value
+#	Added 50ms wait in Dynamic Var capture, allowing slow target to respond
+# 
+# Updated 18 May 2006
+# 	Reworked entire Var system - now parses vars without spaces (ie. $var1$var2)
+#		Also Vars are allowed in defining other static vars (ie. $var1=litteral/$var3/stuff)
+# 		Vars will not be derefenced on lines starting with '#' or '+'
+#
+# Updated 23 May 2006
+#	Fixed bug in new Var system - was not catching end of Var with chars '(' ')'
+#		Added first non-var char detection (rather than last checked)
+#
+# Updated 25 May 2006
+#	Fixed bug in new Var system - did not correctly ignore empty vars (ie. !@#$%^&*()_+-= )
+#
+# Updated 21 June 2006
+#	Added '>>' to send line out without first waiting for a prompt. 
+#		This is useful when creating text files on the fly with cat (ie. >cat > myfile.txt)
+#
+# Updated 7 Sept 2006
+#	Added ignoring an include file named "NONE" 
+#	This permits the following code using a bash if statement:
+#		 >if  [ $manarch = i386 ]; then  
+#		 >echo "test_include.txt"
+#		 >else 
+#		 >echo "" 
+#		 >fi
+#		 +$INCLUDE=\n([0-9a-zA-Z\._]+)
+#
+#		 ~$INCLUDE
+#	If the variable $manarch is not set to i386, then nothing will be echoed, 
+#		$INCLUDE will be set to "NONE"
+#	The include action '~$INCLUDE' will now try to include the file NONE, which will be ignored, 
+#	and the script will continue
+#
+# Updated 13 Sept 2006
+#	Added Dynamic Var to be set with another Var  
+#		>$search_pattern=\n([0-9a-zA-Z\._]+)
+#		>+$INCLUDE=$search_pattern
+#	This permits creating more generic capture files (with search_pattern set at top of test)
+#
+#
+# Updated 3 Oct 2006
+#	Added detection of coloured prompt - print message to encourage user to not use 
+#	In function wait_for_prompt added '.{0,9}' to -re, which may allow coloured prompts
+#
+#	General clean up comments
+#
+#	Fixed bug with potential unbalanced parens (i.e. '<abc(def')
+#		Now all parens and square-brackets are escaped if unbalanced parens 
+#		or square backets are detected
+#	
+#	Added 10ms delay when sending lines with '>>'. This gives the remote host time to catchup.
+#
+#
+# Updated 18 Oct 2006
+#	Updated "unbalanced parens" routine to handle braces (i.e. '{}') as well
+#
+# Updated 19 Oct 2006
+#	Implemented beginings of permitting execution of "Real Expect(tm)" commands using the '!'
+#		Funtionality provided to assist expect-lite, not replace it
+#		Limitations:
+#			Extremely limited protection on expect-lite internal variables
+#			Limited crash protection, expect-lite runs "Expect" commands in a 'catch'
+#			No support for altering expect-lite behaviour (i.e. can't change include file names) 
+#		Access expect-lite internal Constants and Vars
+#			!set arch $Cnamespace(manarch)
+#			!set pwd $unamespace(pwd)
+#		Access to Branching with line continuation
+#			!if { $arch == "ppc" } { 		\
+#			!	puts "\narch is $arch\n" 	\
+#			!}							\
+#			!
+#		Access to "Real Expect(tm)" send & expect commands
+#			!send "ls\n"
+#			!expect -re   "test" { puts "got test"} "rand2" { puts "got rand" } default {puts "\ngot nothing"}
+#		Access to Fail the test by calling _el_fail_test, which gives return code of 1
+#			!_el_fail_test	
+#
+#
+# Updated 21 Oct 2006
+#	Continued improvement of Embedded Expect(tm)
+#		Removed requirement for line continuation
+#			Now Expect is collected in "islands" and executed after "island shore" is reached 
+#				The island shore is defined by lines starting with: > >> < ; @ ~ + $
+#				Blank and comments lines do not an island make
+#		Limitations:
+#			Expect Vars now protected, however, Expect code becomes islands (can't share vars across islands)
+#			Expect has limited access to expect-lite vars (only Constants, Vars, and timeout)
+#			Protected Vars, do not support use of "global vars", ("upvar glovalvar localvar" should be used)
+#
+# Updated 23 Oct 2006
+#	Continued improvement of Embedded Expect(tm)
+#		Tested with TCL functions: creating proc's and sourcing TCL files: Passed
+#		Limitations:
+#			No support for global key word (in Embedded Expect(tm)) - Will issue a warning if global is detected
+#			switch statement not supported (won't take ';' in statement)
+#
+#
+#
+
+
+
+
+# echo version in usage
+set version "2.0.9"
+
+#If it all goes pear shaped the script will timeout 
+set timeout 30 
+set TIMEOUT 30
+
+#Set the expect Match Buffer really large
+match_max -d 10000
+
+#Create Debug Log output == 1, no log ==0
+set DEBUG_LOG 0
+
+# declare array unamespace (for user vars)
+set unamespace(0) 0
+
+# declare array Cnamespace (for cli passed constants)
+set Cnamespace(0) 0
+
+# declare array _el (for internal expect-lite vars)
+set _el(0) 0
+
+# script config values 
+set swyprefix ""
+set termtype "xterm"
+
+# hardcoded login values -- should clean up later
+set user "root"
+set pass "root"
+
+# global constant for rtl mode
+set rtl "rtl"
+
+# global constant for script name aka arg0
+set arg0 "arg0"
+
+# validate prompts (first char in expect-lite script)
+set _out ">"
+set _out_nowait ">>"
+set _in "<"
+set _timeout "@"
+set _exec "!"
+set _stdout_comment ";"
+set _include "~"
+set _setvar "+"
+set _var "\$"
+
+proc usage {} {
+#
+#	Print Usage
+#	
+#
+	global version
+	puts "usage: expect-lite <tempest_IP> <command_file> \[<sw_tree_dir>\] \[const1=value1\]"
+	puts "       eg. ./expect-lite tempest-008  pm_alternation.elt  /local/craig/SW_6_Mar/sw myvar=myvalue"
+	puts "       Version $version by Craig Miller"
+	exit 0
+}
+
+proc parse_cmd_file_nopath { cmd_file } {
+#
+#	Takes full command path+file, and returns just the file name minus path
+#	
+#
+	# Is there a path component?
+	if {[regexp {/} $cmd_file] == 1 } {
+		set temp_list [split $cmd_file '/']
+		set len [expr [llength $temp_list] - 1 ]
+		return [lindex $temp_list $len]
+	} else {
+		return $cmd_file
+	}
+}
+
+proc read_args {} {
+#
+#	Assign arguments to the variable names
+#	Assumes args 0,1,2 are login_host, command_file, user_directory respectively
+#
+#
+	global argc argv tempest cmd_file swyprefix
+	global Cnamespace rtl arg0
+
+	# default rtl multiplier to 1
+	set Cnamespace($rtl) 1
+
+	#puts "argc>$argc"
+	if { $argc >= 2 }  { 
+		set tempest 		[lindex $argv 0]
+		set cmd_file 		[lindex $argv 1]
+		
+		# set script constant arg0 with script name
+		set Cnamespace($arg0) [parse_cmd_file_nopath  $cmd_file]
+	} 
+	if { $argc >= 3 }  { 
+		set swyprefix 		[lindex $argv 2]
+	}
+	if { $argc >= 4 }  {
+		# Walk thru additional args (should be cli constants)
+		for { set x  3 } { $x < $argc} { incr x } {
+			set optarg [ lindex $argv $x ]
+		    #general vars
+		    if [ regexp {.+=.*} $optarg ] {
+			   regsub  "=" $optarg " = " line
+			   scan $line "%s = %s" user_var user_value
+			   #puts "->$user_var $user_value"
+			   set Cnamespace($user_var) $user_value
+
+     		   puts "Const: $user_var = $Cnamespace($user_var)"
+       		}
+		}
+	} 
+	if { $argc < 2 }  {
+		usage
+	}
+}
+
+proc parse_cmd_file_path { cmd_file } {
+#
+#	Takes full command path+file, and returns just the path to command file minus the filename
+#	This is used in including files
+#
+	# Is there a path component?
+	if {[regexp {/} $cmd_file] == 1 } {
+		set temp_list [split $cmd_file '/']
+		set len [expr [llength $temp_list] - 1 ]
+		regsub [lindex $temp_list $len] $cmd_file "" temp_path
+		
+		return $temp_path
+	} else {
+		return ""
+	}
+}
+
+proc connect_telnet_host {tempest} {
+#
+#	Login Method which uses user and password via Telnet to log into hosts
+#	If this is not your access method use one of the other login methods
+#
+	# Telnet access is used for cosim environment. Root has no password
+	global spawn_id user pass
+	#This spawns the telnet program - auto generates spawn_id var
+	set timeout 15
+	spawn telnet $tempest
+	#The script expects login
+	expect -re "ogin:" 
+
+	#The script sends the user variable
+	send "$user\r" 
+
+	#The script expects Password
+	expect -re "assword:" 
+
+	#The script sends the password variable
+	send "$pass\r" 
+
+}
+
+proc zlogin { pass login_attempts } {
+#
+#	Subroutine used by ssh user/password method
+#	If this is not your access method use one of the other login methods
+#
+	global tempest 
+	set timeout 2
+	set MAXLOGINATTEMPT 5
+	#set login_attempts 0
+	while { $login_attempts < $MAXLOGINATTEMPT} {
+		#puts "login: $login_attempts"
+		expect {
+			-re "assword:"	{
+				send "$pass\n" 
+				#puts "send pass"
+				}
+			-re "Are you sure you want to continue connecting" {
+				send "yes\n"
+				#zlogin $pass $login_attempts
+				}
+			-re "Last login" { return }
+			#Default Action
+		 }
+		 incr login_attempts
+		 #puts "here"
+	 }
+	 if { $login_attempts >= $MAXLOGINATTEMPT} {
+		puts stderr "\nCONNECT ERROR:Unable to login to $tempest \n "
+		exit 1
+	 }
+}
+
+proc connect_ssh_host {tempest} {
+#
+#	Login Method which uses user and password via ssh to log into hosts
+#	If this is not your access method use one of the other login methods
+#
+	global spawn_id user pass
+	# work around for older versions of expect
+	#This spawns the ssh program - auto generates spawn_id var
+	#spawn ssh -l $user $tempest
+	set timeout 30
+	if { [catch { spawn ssh -l $user $tempest  } error] } {
+		puts stderr "CONNECT ERROR: Unable to connect to $tempest \n   $error"
+		# Fail script?
+		exit 1
+	}
+	# debug help
+	#exp_internal 1
+	
+	set login_attempt 0
+	#better way of logging in (and catch any errors)
+	if { [ catch {zlogin $pass $login_attempt} error] } {
+		puts stderr "CONNECTION ERROR to $tempest \n   $error"
+		exit 1
+	}
+	# turn off the debugging
+	#exp_internal 0
+	set timeout 90
+}
+
+proc connect_ssh_key_host {tempest} {
+#
+#	Login Method which assumes ssh keys are configured for login hosts
+#	If this is not your access method use one of the other login methods
+#
+	global spawn_id user pass TIMEOUT
+	# work around for older versions of expect
+	#This spawns the ssh program - auto generates spawn_id var
+	#spawn ssh -l $user $tempest
+	set timeout 30
+	if { [catch { spawn ssh $tempest  } error] } {
+		puts stderr "CONNECT ERROR: Unable to connect to $tempest \n   $error"
+		# Fail script?
+		exit 1
+	}
+	# Auto update ~/.ssh/known_hosts if needed
+	set timeout 1
+	send "\n"
+	expect {
+		-re "Are you sure you want to continue connecting" {
+		send "yes\n"
+		}
+		-re {.*\$ $} { } Regular prompt detection
+		-re ".*> $" { }
+		-re ".*# $" { }
+		-re ".*% $" { }
+
+	}
+	# debug help
+	#exp_internal 1
+	
+	# turn off the debugging
+	#exp_internal 0
+	set timeout $TIMEOUT
+}
+
+
+proc strip_char { string char } {
+#
+#	Subroutine to remove char from string
+#
+#
+	regsub  $char $string "" stringb
+	#puts "s->$stringb||$char||"
+	return $stringb
+}
+
+proc check_color_prompt {} {
+#
+#	This just checks the prompt at log in, and alerts the user if there is a coloured prompt
+#
+#
+	global TIMEOUT
+	set color "\\033\\\[00(m)"
+	set timeout 1
+	send "\n\n"
+	expect {
+		-re "$color" { puts "\n\n\tColour Prompt Detected!\n\tThis may cause prompt timeout issues\n\tPlease consider using a non-colour prompt\n\n" }
+		-re {.*\$ $} { } #non-colour prompt detection
+		-re ".*> $" { }
+		-re ".*# $" { }
+		-re ".*% $" { }
+		timeout {	puts "->Check Colour Prompt Timed Out!" }	
+	}
+	set timeout $TIMEOUT
+}
+
+proc wait_for_prompt {} {
+#
+#	Prompts are always a problem, feel to customize this to your enviroments needs
+#	These prompt regexs are setup to take just about any prompt: >#%$
+#
+#
+	global timeout
+	#Accept '>' or '#' prompt
+	if { $timeout == 0 } {
+		# delay in ms
+		after 50
+	}
+	#Added the additional ".{0,9}" to prompt incase there are colours in the prompt
+	expect {
+	  -re ".*> .{0,9}$" { }
+	  -re ".*# .{0,9}$" { }
+	  -re ".*% .{0,9}$" { }
+	  -re {.*\$ .{0,9}$} { }
+	   #timeout {	puts "->Prompt Timed Out!" }
+	  }
+}
+
+proc change_dir { swyprefix } {
+#
+#	Start of script, checks prompt, and cd's to user directory (aka swyprefix) if needed
+#	
+#
+	global termtype PROMPT TIMEOUT timeout
+	set timeout 2
+	send "\n"
+	
+	# ensure we are using bash, 
+	send "bash\n"
+	
+	# Auto detect prompt
+	check_color_prompt
+
+	send "\n"
+	wait_for_prompt
+	#only change directory if swyprefix was passed as an arg, otherwise, user will set it in cmd_file
+	if { $swyprefix != "" } {
+		send "cd $swyprefix\n"
+		#auto_get_prompt
+		wait_for_prompt
+	}
+	set timeout $TIMEOUT
+	
+}
+
+proc print_comment_line { } {
+#
+#	Prints a comment line (begins with a ';')
+#	
+#
+	global comment_line timeout_line
+	# print ';' printable comment
+	if { $comment_line != "" } {
+		puts "\n$comment_line\n"
+		set comment_line ""
+		} 
+	# print new expect timeout value (if needed)
+	if { $timeout_line != "" } {
+		puts "\n$timeout_line\n"
+		set timeout_line ""
+		} 
+
+}
+# export names from global namespace
+namespace export validate_cmds
+
+namespace eval box {
+	#namespace import  ::errorInfo ::Cnamespace ::unamespace ::timeout ::tempest ::swyprefix
+	#namespace import  ::*
+	proc _el_exec_expect { _el_lines } {
+	#
+	#	Execute expect lines buffered in list variable _el_lines 
+	#
+	#
+		#global _el_lines errorInfo 
+		#Allow embedded Expect access to only the following internal vars
+		#global Cnamespace unamespace timeout tempest swyprefix 
+
+		#puts "=>[llength _el_lines]:$_el_lines:"
+		if {  $_el_lines != {} } {
+
+			# join Expect lines		
+			set _el_cont_lines [join $_el_lines " ; "]
+			#puts "EL:$_el_cont_lines \n"
+
+			if {[ catch { eval $_el_cont_lines }  error ]} {
+				regsub -all " ; " $_el_cont_lines "\n" _el_cont_lines
+				#puts "ERROR: Expect: \'$_el_cont_lines\' $error \n$errorInfo\n"
+				puts "ERROR: Expect: \'$_el_cont_lines\' \n$::errorInfo\n"
+			}
+
+			# clear cont lines
+			set ::_el_lines {}
+		}	
+		# remove trailing "\"
+		#regsub  {\\$} $_el(line) ";" _el(line)
+	}
+	
+}
+
+
+
+
+
+
+
+proc parray name {
+#
+#	Used for debugging only, Prints array
+#	
+#
+	upvar $name a
+	foreach e1 [lsort [array names a]]  {
+		puts "$e1 = $a($e1)"
+	}
+}
+
+proc resolve_var_sub var {
+#
+#	Resolves user vars to values, only if there isn't a Constant with the same name
+#	Constants are always given preference over user vars (defined in the script)
+#
+	
+	global unamespace Cnamespace
+	if { $var != "" } {
+		set append_value 1
+		# we have the var
+		set user_var $var
+		
+		#puts "var>$user_var"
+
+		# Give priority over Constants, only assign Vars if Constant not present
+		if { [catch {set user_value $Cnamespace($user_var)}]  } {
+			if { [catch {set user_value $unamespace($user_var)}] } {
+				# go quietly into the night
+				#puts stderr "VAR NOT FOUND: $user_var"
+				# Fail script?
+				set append_value 0
+			}
+
+		} else {
+			puts stdout "CONST FOUND: $user_var = $Cnamespace($user_var)"
+		}
+		if { $append_value } {
+			puts "u_v>$var=$user_value"
+			# only append valid vars
+			return $user_value
+		} else {
+			# if unknown var, be sure to put it back on line with a '$' in front
+			return "\$$var"
+		}
+	} else {
+		return ""
+	}
+
+}
+
+proc explode { var sep } {
+#
+#	A rather complicated subroutine (sorry) which parses out user vars in the script
+#	The sep_list defines what chars are _not_ in vars
+#
+	# explodes the string passed, separating out the Vars and passing them to resolve_var_sub to be resolved
+	# List of Chars which define the end of a Var
+	set sep_list { ! @ # % * / { } \\ ( ) . [ ] }
+	#puts "v>$var|s>$sep"
+	set value ""
+	
+	set var_list [ split $var $sep]
+	#puts "vl>$var_list|sep>$sep"
+	# If only 1 var on the line
+	if { [llength $var_list] == 1 } {
+		if { $sep == "$" } {
+			#puts "one only"
+			# return first chunk which is NOT a var in var_list
+			append value $var
+		} else {
+
+			append value [resolve_var_sub $var]
+		}
+	} else {
+		# First time in (no recursion) 
+		if { $sep == "$" } {
+			append value [lindex $var_list 0]
+		} else {
+			# Dereferences Vars on First time through the var_list
+			#puts "look here"
+			append value [resolve_var_sub [lindex $var_list 0]]
+		}
+		#puts "vl>$var_list"
+		for {set j 1} {$j<[llength $var_list]} {incr j} {
+			set var_only 1
+			# are there other strange chars in the var?
+			# use low_water_marker to find closest one
+			# FIXME: limits var length to less that 255
+			set low_water_marker 255
+			foreach k $sep_list {
+				set odd_char_pos [string first $k [lindex $var_list $j]]
+				if { $odd_char_pos > -1 } { 
+					if { $odd_char_pos < $low_water_marker } { 
+						set low_water_marker $odd_char_pos
+						set s $k
+					}
+					set var_only 0
+				}
+				#puts "k>[string first $k [lindex $var_list $j]]]"
+			}
+			if { $var_only } {
+				# "var only" no other strange chars found
+				if { $sep == "$" } {
+					#puts "vo>[lindex $var_list $j]|j>$j"
+					append value [resolve_var_sub [lindex $var_list $j]]
+				} else {
+					#puts "j>$j|sep>$sep"
+					# add literals back to the line (in a recursed call)
+					append value $sep[lindex $var_list $j]
+				}
+			} else {
+				#puts "j>$j|recurse!"
+				# Recursion Call with smaller chunck - splits known var with "extra" chars
+				# and make sure the var length isn't zero
+				if { ($sep == "$") && ($low_water_marker != 0) } {
+					append value [explode [lindex $var_list $j] $s]
+				} else {
+					append value $sep[lindex $var_list $j]
+				}
+			}
+			#puts "j>$j|val>$value"
+		}
+	}
+	return $value
+}
+
+proc _el_fail_test {} {
+#
+#	Proc available to Expect Commands (expect-lite commands which start with '!') to fail test
+#
+#	
+	puts "\n\n##Overall Result: FAILED \n\n"
+	exit 1
+
+}
+
+set _el_lines {}
+
+proc validate_cmds {cmd_file} {
+#
+#	Heart of expect-lite, reads through script file, and takes appropriate action (based on switch statement)
+#	
+#
+	global tempest _out _out_nowait _in _timeout _var expect_out timeout _exec _stdout_comment _include comment_line timeout_line rtl _el_lines
+	#set timeout 10 
+	#global expect_out
+	global unamespace 
+	global Cnamespace 
+		
+	set prev_line ""
+	set comment_line ""
+	set timeout_line ""
+	
+	# clear expect lines list
+	#set _el_lines {}
+	#send "\n"
+	# Protect initial send to target with catch
+	if { [ catch { send "\n" } error] } {
+		puts stderr "Unable to communicate with remote machine \n "
+		exit 1
+	}
+	
+	# Protect Open with a Catch 
+	if { [ catch { set infile [open $cmd_file r ] } error] } {
+		puts stderr "Unable to open cmd/include_file \n   $error"
+		exit 1
+	}
+	while { -1 != [gets $infile _el(line) ]} {
+		set _el(success) 0
+		
+		# Sub Vars if needed into $_el(line) read from cmd file		
+		if { [regexp {.*\$[A-Za-z0-9]+.*} $_el(line) ] } {
+			# Detect the use of a user_var
+			#puts "l0>$_el(line)"
+			switch -regexp $_el(line) {
+				{^\$.*} {
+					# this is a var definition line
+					#puts "l1>$_el(line)"
+					set parse_list1 [split $_el(line) "="]
+					if { [llength $parse_list1] == 2 } {
+						set _el(line) "[lindex $parse_list1 0]=[explode [lindex $parse_list1 1] $_var]"
+					}
+					#puts "l2>$_el(line)"
+				} 
+				
+				{^\#.*} { 
+					# this is a comment line - don't touch it
+				}  
+				default {
+					# Process Line resolving vars if needed
+					set parse_list1 [split $_el(line) ]
+					#puts "p1>$parse_list1"
+					set plist2 {}
+					foreach i $parse_list1 {
+						lappend plist2 [ explode $i $_var ]
+					}
+					set _el(line2) [join $plist2 " "]
+					set _el(line) $_el(line2)
+					#puts "L>$_el(line)"
+
+				}
+			}
+		}
+
+		switch -regexp $_el(line) {
+			^\#	{	# Don't send lines that start with a '#' which are commented
+			
+					print_comment_line
+
+				}
+			{^>\^AZQ}	{
+					# Don't wait for prompt, and send Minicom Quit now!
+					
+					send \001
+					send "ZQ\n"
+					puts "sending minicom quit sequence\n"
+					set prev_line $_el(line)
+				}
+			{^>\^C}	{
+					# Don't wait for prompt, and send ^C now!
+					
+					send \003
+					puts "sending break\n"
+					set prev_line $_el(line)
+				}
+			{^>\^[A-\]]}	{
+					# Don't wait for prompt, Generalized routine to send control chars
+					
+					# get ascii value of char
+					scan [string index $_el(line) 2] %c control_char_ascii
+					# parse char from passed string
+					set control_char [string index $_el(line) 2]
+					# Send control char
+					send [format %c [expr $control_char_ascii - 64]]
+					#puts "=>$control_char_ascii"
+					# notify user
+					puts "sending ^$control_char\n"
+					set prev_line $_el(line)
+				}
+			{^>\^]}	{
+					# Don't wait for prompt, and send ^] now to quit telnet!
+					
+					send \035
+					puts "\nsending telnet break\n"
+					set prev_line $_el(line)
+				}
+			^\>>	{	# Don't wait for Prompt just send the line
+			
+					print_comment_line
+					# execute expect lines if present
+					box::_el_exec_expect $_el_lines
+					
+					# delay to give remote-host a little time (in ms)
+					after 10
+					# Check of tempest is still connected before sending string
+					if { [catch { send "[strip_char $_el(line) $_out_nowait]\n"  } error] } {
+						puts stderr "CONNECT ERROR: Lost connection to $tempest \n   $error \nExiting..."
+						# Fail script
+						exit 1
+					}
+					set prev_line $_el(line)
+					# clear expect buffer
+					expect -re {.*} {}
+					
+				}
+			^\>	{	# Wait for Prompt and send the line
+			
+					wait_for_prompt
+					print_comment_line
+					# execute expect lines if present
+					box::_el_exec_expect $_el_lines
+					
+					# Check of tempest is still connected before sending string
+					if { [catch { send "[strip_char $_el(line) $_out]\n"  } error] } {
+						puts stderr "CONNECT ERROR: Lost connection to $tempest \n   $error \nExiting..."
+						# Fail script
+						exit 1
+					}
+					set prev_line $_el(line)
+					# clear expect buffer
+				}
+			^\<	{ 	# Expect teststr or set success to 0 and fail test
+			
+					print_comment_line
+					# execute expect lines if present
+					box::_el_exec_expect $_el_lines
+					
+					set teststr [strip_char $_el(line) $_in]
+					# test for single num expect string
+					if {([string length $teststr]==1) && ([regexp \[0-9\] $teststr])} {
+					    expect {
+							 -re \n$teststr\r { 
+					 		    #puts "\nGood=[strip_char $_el(line) $_in]\n" 
+							    set _el(success) 1
+							    } 
+						    }
+					} else {
+						# test for multi-char expect strings
+						# catch expect, just in case
+						if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
+							puts "\nWarning: Expect-lite: $error: Attempting to fix\n"
+							
+							# escape parens or square brackets
+							regsub {([^\\])[(]} $teststr {\1\(} teststr
+							regsub {([^\\])[)]} $teststr {\1\)} teststr
+							# fix potential unbalanced square brackets
+							regsub {([^\\])[[]} $teststr {\1\[} teststr
+							regsub {([^\\])[]]} $teststr {\1\]} teststr
+							# escape braces
+							regsub {([^\\])[\{]} $teststr {\1\{} teststr
+							regsub {([^\\])[\}]} $teststr {\1\}} teststr
+							#puts "+>$teststr"
+							if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
+								puts "\nBUG: Expect-lite: $error\n Fix Failed\n"
+							}
+						}
+					 	#puts "\nGood=[strip_char $_el(line) $_in]\n" 
+					}
+					# look at the expect_out(buffer) for debugging
+					#puts "\n-->$teststr"
+					#puts "--><<$expect_out(buffer)>>"
+				}
+			^\@ 	{ 	# Update the timeout value
+					
+					# validate that the timeout value is a number
+					print_comment_line
+					# execute expect lines if present
+					box::_el_exec_expect $_el_lines
+					if {([regexp \[^0-9\ \]+ [strip_char $_el(line) $_timeout]])} {
+						puts "Bad Timeout Value: [strip_char $_el(line) $_timeout] "
+						close $infile
+						send "quit\n"
+						exit 1
+					} else {
+						#puts "\nSetting Expect Timeout to: [strip_char $_el(line) $_timeout] \n"
+						set timeout_int [strip_char $_el(line) $_timeout]
+
+						if { $Cnamespace($rtl) != 1 } {
+							set timeout [expr $timeout_int * $Cnamespace($rtl)]
+							set timeout_line "\nRTL mode: Setting Expect Timeout to: $timeout \n"
+						} else {
+							set t_timeout $timeout_int
+							set timeout_line "\nSetting Expect Timeout to: $t_timeout \n"
+							set timeout $t_timeout
+						}
+					}
+				}
+			^\;	{	# Send "comment" to stdout
+					
+					print_comment_line
+					# execute expect lines if present
+					box::_el_exec_expect $_el_lines
+					
+					set comment_line [strip_char $_el(line) $_stdout_comment]
+					#puts "\n[strip_char $_el(line) $_stdout_comment]\n"
+				}
+			^\~ 	{	# inlude file from same location at cmd_file
+					# Uses recursion to interpret included file
+					
+					# execute expect lines if present
+					box::_el_exec_expect $_el_lines
+					
+					set include_file [strip_char $_el(line) $_include]
+					# don't include file if name is set to NONE (which is a blank dynamic/capture variable)
+					if { $include_file != "NONE" } {
+						set include_path_file "[parse_cmd_file_path $cmd_file]$include_file"
+						#puts "->$include_path_file"
+						# Make Recursive Call
+						validate_cmds $include_path_file
+					}
+			
+				}
+			^\\+	{ 	# Setup Dynamic Var using Expect Capture
+					# execute expect lines if present
+					box::_el_exec_expect $_el_lines
+					
+					print_comment_line
+					# delay in ms - slow down the host, give the target time to respond
+					after 100
+					# parse $_el(line) to pull out var and expect parts
+					#puts "\n->$_el(line)"
+					set user_var [string range $_el(line) 1 [expr [string first "=" $_el(line)] -1 ]]
+					set user_value [string range $_el(line) [expr [string first "=" $_el(line)] +1 ] [string length $_el(line)]]
+					#puts "\n->$user_var=$user_value"
+					# remove '$' in front of the Var
+					regsub {\$} $user_var "" user_var
+
+					#set teststr [strip_char $_el(line) $_setvar]
+					set capture_val "NONE"
+					expect {
+							 -re {\n.*\$ $|\n.*\# $|\n.*\> $} {
+								 
+								# Do capture in expect buffer
+								if { [catch {regexp -line "$user_value" $expect_out(buffer) match_val capture_val}]  } {
+									set capture_val "NONE"
+									set match_val ""
+								}
+								# remove newlines from capture value
+								regsub -all {[\n\r]+} $capture_val "" capture_val
+								#puts "\neo>>$expect_out(buffer)<<"
+								#puts "\n-m>$capture_val<"
+								#puts "\nAssigned Var:$user_var=|$capture_val|\n"
+								puts "\nAssigned Var:$user_var=$capture_val\n"
+								# Trigger a new prompt
+								send "\n"
+							}
+						# expect should never timeout, but just in case
+						timeout {puts "BUG: Expect-lite: Var Capture Timed Out!"}
+					}
+					# set var (similar to below)
+					set unamespace($user_var) $capture_val
+				}
+			{^\$[A-Za-z0-9_]+[=][~\[/A-Za-z0-9_-]+} {
+					
+					# execute expect lines if present
+					box::_el_exec_expect $_el_lines
+					
+					# Set a user variable 
+					
+					set user_var [string range $_el(line) 1 [expr [string first "=" $_el(line)] -1 ]]
+					set user_value [string range $_el(line) [expr [string first "=" $_el(line)] +1 ] [string length $_el(line)]]
+					
+					# remove '$' in front of the Var
+					regsub {\$} $user_var "" user_var
+					
+					# Assign the Var
+					set unamespace($user_var) $user_value
+					
+					# Used for debugging
+					#puts "->$user_var $user_value"
+					#parray unamespace
+					}
+			^\!	{	# Run an Expect Line(s) (limited support)
+			
+					# don't add Expect comment lines (hint they start with '!#'
+					if { [regexp -line {^![ \t]*#} $_el(line) ] == 0  } {
+						# check that globals are in the line
+						if { [regexp -line {^![ \t]*global} $_el(line) ] == 1  } {
+							puts "\nWARN: Globals not supported: $_el(line)\n"
+						} else {
+							# add Expect Lines to _el_lines list
+							lappend _el_lines [strip_char $_el(line) $_exec] 
+							#puts "+>[llength _el_lines]:$_el_lines:"
+						}
+					}
+				}
+			default {	# blank lines
+				
+					# execute expect lines if present
+					#_el_exec_expect
+						
+			 	}
+		}
+		if {$_el(success) != 1 && [regexp "^<" $_el(line)]==1} {
+			puts "\n\n FAILED COMMAND:[strip_char $prev_line $_out] \n"
+			puts "    Expect Failed:$teststr\n\n"
+			puts "\n\n##Overall Result: FAILED \n\n"
+			close $infile
+			send "quit\n"
+			exit 1
+		}
+	    }
+	close $infile
+	# wait for that very last prompt, this allows us to send the last '> line'
+	#wait_for_prompt
+}
+
+
+# ############# MAIN ######################
+#
+#	Main Program starts here
+#	
+#
+
+read_args
+
+
+# connects to login host, and logs in as $USER
+#
+#	Choose a login method here
+#	
+#
+#connect_telnet_host $tempest
+#connect_ssh_host 	$tempest
+connect_ssh_key_host $tempest
+
+
+if { $DEBUG_LOG==1 } { log_file -noappend debug_output.txt }
+
+# change to passed directory, if needed (and set term type)
+change_dir $swyprefix
+
+# Send commands to remote host, and validate response
+validate_cmds $cmd_file
+
+#If we get this far, then we passed!
+puts "\n\n##Overall Result: PASS \n\n"
+
+close $spawn_id
+
+if { $DEBUG_LOG==1 } { log_file }
+
+# exit with 0 to indicate that test passed
+exit 0
+

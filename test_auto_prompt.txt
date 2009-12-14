@@ -1,0 +1,95 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: http://lancelot.am.freescale.net/~craig/Docs/expect-lite.html
+
+#
+#	test of Prompt Detection
+#
+
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+@5
+>id
+<craig
+> pwd
+> echo $PS1
+#>sleep 1
+> pwd
++mypwd=\n([/a-z\-A-Z0-0]+)
+
+$thisvar=abc(def
+> echo $thisvar
+<abc(def
+
+$thisvar=abc[def]
+> echo $thisvar
+<abc\[def\]
+
+$thisvar=abc[def
+> echo $thisvar
+<abc\[def
+
+
+$this="For whom the bell tolls"
+> echo $this
+
+>echo "32"
+<3[1-2]
+
+
+$set=1 2 3 4 5
+>for i in $set 
+>{
+>echo $i
+>}
+
+$max=5
+>i=0
+>while [ $i -lt $max ]
+>do
+>echo $i
+>let i+=1
+>done
+<1
+<2
+<3
+<4
+
+$max=4
+>if [ $max -ne 5 ]; then
+>echo "max is not equal to 5"
+>else
+>echo "we have a winner"
+>fi
+
+>PROC=`uname -i`
+>if [ "$PROC" == "i386" ]; then
+>echo proc20
+>else
+>echo proc100
+>fi
++loop_counter=\nproc([0-9]+)
+
+
+$local_char_test_file=/tmp/junk
+> cat > $local_char_test_file
+##### Paste in Regex lines below ####
+>>T00001/a(?$XL.*)/tag=0x08000001
+>>T00002/b(?$XR.*)/tag=0x08000002
+>>T00003/c(?$XO[0-7]*)/tag=0x08000003
+>>T00004/d(?$XH[0-9A-F]*)/tag=0x08000004
+>>T00005/e(?$XD[0-9]*)/tag=0x08000005
+>^D
+#>^D
+>
+
+>cat $local_char_test_file
+>
+>
+#pau

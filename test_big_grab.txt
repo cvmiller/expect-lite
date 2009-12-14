@@ -1,0 +1,53 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+
+#
+#	test of Dynamic Variables implemented in expect-lite
+#
+
+; ==== Set Timeout ====
+@10
+
+; ==== Static Variable Tests ====
+$name=craig
+$telephone=723-9161
+
+; ==== Define functions ====
+!proc inc_var { var } {
+!	incr ::user_namespace($var)
+!}
+>
+# initial value of counter
+$counter=1
+
+
+; ==== Grab bunch of data ===
+!inc_var counter
+>lsmod | grep snd | cut -b 1-20 | head -$counter | tail -1
++$bulk_data=\n(snd[a-z0-9_]+)
+
+
+!inc_var counter
+>lsmod | grep snd | cut -b 1-20 | head -$counter | tail -1
+
++$bulk_data1=\n(snd[a-z0-9_]+)
+
+!inc_var counter
+>lsmod | grep snd | cut -b 1-20 | head -$counter | tail -1
++$bulk_data2=\n(snd[a-z0-9_]+)
+
+>
+; === Buld data is: $bulk_data
+>
+
+#pau
+
+

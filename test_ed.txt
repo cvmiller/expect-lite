@@ -1,0 +1,67 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: expect-lite.html
+
+#
+# Test: 	tests editing with ed in expect-lite
+# Assumptions:	ed is present
+# Platforms: 	i386 & Full Linux Distros (like Ubuntu PPC)
+#
+
+
+
+# Source common variable file for this test suite
+#~mod_common.inc
+
+# Redefine test file to always be in /tmp
+$local_char_test_file=/tmp/test_ed_data.txt
+
+; ==== $local_char_test_file
+>
+>
+>
+
+
+@1
+; ==== Create Test File with ed
+>ed -p "# " $local_char_test_file
+>%d
+>a
+
+>>STATEFUL_RULE: rule_1
+
+>>  RESET_STATE:
+>>    EVENT "login"
+>>    GV[1] = 0x02
+>>    report { GV[1]:4}
+>>    next_state STATE_1
+
+>>  STATE STATE_1:
+>>    EVENT "open"
+>>    GV[1] = GV[1]+1
+>>    report { 'test' }
+>>    report { GV[1]:4}
+>>    EVENT "END_OF_SUI"
+>>    GV[1] = GV[1]+1
+
+
+>>.
+>wq
+# number of bytes in file
+<\n[0-9]+
+>
+# ==== end of test file
+
+; === set timeout to 10
+@10
+
+; ==== Display test file created with ed
+>cat $local_char_test_file
+<RESET_STATE
+<STATE STATE_1
+>

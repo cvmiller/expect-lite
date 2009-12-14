@@ -1,0 +1,121 @@
+# How to use this file
+#  Lines that begin with '>' are sent to the tempest
+#  Lines that begin with '<' _MUST_ be received from the tempest, or this config script will fail
+#  Lines beginning with # are comment lines, and have no effect
+#  Lines beginning with ; are printable (in stdout) comments, and have no other effect
+#  Lines beginning with @ change the expect timeout value
+
+#
+#	test of Embedded Expect commands
+#
+@10
+; ==== Running TCL script cosimInvalidBreak
+
+!set logDir "/tmp"
+!set manArch $Cnamespace(manarch)
+!set dutAddr $Cnamespace(dutaddr)
+!set dutArch $Cnamespace(dutarch)
+
+!# run test
+!
+!source ../moduleCommon.inc
+!
+!set ruleFile "invalidAssignment.src"
+!set resultFile [open "$logDir/cosimExitTestResult.txt" w+]
+!
+!set returnValue 0
+!
+!proc generateFile { file } {
+!    global projTmpDir
+!
+!    set outFile [open "$projTmpDir/$file" w]
+!    
+!    puts -nonewline $outFile "STATEFUL_RULE: rule_1\n\n"
+!    puts -nonewline $outFile "  RESET_STATE:\n"
+!    puts -nonewline $outFile "    EVENT \"login\"\n"	
+!    puts -nonewline $outFile "     GV\[1\] = 4 \n"
+!    puts -nonewline $outFile "    next_state STATE_1\n\n"
+!    
+!    puts -nonewline $outFile "  STATE STATE_1: \n"
+!    puts -nonewline $outFile "    EVENT \"open\"\n"
+!    
+!    puts -nonewline $outFile "    while(GV\[1\] <= 4) \n"
+!    puts -nonewline $outFile "        \{ \n"
+!    puts -nonewline $outFile "           report \{ GV\[1\]:4\} \n"
+!    puts -nonewline $outFile "          GV\[1\] = GV\[1\] +1\n"
+!    puts -nonewline $outFile "        \} \n"
+!    puts -nonewline $outFile "        break \n"
+!    
+!    close $outFile
+!
+!}
+!
+!
+!set regexExp1 "login"
+!set regexExp2 "open"
+!
+!proc runPmm {} {
+!	
+!	global regexExp1 regexExp2 testPath tempest ruleFile tmpTestDataDir pmmMode
+!	
+!	set scanResult 0
+!	#logon to the host env
+!	generateFile $ruleFile
+!	
+!	startModulePmm
+!	
+!	set timeout 60
+!	
+!	#add the regex 
+!	send "add regex name $regexExp1 exp \/$regexExp1\/ \n"
+!	expect "pmm>"
+!	send "add regex name $regexExp2 exp \/$regexExp2\/ \n"
+!	expect "pmm>"
+!
+!	#add the stateful rule
+!	send "add rule file source  $tmpTestDataDir/$ruleFile \n"
+!	expect "pmm>"
+!	catch {set scanResult $expect_out(buffer)}
+!
+!	send "quit \n"
+!	expect $pmmMode
+!
+!	return [analysizeResult "Keyword 'break' found outside of loop" $scanResult]
+!
+!}
+!
+!
+!#main process
+!
+!set value 0
+!#in case PPC, do a telnet session
+!if {$dutArch == "8548_cds" && $manArch == "ppc"} {
+!    telnetToCds $dutAddr
+!}
+!
+!set value [runPmm] 
+!
+!#write to the result file
+!if {$value == 0 } {puts "test FAILED! "
+!    puts -nonewline $resultFile "Failed! \n" } else {
+!	puts -nonewline $resultFile "Passed! \n"
+!	puts "test passed!"}
+!
+!
+!send "exit \n"
+!expect $tempest
+!
+!
+#!exit $returnValue
+
+
+
+
+
+
+
+; ==== Success!
+
+>
+
+#pau

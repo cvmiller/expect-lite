@@ -1,0 +1,105 @@
+# How to use this file
+#  Lines that begin with '>' are sent to the tempest
+#  Lines that begin with '<' _MUST_ be received from the tempest, or this config script will fail
+#  Lines beginning with # are comment lines, and have no effect
+#  Lines beginning with ; are printable (in stdout) comments, and have no other effect
+#  Lines beginning with @ change the expect timeout value
+
+#
+#	test of Embedded Expect commands
+#
+
+#~mod_common.inc
+
+# set timeout value to 5 seconds
+; ==== Set Timeout ====
+@5
+>id
+<(craig|cvmiller)
+
+$tmp=/proj/regression/tmp/generalRegression/tc_gzip_reserve.elt/
+$junk=orbit-root
+$junk2=$junk/some/path
+
+> cd $tmp
+> pwd
+>
+!#
+!puts "\nhello"
+!puts "EL->$::unamespace(junk2)"
+!puts "Expect timeout is: $::timeout"
+!puts "The tempest is: $::tempest"
+>
+; ==== Set up a var
+!set arch $::Cnamespace(manarch)
+
+!if { $arch == "ppc" } { 				
+!	puts "\narch IS $arch\n"				
+! } else {							
+!	puts "\narch is NOT ppc, but $arch\n"	
+!	_el_fail_test						
+! }									
+!
+>
+!puts "EL->$::unamespace(junk2)"
+!set ::unamespace(junk2) "this space"
+!puts "EL->$::unamespace(junk2)"
+!
+>
+; == $junk2
+>
+
+
+#$TEST=NONE
+!puts "->$Cnamespace(manarch)"
+#!set TEST $unamespace(TEST)
+#!puts "->$TEST"
+!if {$Cnamespace(manarch) == "ppc"} {
+!	set TEST "test_include.inc"
+!}
+!set unamespace(TEST) $TEST 
+!puts "->$unamespace(TEST),$TEST"
+>
+>
+; == $TEST
+>
+~$TEST
+
+>
+!set ruleFile "rule.txt"
+!for {set j 1} {$j<6} {incr j} {
+!	if {$j == 1}   {set type "1"    }   
+!	if {$j == 2}	{set type "2"    }
+!	if {$j == 3}	{set type "3"    }
+!	if {$j == 4}	{set type "4"    }
+!	if {$j == 5}	{set type "5"    }
+!	
+!	puts "$j>$type"
+#!	$i = $k
+!}
+!set mylist { 
+! "two"
+! "three"
+! "four"
+! }
+!puts "Rule:$ruleFile"
+!puts "test $TEST"
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+>
+> echo "All Pau\\"
+>
+
+#pau
