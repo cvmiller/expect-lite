@@ -1,0 +1,41 @@
+#
+# Test expect-lite directives (requires version 3.5.0 or later)
+#
+*NODEBUG
+# Turn on warnings
+#*WARN
+@3
+; === Check hello at beginning of test
+>echo hello
++$answer=\n(hello)
+# self check
+?if $answer != hello ? >echo FAIL :: >echo Good
+<\nGood
+
+# set tcsh for test, but not at beginning of file
+**SHELL=tcsh
+
+*NOINFO
+#; === Quiet check with NOINFO
+$temp=fine
+>
+# self check
+?if $temp != fine ? >echo FAIL :: >echo Good
+<\nGood
+>
+
+>
+*NOWARN
+; === See no warning
+@1
+> sleep 2
+>
+>
+*WARN
+; === See prompt timeout warning
+@1
+> sleep 2
+>
+>
+#Pau!
+

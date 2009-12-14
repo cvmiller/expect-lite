@@ -1,0 +1,104 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+# Test the math functions (requires version 3.10 or later)
+#
+#
+#
+#
+
+# Turn on warnings
+!set ::WARN 1
+
+
+@3
+; == test of Math Functions
+>
+$num=5
+$mult=2
+=$num + 10*$mult
+; === num is $num
+>echo $num
+<25
+
+=$num*10
+; === num is $num
+>echo $num
+<250
+
+$num=5
+=$num*10 / $num
+; === num is $num
+>echo $num
+<10
+
+$five=5
+$answer=1
+=$answer*$five/2.0
+; === answer is $answer
+>echo $answer
+<2.5
+
+$five=5
+$answer=1
+=$answer*$five % 2
+; === answer is $answer
+>echo $answer
+<1
+
+
+$five=5
+$answer=1
+=$answer + $five / 2
+; === answer is $answer
+>echo $answer
+<3
+
+
+$five=5
+; == Negative test answer1 not defined then division
+=$answer1 / 2 * (10 + 1)
+# self check
+?if $answer1 !=  ? >echo FAIL :: >echo Good
+<\nGood
+; === answer is $answer1
+
+
+; == Negative test answer1 not defined, but should work becuase of '+'
+=$answer1 + 2 * (10 + 1)
+; === answer is $answer1
+# self check
+?if $answer1 != 22 ? >echo FAIL :: >echo Good
+<\nGood
+
+; === Negative test: Arrays not supported
+$count=3
+$answer=5
+=$answer$count + 5
+; === answer is $answer
+# self check
+?if $answer != 5 ? >echo FAIL :: >echo Good
+<\nGood
+
+# Calculate and set test_timeout in seconds
+=$test_timeout + 60 * 2
+@$test_timeout
+>
+?if $test_timeout != 120 ? >echo FAIL :: >echo Good
+<\nGood
+>
+$answer=1
+=$answer * pow(2,3)
+>
+; == answer is: $answer
+>
+#Pau!
+

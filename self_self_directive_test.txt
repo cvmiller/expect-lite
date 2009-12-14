@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# make this auto-runnable! 
+# Little bootstrap bash script to run kick start expect-lite script
+# Convert --parms to expect-lite param=value format
+PARAMS=`echo $* | /bin/sed -r 's;--([a-z_]+) ([0-9a-zA-Z]+);\1=\2;g'`
+echo $PARAMS
+expect-lite r=none c=$0 el=expect-lite test_host=none $PARAMS
+exit $?
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+# Self Self Test of Expect-lite Directives
+#	Runs another expect-lite self test, and monitors INFO & WARNings
+#	
+#
+#	Requires expect-lite version 3.5.0
+#
+
+# default expect-lite app
+
+
+@10
+>$el r=$test_host c=self_test_directives.txt el=$el 
+<If: expr { "hello" != "hello" } |then   >echo FAIL|else  >echo Good|result0
+<expect-lite directive: \*NOINFO
+-<If: expr
+<expect-lite directive: \*NOWARN
+<sleep 2
+-<Warning
+<expect-lite directive: \*WARN
+<Warning:Prompt Timed Out!
+>echo $?
+<\n0
+; *********** Expect-lite Directive Test Pass! ************
+>
