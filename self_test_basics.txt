@@ -1,0 +1,80 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+# Test Basic Functionality of Send '>' '>>' and Expect '<' '<<'
+#	Self tested functionality
+#
+#	Requires Expect-lite version 3.6.0
+#
+
+# Turn on warnings
+*WARN
+
+# Turn on debug and see the inside workings 
+*DEBUG
+
+# set expect timeout
+@3
+
+# set bash var NUM
+>NUM=5
+>TAG="<HTML>"
+>TESTSTR="This is an equation:(5+3)/2*2"
+
+
+; === detect single value with no regex
+>echo $NUM
+<<5
+>
+; === detect HTML Tag (no regex using '<<')
+>echo $TAG
+<<<HTML>
+>
+; === detect HTML Tag (with regex using '<')
+>echo $TAG
+<[<]H..L>
+>
+
+; === look for no regex with parenthisis, plus, star
+>echo $TESTSTR
+<<This is an equation:(5+3)/2*2
+
+; === look for wild carding 'This*equation'
+>echo $TESTSTR
+<<This*equation
+
+; === use Regex and escape special chars ()+*
+>echo $TESTSTR
+<This is an equation:\(5\+3\)/2\*2
+>
+
+; === collect equation
+>echo $TESTSTR
++$equation=This is an equation:([0-9()/\*+]+)
+
+; === Start BC (which has no prompt)
+>bc
+<warranty
+>>$equation
+<<8
+>>
+>^D
+>
+
+
+#pau!
+
+
+
+
+
+
+

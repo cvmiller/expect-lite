@@ -4,7 +4,7 @@
 # Convert --parms to expect-lite param=value format
 PARAMS=`echo $* | /bin/sed -r 's;--([a-z_]+) ([0-9a-zA-Z]+);\1=\2;g'`
 echo $PARAMS
-expect-lite r=none c=$0 el=expect-lite test_host=none $PARAMS
+expect-lite r=localhost c=$0 el=expect-lite test_host=none $PARAMS
 exit $?
 # How to use this expect-lite file, Lines that begin with:
 #	'>' send to remote host, implies "wait for prompt"
@@ -20,15 +20,18 @@ exit $?
 # Self Self Test of Expect-lite Directives
 #	Runs another expect-lite self test, and monitors INFO & WARNings
 #	
+#	Requires ssh connection, timing issues with remote_host=none
 #
 #	Requires expect-lite version 3.5.0
 #
 
 # default expect-lite app
 
+# force use of Localhost (rather than none)
+LOCALHOST=localhost
 
 @10
->$el r=$test_host c=self_test_directives.txt el=$el 
+>$el r=$LOCALHOST c=self_test_directives.txt el=$el 
 <If: expr { "hello" != "hello" } |then   >echo FAIL|else  >echo Good|result0
 <expect-lite directive: \*NOINFO
 -<If: expr

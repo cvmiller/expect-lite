@@ -25,7 +25,7 @@ exit $?
 #	Requires expect-lite version 3.1.4
 
 @45
->>
+>
 >
 # default expect-lite app
 $el=expect-lite
@@ -33,6 +33,7 @@ $test_host=camelot-017
 
 ######## Get PWD to pass to child tests
 >echo $PWD
+>pwd
 +$pwd=\n(/[a-zA-Z0-9/_.-]+)
 
 ######## Get host to pass to child tests
@@ -45,7 +46,7 @@ $test_host=camelot-017
 ######## set defaults
 $count=0
 # number of tests to run
-$max_test_count=4
+$max_test_count=5
 $fail=0
 
 $self_test0=self_test_conditional.txt
@@ -53,6 +54,7 @@ $self_test1=self_test_math.txt
 $self_test2=self_test_var_deref.txt
 $self_test3=self_self_directive_test.txt
 $self_test4=self_test_fork.txt
+$self_test5=self_test_basics.txt
 
 
 %START_LOOP

@@ -2,6 +2,8 @@
 
 ##################################################################################
 #
+#  Copyright (C) Craig Miller 2008-2010
+#
 #  Copyright (C) Freescale Semiconductor, Inc. 2005-2007
 #
 #  See the file "COPYING" for information on usage and redistribution
@@ -15,7 +17,7 @@
 # Script logs into Remote-host, sends command file, while validating commands
 #	fails if validation fails, returns code 1 (0=passed)
 #
-# by Craig Miller craig@freescale.com	19 Jan 2005
+# by Craig Miller cvmiller@gmail.com	19 Jan 2005
 #
 # Command Arguments:
 #	<Remote-Host|IP>
@@ -38,7 +40,7 @@
 #
 
 # echo version in usage
-set version "3.5.2b1"
+set version "3.5.2b2"
 
 #set starting expect timeout 
 set timeout 30 
@@ -144,6 +146,7 @@ set _el_fork(current) "default"
 set _out ">"
 set _out_nowait ">>"
 set _in "<"
+set _in_noregex "<<"
 set _not_in "-<"
 set _timeout "@"
 set _exec "!"
@@ -1162,7 +1165,7 @@ proc _el_buffer_search {line_buffer line_ptr line_search} {
 #	
 #
 proc _el_script_exec {cmd_file} {
-	global remote_host _out _out_nowait _in _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
+	global remote_host _out _out_nowait _in _in_noregex _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
 	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0
 		
 	set prev_line ""
@@ -1461,7 +1464,29 @@ proc _el_script_exec {cmd_file} {
 						after [expr $delay_wait_for_host * 2]
 					}	
 				}
-			^\<	{ 	# Expect teststr or set success to 0 and fail test
+			^\<\<	{ 	# Expect teststr without regex or set success to 0 and fail test		'<<'=no regex
+					set _el(success) 0
+					print_comment_line
+					# execute expect lines if present
+					_el_exec_expect
+					set teststr [_el_strip_char $_el(line) $_in_noregex]
+
+					# catch expect, just in case
+					if {[catch {expect "$teststr" { set _el(success) 1 } } error  ] } {
+						if {$WARN} {
+							puts "\nExpect error: Expect-lite: $error\n"
+						}
+					}
+					
+					# look at the expect_out(buffer) for debugging
+					if { $DEBUG } {
+						puts "\nfind<<$teststr>>"
+						puts "  in<<$expect_out(buffer)>>"
+						#puts "  found_in<<$expect_out(0,string)>>"
+						puts "\n"
+					}
+				}
+			^\<	{ 	# Expect teststr or set success to 0 and fail test	'<'=use regex
 					set _el(success) 0
 					print_comment_line
 					# execute expect lines if present

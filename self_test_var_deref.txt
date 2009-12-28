@@ -16,8 +16,7 @@
 #
 
 # Turn on warnings
-!set ::WARN 1
-
+*WARN
 
 @3
 
