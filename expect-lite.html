@@ -1,6 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
+<html><head>
   <meta content="text/html; charset=ISO-8859-1">
   <meta name="AUTHOR" content="Craig Miller">
   <style>
@@ -16,10 +15,9 @@ margin-left: 1%;
 margin-right: 1%;
 }
   </style>
-  <title>expect-lite.html</title>
-</head>
-<body style="color: rgb(0, 0, 0);" alink="#ee0000" link="#0000ee"
- vlink="#551a8b">
+  <title>expect-lite.html</title></head>
+
+<body style="color: rgb(0, 0, 0);" alink="#ee0000" link="#0000ee" vlink="#551a8b">
 <h1 style="text-align: center;">Expect-Lite</h1>
 <h3 style="text-align: center;">Making automation
 scripting Simple<br>
@@ -90,8 +88,7 @@ loop protection</li>
 can
 be executable</span></a>
 with the
-help of a small embedded bash script&nbsp;<span
- style="background-color: rgb(255, 255, 102);"></span></li>
+help of a small embedded bash script&nbsp;<span style="background-color: rgb(255, 255, 102);"></span></li>
   <li><a href="#user_defined_prompt"><span style="font-weight: bold;">User
 defined
 prompt</span></a>
@@ -100,12 +97,10 @@ allows interaction with a wider range of hosts (routers, switches, etc)
   </li>
   <li><a href="#directive_fork"><span style="font-weight: bold;">Multiple
 Sessions</span></a>
-enabling interaction with a client and a server in one script - <span
- style="background-color: rgb(255, 255, 102);"> new in
+enabling interaction with a client and a server in one script - <span style="background-color: rgb(255, 255, 102);"> new in
 version 3.5.0</span></li>
   <li><a href="#instant_interact"><span style="font-weight: bold;">Instant-Interact</span></a>
-empowers on the spot debugging <span
- style="background-color: rgb(255, 255, 102);">new in version 3.5.0<br>
+empowers on the spot debugging <span style="background-color: rgb(255, 255, 102);">new in version 3.5.0<br>
     </span></li>
 </ul>
 <br>
@@ -118,8 +113,7 @@ usage and redistribution<br>
 of this file, and for a DISCLAIMER OF ALL WARRANTIES.<br>
 <h2>Download<br>
 </h2>
-Expect-lite downloads can be found on the Expect-lite Project Page: <a
- href="http://sourceforge.net/projects/expect-lite">http://sourceforge.net/projects/expect-lite</a><br>
+Expect-lite downloads can be found on the Expect-lite Project Page: <a href="http://sourceforge.net/projects/expect-lite">http://sourceforge.net/projects/expect-lite</a><br>
 The package includes expect-lite, as well as several examples.<br>
 <h2>Installation<br>
 </h2>
@@ -127,8 +121,7 @@ Place expect-lite in your path. Test by typing at the prompt:<br>
 <pre>expect-lite</pre>
 If you see the help, then it is ready to go, installation is complete!<br>
 <br>
-See the <a
- href="http://expect-lite.sourceforge.net/expect-lite_install.html">Installation
+See the <a href="http://expect-lite.sourceforge.net/expect-lite_install.html">Installation
 &amp; Quick Start Guide</a> for more help with tuning
 expect-lite to
 your environment.
@@ -163,15 +156,12 @@ Expect-lite interprets the following special characters at the
 beginning of each line in the script as:<br>
 <dl>
   <dd>
-    <table style="text-align: left; width: 80%;" border="1"
- cellpadding="2" cellspacing="2">
+    <table style="text-align: left; width: 80%;" border="1" cellpadding="2" cellspacing="2">
       <tbody>
         <tr>
-          <td
- style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Char<br>
+          <td style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Char<br>
           </td>
-          <td
- style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Action<br>
+          <td style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Action<br>
           </td>
         </tr>
         <tr>
@@ -192,16 +182,14 @@ without waiting for prompt
         <tr>
           <td style="vertical-align: top;">&lt;<br>
           </td>
-          <td style="vertical-align: top;">string/regex<span
- style="font-weight: bold;"> MUST</span> be
+          <td style="vertical-align: top;">string/regex<span style="font-weight: bold;"> MUST</span> be
 received from the remote host in the alloted timeout or the script will
 FAIL!</td>
         </tr>
-        <tr>
+        <tr><td>&lt;&lt;</td><td>string/no_regex MUST be received (similar to '&lt;' without regex)</td></tr><tr>
           <td style="vertical-align: top;">-&lt;<br>
           </td>
-          <td style="vertical-align: top;">if string/regex<span
- style="font-weight: bold;"> IS</span>
+          <td style="vertical-align: top;">if string/regex<span style="font-weight: bold;"> IS</span>
 received from the remote host the script will
 FAIL! (see <a href="#not_expect">Not Expect</a>)<br>
           </td>
@@ -289,8 +277,7 @@ expect</a>)</td>
           </td>
           <td style="vertical-align: top;">c-style
 if/then/else in the
-format ?cond?action::else_action (see <a
- href="expect-lite.html#conditional">conditionals</a>)<br>
+format ?cond?action::else_action (see <a href="expect-lite.html#conditional">conditionals</a>)<br>
           </td>
         </tr>
         <tr>
@@ -325,7 +312,7 @@ control characters are supported (from ^@ to ^\):<br>
 <ul>
   <li>^C or break, when it is desired to stop a running program
 e.g.
-&gt;^C</li>
+&gt;^C or &gt;&gt;^C</li>
   <li>^] or escape from telnet, e.g. &gt;^] This will bring
 the
 script
@@ -344,16 +331,12 @@ an expect-lite directive. Directives change the behaviour of
 expect-lite.<br>
 <dl>
   <dd>
-    <table style="text-align: left; width: 80%;" border="1"
- cellpadding="2" cellspacing="2">
+    <table style="text-align: left; width: 80%;" border="1" cellpadding="2" cellspacing="2">
       <tbody>
         <tr>
-          <td
- style="vertical-align: top; color: rgb(204, 204, 204); background-color: rgb(204, 204, 204);"><br>
+          <td style="vertical-align: top; color: rgb(204, 204, 204); background-color: rgb(204, 204, 204);"><br>
           </td>
-          <td
- style="vertical-align: top; color: rgb(204, 204, 204); background-color: rgb(204, 204, 204);"><span
- style="color: rgb(0, 0, 0); font-weight: bold;">Expect-lite
+          <td style="vertical-align: top; color: rgb(204, 204, 204); background-color: rgb(204, 204, 204);"><span style="color: rgb(0, 0, 0); font-weight: bold;">Expect-lite
 Directives</span><br>
           </td>
         </tr>
@@ -361,15 +344,13 @@ Directives</span><br>
           <td align="undefined" valign="undefined">*~filename</td>
           <td align="undefined" valign="undefined">Include
 a fail
-script, which expect-lite runs only if the main script fails (see <a
- href="expect-lite.html#fail_script">fail script</a>)</td>
+script, which expect-lite runs only if the main script fails (see <a href="expect-lite.html#fail_script">fail script</a>)</td>
         </tr>
         <tr>
           <td style="vertical-align: top;">*/prompt/<br>
           </td>
           <td style="vertical-align: top;">Set
-a user defined prompt (see <a
- href="expect-lite.html#user_defined_prompt">user defined
+a user defined prompt (see <a href="expect-lite.html#user_defined_prompt">user defined
 prompt</a>)<br>
           </td>
         </tr>
@@ -377,16 +358,14 @@ prompt</a>)<br>
           <td style="vertical-align: top;">*TERM<br>
           </td>
           <td style="vertical-align: top;">Immediately
-terminates script, but returns 0 (pass) (see <a
- href="#directive_term_fail">stopping execution early</a>)<br>
+terminates script, but returns 0 (pass) (see <a href="#directive_term_fail">stopping execution early</a>)<br>
           </td>
         </tr>
         <tr>
           <td style="vertical-align: top;">*FAIL<br>
           </td>
           <td style="vertical-align: top;">Immediately
-fails script, and returns 1 (fail) (see&nbsp;<a
- href="#directive_term_fail">stopping execution early</a>)<br>
+fails script, and returns 1 (fail) (see&nbsp;<a href="#directive_term_fail">stopping execution early</a>)<br>
           </td>
         </tr>
         <tr>
@@ -412,8 +391,7 @@ Techniques: Interact</a>)<br>
 &lt;session&gt;</td>
           <td align="undefined" valign="undefined">Multiple
 session support.
-Directs expect-lite to open a new session and spawns a newshell (see <a
- href="expect-lite.html#directive_fork">multiple sessions</a>)</td>
+Directs expect-lite to open a new session and spawns a newshell (see <a href="expect-lite.html#directive_fork">multiple sessions</a>)</td>
         </tr>
         <tr>
           <td style="vertical-align: top;">*SHOW VARS<br>
@@ -422,12 +400,9 @@ Directs expect-lite to open a new session and spawns a newshell (see <a
 all expect-lite variables. Can be used in interact mode.</td>
         </tr>
         <tr>
-          <td style="background-color: rgb(204, 204, 204);"
- align="undefined" valign="undefined"><br>
+          <td style="background-color: rgb(204, 204, 204);" align="undefined" valign="undefined"><br>
           </td>
-          <td style="background-color: rgb(204, 204, 204);"
- align="undefined" valign="undefined"><span
- style="color: rgb(0, 0, 0); font-weight: bold;">Logging Directives</span></td>
+          <td style="background-color: rgb(204, 204, 204);" align="undefined" valign="undefined"><span style="color: rgb(0, 0, 0); font-weight: bold;">Logging Directives</span></td>
         </tr>
         <tr>
           <td align="undefined" valign="undefined">*INFO <br>
@@ -470,13 +445,11 @@ like:
   <ul>
     <li>The parentheses is used by the regex engine, instead
 escape
-these characters: &lt;0.005 secs \(5 micro secs\) (see <a
- href="#regex_in_expect-lite">Use of Regex in expect-lite</a>)</li>
+these characters: &lt;0.005 secs \(5 micro secs\) (see <a href="#regex_in_expect-lite">Use of Regex in expect-lite</a>)</li><li>or use '&lt;&lt;' which does not use regex, and does not require escaping: &lt;&lt;0.005 secs (5 micro secs)</li>
   </ul>
-  <li>Use the expect character '&lt;' often. Check for valid
+  <li>Use the expect character '&lt;' or '&lt;&lt;' often. Check for valid
 results
-when possible. A script which expects nothing will never fail! (see <a
- href="#test_failure">Test Failure</a>)</li>
+when possible. A script which expects nothing will never fail! (see <a href="#test_failure">Test Failure</a>)</li>
   <li>Use printable comments ';' often. Think of it as writing
 a note to oneself, it will make reading log files much easier.</li>
 </ul>
@@ -500,7 +473,7 @@ debugging</a>).<br>
 <br>
 Additionally, the include scripts, debug.inc and show_vars.inc, have
 been added to the release (as of version 3.1.3) to assist in debugging
-scripts.<br>
+scripts (see also *SHOW VARS)<br>
 <br>
 See the <a href="expect-lite_tips.html">Tips and
 Techniques Guide</a>
@@ -534,8 +507,7 @@ of characters must be done when using '&lt;'. The following
 characters
 must be escaped with a backslash to convey their literal meaning:<br>
 <a name="escaped_regex"></a><br>
-<table style="text-align: left; width: 35%; margin-left: 40px;"
- border="1" cellpadding="2" cellspacing="2">
+<table style="text-align: left; width: 35%; margin-left: 40px;" border="1" cellpadding="2" cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top; font-weight: bold;">Example<br>
@@ -576,10 +548,15 @@ must be escaped with a backslash to convey their literal meaning:<br>
       </td>
       <td style="vertical-align: top;">dollar
 sign</td>
-    </tr>
+    </tr><tr><td>+</td><td>\+</td><td>plus</td></tr><tr><td>*</td><td>\*</td><td>astricks (or star)</td></tr>
   </tbody>
 </table>
-<br>
+<br><br><h3><a name="expect_no_regex"></a>Using &lt;&lt; without Regex</h3>There
+are times when the use of regex is not desired, or 'escaping'
+characters is burdensome. As of version 3.6.0, expect lines can begin
+with '&lt;&lt;' which will not use regex, but rather literal evalution
+of expected results. That said, wild-carding is still permitted such as
+'&lt;&lt;wild*permitted' would match 'wild-carding is still permitted'.<br><br>
 <h2><a name="variables"></a>Using Variables</h2>
 Expect-lite supports two types of variables:<br>
 <ul>
@@ -650,8 +627,7 @@ following example, the result will be 23:<br>
 <br>
 Both bitwise and arithmetic operators are supported with the following
 precedence (left to right):<br>
-<table style="text-align: left; width: 616px; height: 66px;" border="1"
- cellpadding="2" cellspacing="2">
+<table style="text-align: left; width: 616px; height: 66px;" border="1" cellpadding="2" cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top;">bitwise<br>
@@ -768,8 +744,7 @@ action 'echo "freedom at 55!". If $age is less than 55 then the action
 Each action or else_action is as if it began on a separate line. Since
 in the above example '&gt;' is used (e.g. &gt;echo) the echo
 line will
-be sent to the remote host. Any expect-lite action (see <a
- href="#special_characters">Special Characters</a>) can
+be sent to the remote host. Any expect-lite action (see <a href="#special_characters">Special Characters</a>) can
 be placed after
 the second question mark. For example, an <a href="#include_files">include
 file</a> may be executed based on a conditional:<br>
@@ -778,26 +753,22 @@ In order to make log files more understandable, a message will be
 printed when a conditional is evaluated, such as:<br>
 <pre>If: expr { "ppc" == "i386" } |then ~connect_i386.inc|else ~connect_ppc.inc|result0<br></pre>
 The message prints: what was evaluated (expr { "ppc" == "i386"
-}),&nbsp; 'then', and 'else' actions, as well as a result (0=false)<br>
+}),&nbsp; 'then', and 'else' actions, as well as a result (true or false)<br>
 <br>
 <a name="label"></a><span style="font-weight: bold;">Labels</span><br>
 <br>
 Conditionals are limited to a single line. Sometimes this is too
 limiting, as it would be nice to have several commands be executed
-based on the success of a conditional. To support this, the concept of <span
- style="font-weight: bold;">labels</span> has been
+based on the success of a conditional. To support this, the concept of <span style="font-weight: bold;">labels</span> has been
 introduced. A label
 is defined as having the first character a '%'. Although the label line
-itself does nothing, it provides a location to the conditional to <span
- style="font-style: italic;">Jump To Label</span>. The
+itself does nothing, it provides a location to the conditional to <span style="font-style: italic;">Jump To Label</span>. The
 following is a
 simple example of using a conditional in conjunction with a label:<br>
 <pre>$kmodules_inserted=true<br>? $kmodules_inserted == false ? %SKIP_CHECK_KMODS<br>&gt;lsmod | grep nfs<br>&lt;nfsd<br>&lt;exportfs<br>&lt;sunrpc<br>%SKIP_CHECK_KMODS<br></pre>
-When a label is the action of a conditional, there is an implied <span
- style="font-style: italic;">Jump to Label</span>.
+When a label is the action of a conditional, there is an implied <span style="font-style: italic;">Jump to Label</span>.
 Lines between the
-conditional and the label will be skipped. The <span
- style="font-style: italic;">Jump to Label</span>
+conditional and the label will be skipped. The <span style="font-style: italic;">Jump to Label</span>
 action is no longer
 limited to only
 jumping forward. (see <a href="#looping">Looping with
@@ -813,8 +784,7 @@ containing %SKIP. Of course it is easier for the script reader if
 clearer label names are used. Labels may contain spaces, as in this
 example:<br>
 <pre>; === Test conditional jump to label<br>? $jump == true ?%move along, nothing to see<br>&gt;echo "1"<br>&gt;echo "2"<br>&gt;echo "3"<br>%move along, nothing to see<br></pre>
-To assist reading the logs, the action <span
- style="font-style: italic;">Jump to Label</span> will
+To assist reading the logs, the action <span style="font-style: italic;">Jump to Label</span> will
 generate a
 message to standard out (captured in the log). From the above example,
 the following would be printed:<br>
@@ -823,15 +793,13 @@ the following would be printed:<br>
 <h2><a name="looping"></a>Looping with
 Conditionals &amp; Labels<br>
 </h2>
-Simple looping is now supported by allowing <span
- style="font-style: italic;">jump to label</span>
+Simple looping is now supported by allowing <span style="font-style: italic;">jump to label</span>
 backwards. The Repeat
 Loop is the easiest loop to implement:<br>
 <pre>; ======== Incrementing Loop ========<br>$max=5<br>$count=3<br>%REPEAT_INC_LOOP<br>	&gt;echo $count<br>	# increment variable<br>	+$count<br>?if $count &lt;= $max ?%REPEAT_INC_LOOP<br></pre>
 Because of <span style="font-style: italic;">jump to label</span>
 can
-jump backwards, it is important to assign <span
- style="font-style: italic;">unique</span>
+jump backwards, it is important to assign <span style="font-style: italic;">unique</span>
 looping labels, such as %REPEAT_INC_LOOP. Unexpected results will occur
 if non-unique loop label names are used. Non-looping labels, as
 illustrated in the previous section, are not required to be unique.<br>
@@ -870,7 +838,7 @@ final "}" line is sent to the
 remote-host. Because of this "execute after" effect, an expect-lite
 '&lt;' line can not be used within the bash loop. <br>
 <br>
-Another example is the while loop:<br>
+Another example is the bash while loop:<br>
 <pre>$max=5<br>&gt;i=0<br>&gt;while [ $i -lt $max ]<br>&gt;do<br>&gt;echo $i<br>&gt;let i+=1<br>&gt;done<br></pre>
 Conditionals via bash are also supported, as in this example:<br>
 <pre>$max=4<br>&gt;if [ $max -ne 5 ]; then<br>&gt;echo "max is not equal to 5"<br>&gt;else<br>&gt;echo "we have a winner"<br>&gt;fi<br></pre>
@@ -880,7 +848,7 @@ time (some hosts may be faster than others). The answer is echoed, and
 then captured using a dynamic variable. Note that that 'proc' is
 prepended to the answer, as it enables the capture to be much more
 specific.<br>
-<pre>&gt;PROC=`uname -i`<br>&gt;if [ "$PROC" == "i386" ]; then<br>&gt;echo proc20<br>&gt;else<br>&gt;echo proc100<br>&gt;fi<br>+loop_counter=\nproc([0-9]+)<br></pre>
+<pre>&gt;PROC=`uname -i`<br>&gt;if [ "$PROC" == "i386" ]; then<br>&gt;echo proc20<br>&gt;else<br>&gt;echo proc100<br>&gt;fi<br>+$loop_counter=\nproc([0-9]+)<br></pre>
 Note that 'proc' is outside the parenthesis, and therefore will not be
 captured into the expect-lite dynamic variable $loop_counter.<br>
 <br>
@@ -937,8 +905,7 @@ There are situations when expect-lite cannot provide a solution. Rather
 than force the user to abandon the simplicity of expect-lite, an
 embedded expect is supported. This functionality is provided to assist
 expect-lite rather than replace it. Lines beginning with '!' will be
-interpreted as native expect (see <a
- href="#limitations_of_embedded_expect">limitations below</a>).
+interpreted as native expect (see <a href="#limitations_of_embedded_expect">limitations below</a>).
 <br>
 <br>
 Embedded Expect requires the script writer to know&nbsp; native
@@ -958,8 +925,7 @@ and executed after an <span style="font-style: italic;">island
 shore</span>
 is reached. The <span style="font-style: italic;">island
 shore</span>
-is represented by lines that start with any <a
- href="#special_characters">special character</a>,
+is represented by lines that start with any <a href="#special_characters">special character</a>,
 except '#' and blank
 lines. However, it is recommended that the '&gt;' be used, as this
 implies a "wait for prompt."<br>
@@ -977,8 +943,7 @@ _el_fail_test function:<br>
 TCL files can be sourced, and functions can be declared and called from
 within embedded expect.<br>
 <br>
-<span style="font-weight: bold;"><a
- name="limitations_of_embedded_expect"></a>Limitations
+<span style="font-weight: bold;"><a name="limitations_of_embedded_expect"></a>Limitations
 of Embedded
 Expect</span>:<br>
 <ul>
@@ -1015,8 +980,7 @@ user defined manner. These directives include:<br>
   <li>multiple sessions - for hard to script environments *FORK</li>
   <li>managing logging - *INFO, *NOINFO, *WARN, *NOWARN,
 *DEBUG, *NODEBUG</li>
-  <li>debugging aid - *INTERACT (see <a href="#debugging">debugging</a>)<br>
-  </li>
+  <li>debugging aid - *INTERACT (see <a href="./expect-lite_tips.html">debugging tips</a><a href="./expect-lite_tips.html"></a>)</li><li>print all expect-lite variables - *SHOW VARS</li>
 </ul>
 <br>
 <h3><span style="font-weight: bold;"><a name="fail_script"></a></span>Fail
@@ -1046,8 +1010,7 @@ there were no failure.<br>
 <br>
 <h3><a name="user_defined_prompt"></a>User
 Defined Prompt&nbsp;&nbsp; */prompt/</h3>
-With each '&gt;' command an implied "wait for prompt" occurs (see <a
- href="#implied_prompt">implementation details</a>).
+With each '&gt;' command an implied "wait for prompt" occurs (see <a href="#implied_prompt">implementation details</a>).
 The predefined
 prompts are based on standard shell prompts (&gt;%$#). However, it
 is
@@ -1114,7 +1077,11 @@ as this is Monday, and terminate the script.<br>
 execution and return 0, or Pass. This is useful for debugging. *FAIL
 will stop execution and return 1, or Fail. If a fail script has been
 declared earlier, it will be executed before terminating execution.<br>
-<br>
+<br><h3><span style="font-weight: bold;"><a name="directive_term_fail"></a></span>Debugging by examining expect-lite variables with *SHOW VARS</h3>It
+can be useful when debugging a script to see what the value of
+variables are at some point in the script. This can be especially
+useful when used with *INTERACT, or pausing the script, and looking at
+the value of the variables.<br><br>
 <h3><a name="directive_fork"></a>Multiple Sessions
 *FORK</h3>
 Until version release 3.5.0, expect-lite has been intentionally limited
@@ -1124,8 +1091,7 @@ control/monitor both a client (e.g wget) and a server (httpd log).
 Without multiple session support this type of environment would be
 difficult to automate with expect-lite.<br>
 <br>
-What is a new session? A new session starts with a new shell on the <span
- style="font-style: italic;">remote host</span>. All
+What is a new session? A new session starts with a new shell on the <span style="font-style: italic;">remote host</span>. All
 commands '&gt;'
 and received text '&lt;' are constrained to that session. It is
 possible to use multiple sessions on the localhost using r=none,
@@ -1133,8 +1099,7 @@ however <a href="expect-lite_install.html#connect_method">r=none
 support is limted</a> due to timing issues. If multiple sessions
 on the
 localhost (the same host where expect-lite is running), it is better to
-ssh to the localhost by specifying r=localhost. This <span
- style="font-style: italic;">loop back</span> method
+ssh to the localhost by specifying r=localhost. This <span style="font-style: italic;">loop back</span> method
 ensures that the
 timing between commands and received text stay in sync.<br>
 <br>
@@ -1240,8 +1205,7 @@ Using Regex in expect-lite to allow multiple responses<br>
 <pre>&gt;id<br># allow either groups users or wheel<br>&lt;(users|wheel)<br></pre>
 <a name="temp_file_example"></a>Create a temporary
 file with unique
-name including script name and date. The <a
- href="#predefined_variables">predefined variable</a>
+name including script name and date. The <a href="#predefined_variables">predefined variable</a>
 $arg0 is contains
 the expect-lite script name.<br>
 <pre># date stamp of script run time<br>&gt;echo `date +_%Y_%m_%d_%H-%M-%S`<br>+$DATE=\n(_[0-9_-]+)<br><br>$temp_file=$arg0$DATE<br>; === Create a temp file using bash "here doc" method<br>&gt;cat &gt; $temp_file &lt;&lt;'+++'<br>&gt;line 1<br>&gt;line 2<br>&gt;+++<br>&gt;<br></pre>
@@ -1265,8 +1229,7 @@ input
 buffer</a>,
 and should be used before a valid expect. How long should the script
 wait for the un-expected? In order to reduce delays in script running
-time, the Not Expect feature only waits for <a
- href="#delay_wait_for_host">100ms</a>. This is usually
+time, the Not Expect feature only waits for <a href="#delay_wait_for_host">100ms</a>. This is usually
 enough time to
 detect quick error responses such as "file not found".&nbsp;<br>
 <br>
@@ -1324,8 +1287,7 @@ sending the command. The definition of a shell prompt a: $, #, % or
 '&gt;' for force the script to wait for the prompt:<br>
 <pre>&gt; $some_long_command<br>&lt;critical value<br># wait for prompt<br>&gt;<br></pre>
 Prompt detection can be problematic, and by no means is expect-lite's
-method perfect. Expect-lite looks for a <span
- style="text-decoration: underline;">prompt character</span>
+method perfect. Expect-lite looks for a <span style="text-decoration: underline;">prompt character</span>
 ($, #, %
 or
 &gt;) <span style="text-decoration: underline;">followed
@@ -1340,8 +1302,7 @@ is supported without modifying expect-lite.<br>
 <br>
 It may be useful to create files on the fly which will be used in the
 test. Since expect-lite does not read/write files directly, this
-function can be done with the linux command 'cat' and the <span
- style="font-style: italic;">bash here doc</span>
+function can be done with the linux command 'cat' and the <span style="font-style: italic;">bash here doc</span>
 method. Creating a
 regex
 file for example:<br>
@@ -1360,8 +1321,7 @@ variables</h3>
 Expect-lite has minimized the use of predefined variables to allow the
 user the widest latitude in selecting variable names. However a few
 predefined variables are useful and listed below:<br>
-<table style="text-align: left; width: 80%;" border="1" cellpadding="2"
- cellspacing="2">
+<table style="text-align: left; width: 80%;" border="1" cellpadding="2" cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top; font-weight: bold;">Predefined
@@ -1428,8 +1388,7 @@ comment as
 shown in the following:<br>
 <pre>; === starting long command<br>&gt;<br>&gt;start_long_command</pre>
 <br>
-<h3><span style="font-weight: bold;"><a
- name="instant-interact_explained"></a>Instant-Interact: More than just
+<h3><span style="font-weight: bold;"><a name="instant-interact_explained"></a>Instant-Interact: More than just
 a pretty prompt</span></h3>
 When the user presses ^\ (control+backslash) during the running of a
 script, expect-lite will drop into interactive mode. In version 3.5.0,
@@ -1479,22 +1438,19 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
 <br>
 <h2><a name="license_terms"></a>COPYING</h2>
 <br>
-<pre>Copyright (c) 2007, Freescale Semiconductor, Inc.<br>All rights reserved.<br><br>Redistribution and use in source and binary forms, with or without modification, are<br>permitted provided that the following conditions are met:<br><br> * Redistributions of source code must retain the above copyright notice, this list<br>	of conditions and the following disclaimer.<br> * Redistributions in binary form must reproduce the above copyright notice, this<br>	list of conditions and the following disclaimer in the documentation and/or other<br>	materials provided with the distribution.<br> * Neither the name of the Freescale Semiconductor nor the names of its contributors<br>	may be used to endorse or promote products derived from this software without<br>	specific prior written permission.<br><br>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY<br>EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF<br>MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL<br>THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,<br>SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT<br>OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS<br>INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT<br>LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE<br>OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.<br></pre>
+<pre>Copyright (C) 2008-2010, Craig Miller<br>Copyright (c) 2005-2007, Freescale Semiconductor, Inc.<br>All rights reserved.<br><br>Redistribution and use in source and binary forms, with or without modification, are<br>permitted provided that the following conditions are met:<br><br> * Redistributions of source code must retain the above copyright notice, this list<br>	of conditions and the following disclaimer.<br> * Redistributions in binary form must reproduce the above copyright notice, this<br>	list of conditions and the following disclaimer in the documentation and/or other<br>	materials provided with the distribution.<br> * Neither the name of the Freescale Semiconductor nor the names of its contributors<br>	may be used to endorse or promote products derived from this software without<br>	specific prior written permission.<br><br>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY<br>EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF<br>MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL<br>THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,<br>SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT<br>OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS<br>INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT<br>LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE<br>OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.<br></pre>
 <br>
 <br>
 <hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15
-January 2009<br>
-</span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span
- style="font-style: italic;"><br>
+January 2010<br>
+</span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
-<small><a
- href="https://lists.sourceforge.net/lists/listinfo/expect-lite-users">Subscribe
+<small><a href="https://lists.sourceforge.net/lists/listinfo/expect-lite-users">Subscribe
 to expect-list-users</a> Discussion List</small><br>
 <br>
 <small><span style="font-style: italic;">this
 document for version
-3.5.0 and above</span><br style="font-style: italic;">
+3.6.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
-</body>
-</html>
+</body></html>

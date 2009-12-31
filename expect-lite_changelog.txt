@@ -1,6 +1,8 @@
 ##################################################################################
 #
-#  Copyright (C) Freescale Semiconductor, Inc. 2005-2006
+#  Copyright (C) Craig Miller 2008-2010
+#
+#  Copyright (C) Freescale Semiconductor, Inc. 2005-2007
 #
 #  See the file "license.terms" for information on usage and redistribution
 #  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -535,49 +537,14 @@ Updated 29 Sept 2009 version 3.5.2b1
 	Made sending Control Charactors more consistant
 		Now use >>^<char> or  >^<char>
 
-
------------- Future Versions --------------------------
-
-
-Version 3.5.0
-o	User Defined Prompt & Dynamic Variables - May need to fix
-	Fixed - but UDF's are harder to define than thought
-		May need additional documentation - done
-	Add more doc about using *FORK in INTERACT (tips doc?)
-
-o	cli -v -vv overide of script logging directives - done
-
-o	make _el_fail_test an expect-lite directive: *FAIL, *TERM (no fail) - done
-	*INTERACT		a shell which provides interaction - done
-	add directives *NOWARN *WARN *NODEBUG *DEBUG - Done
-
-o	add *SHOW VARS (what else can be "shown") - done d14
-		*SHOW LAST - shows current line in script
-
-o	*FORK <name>
-	Permits access to multiple spawn_ids (spawn to a shell)
-		Includes additional debugging info with --v - done
+Updated 28 December 2009 version 3.5.2b2 (3.6.0.RC)
+	Added '<<' for expect with NO regex
+		Still allows wildcarding, e.g. <<this*that
+	Added self_test_basics.txt for regression of feature
+	Added DEBUG statement inside Embedded Expect to make it more visable
 	
-o	Add better prompt initialization (for other shells, like tcsh with bold in prompt)
-		Set $prompt or $PS1 to sane values - done
-		**SHELL=<shell> directive - sets shell	
-			Allow to blank			
-		Should this be a configure vs runtime directive? configure only
-		Not supported in include scripts
-		
-o	set sane prompt at login to remote host - done
-	Added better prompt wait at login - done
-
-o	Differenciate between WARN and INFO
-		If, Dyn-Var should be INFOs - done
-		Test FAIL/PASS should be INFOs? - done d14
-
-o	Update Documentation 
-	Tips and Techniques - replace with *INTERACT, discuss Instant-Interact - done
-	Quick Start Guide - update with Directives in fine tuning section - done
-		ie. *WARN
-	Explain more how *FORK works. Discuss where the new session begins.	(implementation details) - done d14
-
+	
+------------ Future Versions --------------------------
 		
 Future
 o	Update for more config directives (put in own proc)

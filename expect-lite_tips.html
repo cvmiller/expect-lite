@@ -1,6 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
+<html><head>
   <meta content="text/html; charset=ISO-8859-1">
   <meta name="AUTHOR" content="Craig Miller">
   <style>
@@ -19,8 +18,8 @@ body {
    margin-right: 1%;
 }
   </style>
-  <title>expect-lite Tips</title>
-</head>
+  <title>expect-lite Tips</title></head>
+
 <body>
 <h1 style="text-align: center;">Expect-Lite&nbsp;&nbsp; Tips and
 Techniques</h1>
@@ -84,8 +83,11 @@ over to the user for an interactive session.<br>
 This feature requires a tcl package Tclx to be installed, and will
 automatically be enabled when the package is present. With the feature
 enabled, the user can press '^\' (control+backslash) at anytime and
-enter Interact. This is the easiest, and fastest way to debug a script.<br>
-<br>
+enter Interact. This is the easiest, and fastest way to debug a script.<br><br><h3><a name="debugging"></a>Debugging with the el_shell</h3>To make debugging of scripts even easier, both methods of <span style="font-weight: bold;">interact</span>
+support a limited expect-lite "shell". In this "el_shell", expect-lite
+script commands can be typed, even assigning variables inside the
+paused script, for example:<br>
+<pre>$MYVAR=today<br><br>*SHOW VARS<br>Var:0           Value:0<br>Var:MYVAR               Value:today<br>Var:TEST                Value:/proc/cpuinfo<br><br>&gt;&gt;pwd<br>pwd<br>/home/user<br></pre><br>
 <h2><a name="fail_then_interact"></a>Fail then Interact<br>
 </h2>
 There is a secret back door to expect-lite, which reverses a script
@@ -149,7 +151,7 @@ As of expect-lite version 3.5.0, -vv or --verbose will display all
 warnings and debug information (including user defined prompt debug
 info)<br>
 <br>
-<h2><a name="variables_values"></a>Showing Variables &amp; Values<br>
+<h2><a name="variables_values"></a>Showing Variables &amp; Values with *SHOW VARS<br>
 </h2>
 Sometimes when troubleshooting a script, it is really useful to display
 the value of an expect-lite variable. The easiest method to display a
@@ -158,19 +160,15 @@ is a variable named '$max', by adding the following line to the script,
 $max will be dereferenced and displayed:<br>
 <pre>; The value of max is:$max<br></pre>
 The above method works well for a few variables, but it may be
-neccessary to view all the expect-lite variables. Using the following
-include script, show_vars.inc, in the expect-lite script will display
-all the assigned variables: <br>
-<pre># Shows all defined expect-lite Vars<br>; === Show all Vars Defined<br>!set var_list [array names user_namespace]<br>!set var_list_sorted [lsort $var_list]<br>!foreach i $var_list_sorted {<br>!       puts "Var:$i \t\t\Value:$user_namespace($i)"<br>!}<br>&gt;<br>&gt;sleep 1<br>&gt;<br><br></pre>
-Including the show_vars script with the following line in the script to
-be debugged:<br>
-<pre>~show_vars.inc<br></pre>
+neccessary to view all the expect-lite variables. In previous versions
+of expect-lite, a script (show_vars.inc) was required to view all
+variable values. As of version 3.5.0, the expect-lite directive: *SHOW
+VARS now performs the same function. <br><br>All variables can now be displayed by using the line:<br>
+<pre>*SHOW VARS<br></pre>
 The include script is written in embedded expect and will walk the
 array of expect-lite variables, and print their respective values. The
 output will appear like the following:<br>
-<pre> === Show all Vars Defined<br><br>Var:count               Value:14<br>Var:first               Value:this is a regression test line<br>Var:gen10               Value:test10<br>Var:gen11               Value:test11<br>Var:gen12               Value:test12<br>Var:gen13               Value:test13<br>...<br>Var:mac_da12            Value:38:8B:50:49:AE:0D<br>Var:mac_da13            Value:38:E4:EB:0C:DE:4B<br></pre>
-The include script, show_vars.inc, is included in the expect-lite
-release (as of version 3.1.3)<br>
+<pre> === Show all Vars Defined<br><br>Var:count               Value:14<br>Var:first               Value:this is a regression test line<br>Var:gen10               Value:test10<br>Var:gen11               Value:test11<br>Var:gen12               Value:test12<br>Var:gen13               Value:test13<br>...<br>Var:mac_da12            Value:38:8B:50:49:AE:0D<br>Var:mac_da13            Value:38:E4:EB:0C:DE:4B<br></pre><br>*SHOW VARS can also be used with *INTERACT and instant-interact to view the values all assigned variables.<br>
 <br>
 <h2><a name="define_narrowly"></a>Define '&lt;' narrowly</h2>
 Do not define '&lt;' too broadly. For example, DO NOT use the following:<br>
@@ -212,9 +210,9 @@ also be variables<br>
 &lt;0.005 secs (5 micro secs)</li>
   <ul>
     <li>The parentheses is used by the regex engine, instead escape
-these characters: &lt;0.005 secs \(5 micro secs\)</li>
+these characters: &lt;0.005 secs \(5 micro secs\)</li><li>or use '&lt;&lt;' which does not use regex, and does not require escaping: &lt;&lt;0.005 secs (5 micro secs)</li>
   </ul>
-  <li>Use the expect character '&lt;' often. Check for valid results
+  <li>Use the expect character '&lt;' or '&lt;&lt;' often. Check for valid results
 when possible. A script which expects nothing will never fail!</li>
   <li>Use printable comments ';' often. Think of it as writing
 a note to oneself, it will make reading log files much easier.</li>
@@ -228,12 +226,11 @@ Expect-lite was written to create quick and easy automation of
 repetitive tasks.<br>
 <br>
 <br>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15 January 2009<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15 January 2010<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this document for version
-3.5.0 or later</span><br style="font-style: italic;">
+3.6.0 or later</span><br style="font-style: italic;">
 </small>
 <br>
-</body>
-</html>
+</body></html>

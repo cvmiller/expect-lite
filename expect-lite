@@ -2,9 +2,9 @@
 
 ##################################################################################
 #
-#  Copyright (C) Craig Miller 2008-2010
+#  Copyright (C) 2008-2010 Craig Miller
 #
-#  Copyright (C) Freescale Semiconductor, Inc. 2005-2007
+#  Copyright (C) 2005-2007 Freescale Semiconductor, Inc. 
 #
 #  See the file "COPYING" for information on usage and redistribution
 #  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "3.5.2b2"
+set version "3.6.0.RC1"
 
 #set starting expect timeout 
 set timeout 30 
@@ -1328,7 +1328,7 @@ proc _el_script_exec {cmd_file} {
 
 			# join Expect lines		
 			set __el_cont_lines [join $__el_lines " ; "]
-			#puts "EL:$__el_cont_lines \n"
+			if {$::DEBUG} {puts "EL-Expect: $__el_cont_lines \n"}
 
 			if {[ catch { uplevel {eval $_el_cont_lines }}  error ]} {
 				regsub -all " ; " $__el_cont_lines "\n" __el_cont_lines
@@ -1667,10 +1667,15 @@ proc _el_script_exec {cmd_file} {
 						
 						if {$INFO} {
 							set _test_result [eval  $_test ]
-							if { $_else_action == ""} {
-								puts "\nIf:$_test|then$_action|result$_test_result\n"
+							if {$_test_result} {
+								set _test_result "TRUE"
 							} else {
-								puts "\nIf:$_test|then$_action|else$_else_action|result$_test_result\n"
+								set _test_result "FALSE"
+							}
+							if { $_else_action == ""} {
+								puts "\nIf:$_test|then$_action|result=$_test_result\n"
+							} else {
+								puts "\nIf:$_test|then$_action|else$_else_action|result=$_test_result\n"
 							}
 						}
 						# no syntax error, go ahead and eval the conditional action or else action
