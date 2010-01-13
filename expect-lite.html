@@ -16,7 +16,6 @@ margin-right: 1%;
 }
   </style>
   <title>expect-lite.html</title></head>
-
 <body style="color: rgb(0, 0, 0);" alink="#ee0000" link="#0000ee" vlink="#551a8b">
 <h1 style="text-align: center;">Expect-Lite</h1>
 <h3 style="text-align: center;">Making automation
@@ -57,7 +56,7 @@ This creates many lines of expect with minimal "code"<br>
   </li>
   <li><a href="#regex_in_expect-lite"><span style="font-weight: bold;">Regular
 expression</span></a>
-(regex) evaluation in expected results</li>
+(regex) evaluation in expected results</li><ul><li><a href="#expect_no_regex">Non-Regex evaluation</a> also available in expected results <span style="background-color: rgb(255, 255, 102);">new in version 3.6.0</span></li></ul>
   <li style="font-weight: bold;"><a href="#variables">Static and
 Dynamic
 Variables</a> <span style="font-weight: normal;">with math
@@ -97,15 +96,13 @@ allows interaction with a wider range of hosts (routers, switches, etc)
   </li>
   <li><a href="#directive_fork"><span style="font-weight: bold;">Multiple
 Sessions</span></a>
-enabling interaction with a client and a server in one script - <span style="background-color: rgb(255, 255, 102);"> new in
-version 3.5.0</span></li>
+enabling interaction with a client and a server in one script&nbsp;<span style="background-color: rgb(255, 255, 102);"></span></li>
   <li><a href="#instant_interact"><span style="font-weight: bold;">Instant-Interact</span></a>
-empowers on the spot debugging <span style="background-color: rgb(255, 255, 102);">new in version 3.5.0<br>
+empowers on the spot debugging <span style="background-color: rgb(255, 255, 102);">improved in version 3.6.0<br>
     </span></li>
 </ul>
 <br>
-<h2>BSD-Style License</h2>
-Copyright (C) Freescale Semiconductor, Inc. 2005-2007<br>
+<h2>BSD-Style License</h2>Copyright (C) Craig Miller 2008-2010<br>Copyright (C) Freescale Semiconductor, Inc. 2005-2007<br>
 <br>
 See the&nbsp; <a href="#license_terms">COPYING</a>
 for information on
@@ -184,9 +181,9 @@ without waiting for prompt
           </td>
           <td style="vertical-align: top;">string/regex<span style="font-weight: bold;"> MUST</span> be
 received from the remote host in the alloted timeout or the script will
-FAIL!</td>
+FAIL! (see <a href="#test_failure">test failure</a>)</td>
         </tr>
-        <tr><td>&lt;&lt;</td><td>string/no_regex MUST be received (similar to '&lt;' without regex)</td></tr><tr>
+        <tr><td>&lt;&lt;</td><td>literal string MUST be received (similar to '&lt;' without regex evaluation)</td></tr><tr>
           <td style="vertical-align: top;">-&lt;<br>
           </td>
           <td style="vertical-align: top;">if string/regex<span style="font-weight: bold;"> IS</span>
@@ -326,7 +323,7 @@ Control characters must be the first two characters on the line
 (e.g.[^][A-Z]). The sequence of ^C anywhere else in the line will not
 be interpreted as a control-C, but rather the two characters '^' 'C'.<br>
 <br>
-Lastly, any line beginning with an asterick '*' will be interpreted as
+Lastly, any line beginning with an asterisk '*' will be interpreted as
 an expect-lite directive. Directives change the behaviour of
 expect-lite.<br>
 <dl>
@@ -445,7 +442,7 @@ like:
   <ul>
     <li>The parentheses is used by the regex engine, instead
 escape
-these characters: &lt;0.005 secs \(5 micro secs\) (see <a href="#regex_in_expect-lite">Use of Regex in expect-lite</a>)</li><li>or use '&lt;&lt;' which does not use regex, and does not require escaping: &lt;&lt;0.005 secs (5 micro secs)</li>
+these characters: &lt;0.005 secs \(5 micro secs\) (see <a href="#regex_in_expect-lite">Use of Regex in expect-lite</a>)</li><li>or use '&lt;&lt;' which does not use regex, and does not require escaping: &lt;&lt;0.005 secs (5 micro secs) (see <a href="#expect_no_regex">using non-regex evaluation</a>)</li>
   </ul>
   <li>Use the expect character '&lt;' or '&lt;&lt;' often. Check for valid
 results
@@ -551,12 +548,21 @@ sign</td>
     </tr><tr><td>+</td><td>\+</td><td>plus</td></tr><tr><td>*</td><td>\*</td><td>astricks (or star)</td></tr>
   </tbody>
 </table>
-<br><br><h3><a name="expect_no_regex"></a>Using &lt;&lt; without Regex</h3>There
+<br><br><h3><a name="expect_no_regex"></a>Using &lt;&lt; for non-regex evaluation</h3>There
 are times when the use of regex is not desired, or 'escaping'
 characters is burdensome. As of version 3.6.0, expect lines can begin
 with '&lt;&lt;' which will not use regex, but rather literal evalution
 of expected results. That said, wild-carding is still permitted such as
-'&lt;&lt;wild*permitted' would match 'wild-carding is still permitted'.<br><br>
+'&lt;&lt;wild*permitted' would match 'wild-carding is still permitted'.<br><br><span style="font-weight: bold;"><a name="handling_xml_tags"></a>Handling HTML/XML Tags in expect lines</span><br>The &lt;&lt; may cause a backward compatibility problem, if the script was expecting an HTML tag, such as<br><pre>&gt;grep body my_html_file.html<br>&lt;&lt;body.+&gt;</pre>In
+the above example, the script is expecting a body tag with 1 or more
+characters between body and the closing greater-than of the tag.
+However the new feature will not interpret this line as regex, but
+rather interpret the beginning of the line as &lt;&lt;, and evaluate it
+as a literal. The method to force expect-lite to evaluate the line as
+regex, is to change the line is slightly:<br><pre>&gt;grep body my_html_file.html<br>&lt;[&lt;]body.+&gt;</pre>By
+making the first expected character as a regex character class, it
+signals to expect-lite that this line should be evaluated as regex,
+rather than a literal.<br><br>
 <h2><a name="variables"></a>Using Variables</h2>
 Expect-lite supports two types of variables:<br>
 <ul>
@@ -1153,7 +1159,7 @@ Assignments, User Defined Prompt assignments</li>
   <li>WARN: Instant-Interact feature disabled, Wait-for-prompt
 timeouts, Using localhost (r=none), Unable to parse Conditional,
 Dynamic Variable Capture timeouts, Unable to parse math variable
-statement, Unable to parse FORK session, Lost connection to remote host</li>
+statement, Unable to parse FORK session</li>
   <li>DEBUG: Additional debugging information for: User Defined Prompt,
 FORK session instantiation/switching,
 '&lt;' searching, Dynamic Variable capture</li>
@@ -1189,7 +1195,7 @@ Starting a ssh session to another host<br>
 <a name="screen_example"></a>Use of 'screen' command
 to keep a command
 alive after test completes<br>
-<pre>; ==== Use Screen command for to keep application running ====<br>&gt;screen <br>&gt; $pmm <br># Check that HW is alive<br>&gt;ping<br>&lt;Successfully pinged the PM H/W<br>; ==== Keep pmm application active, and detach from this screen<br>&gt;^A<br>&gt;^D<br>&lt;detached<br>&gt;<br></pre>
+<pre>; ==== Use Screen command for to keep application running ====<br>&gt;screen <br>&gt; $pmm <br># Check that HW is alive<br>&gt;ping<br>&lt;Successfully pinged the PM H/W<br>; ==== Keep pmm application active, and detach from this screen<br>&gt;&gt;^A<br>&gt;&gt;^D<br>&lt;detached<br>&gt;<br></pre>
 <a name="dyn_var_example"></a>Assigning a dynamic
 variable $host using
 regex to capture the hostname
@@ -1200,7 +1206,7 @@ variables $HOME and $SHELL, while expecting $TERM=xterm<br>
 <pre>&gt;env | sort<br>+$home=\nHOME=([a-z/]+)<br>+$shell=\nSHELL=([a-z/]+)<br>&lt;TERM=xterm<br>Assigned Var:home=/home/joe<br>Assigned Var:shell=/bin/bash<br>&gt;<br></pre>
 Manage multiple Screen commands with a dynamic variable and regex
 capture<br>
-<pre># show the last screen in the list <br>&gt;screen -list | grep pts | sort | tail -1<br># regex capture to dynamically assign the result to var $myscreen<br>+$myscreen=([0-9]+\.pts.[0-9]+.[a-z\- 0-9]+)<br># connect to $myscreen<br>&gt; screen -r $myscreen<br># inside existing screen, kick it to get a prompt<br>&gt;^M<br>&gt; sleep 3<br>&gt; ls<br>&gt;<br>&gt;^A<br>&gt;^D<br>&lt;detached<br>&gt;<br></pre>
+<pre># show the last screen in the list <br>&gt;screen -list | grep pts | sort | tail -1<br># regex capture to dynamically assign the result to var $myscreen<br>+$myscreen=([0-9]+\.pts.[0-9]+.[a-z\- 0-9]+)<br># connect to $myscreen<br>&gt; screen -r $myscreen<br># inside existing screen, kick it to get a prompt<br>&gt;&gt;^M<br>&gt; sleep 3<br>&gt; ls<br>&gt;<br>&gt;&gt;^A<br>&gt;&gt;^D<br>&lt;detached<br>&gt;<br></pre>
 Using Regex in expect-lite to allow multiple responses<br>
 <pre>&gt;id<br># allow either groups users or wheel<br>&lt;(users|wheel)<br></pre>
 <a name="temp_file_example"></a>Create a temporary
@@ -1298,7 +1304,7 @@ This should work for most standard prompts, however coloured or fancy
 prompts may not be detected. As of
 version 3.1.5, <a href="#user_defined_prompt">user
 defined prompt</a>
-is supported without modifying expect-lite.<br>
+is supported.<br>
 <br>
 It may be useful to create files on the fly which will be used in the
 test. Since expect-lite does not read/write files directly, this
@@ -1400,17 +1406,19 @@ feature will be disabled, and a warning will be printed.<br>
 <br>
 Control will be returned to the script when '+++' is typed. In addition
 to returning to the script, the current command in the script will be
-"Passed", disabling it from failing the script. This is useful when
-debugging a script, the user notes that the response is not as
-expected, and presses ^\ to moved to interact mode. Returning from
+"Passed", preventing it from failing the script. This is useful when
+debugging a script, the user notices that the response is not as
+expected, and presses ^\ to move to interact mode. Returning from
 interact mode, the line which would have failed the script (because of
 the response not being as expected) will be "Passed" and the script
 will continue. This Passing action is line oriented, and other '&lt;'
 lines in the script can still fail the script.<br>
 <br>
-There is experimental (read: could be better tested) access
-to expect-lite commands or directives. <br>
-<br>
+There is experimental (read: could be better tested) "el_shell" to access
+to expect-lite commands or directives while the script is paused with instant-interact.&nbsp;In this "el_shell", expect-lite
+script commands can be typed, even assigning variables inside the
+paused script, for example:<br>
+<pre>$MYVAR=today<br><br>*SHOW VARS<br>Var:0           Value:0<br>Var:MYVAR               Value:today<br>Var:TEST                Value:/proc/cpuinfo<br><br>&gt;&gt;pwd<br>pwd<br>/home/user</pre><br>
 <h3><a name="fork_explained">*FORK: what happens behind the scenes<br>
 </a></h3>
 A new *FORK session actually creates an additional login(s) to the
