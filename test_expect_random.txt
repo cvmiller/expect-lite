@@ -74,18 +74,25 @@ $seed=$seed
 ; === initialize the rng
 !set_random_seed seed
 
-; === Randomize expect-lite variables x & y
-# !randomize <var name> <range_start> <range_end>
+# loop a few times
+$count=0
+$max=3
+*NOINFO
+%TOP_LOOP
+	;; === Randomize expect-lite variables x & y
+	# !randomize <var name> <range_start> <range_end>
 
-!randomize x 0 255
->
-; === Display value of x is $x
-!dec2hex x
-!randomize w 5 10
-!randomize y 20 50
->
-; === Display value of w is $w, x is 0x$x, y is $y
->
+	!randomize x 0 255
+	>
+	;; === Display value of x is $x
+	!dec2hex x
+	!randomize w 5 10
+	!randomize y 20 50
+	>
+	;; === Display value of w is $w, x is 0x$x, y is $y
+	>
+	+$count
+?if $count<$max ?%TOP_LOOP
 
 ; == do bitwise operation 9 << 2
 $x=9
