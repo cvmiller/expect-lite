@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# make this auto-runnable! 
+# Little bootstrap bash script to run kick start expect-lite script
+# Convert --parms to expect-lite param=value format
+PARAMS=`echo $* | /bin/sed -r 's;--([a-z_-]+) ([0-9a-zA-Z_/-]+);\1=\2;g'`
+echo $PARAMS
+expect-lite r=none c=$0 el=expect-lite d=$PWD $PARAMS
+exit $?
+
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+#	Test of sudo privilages from a script
+#
+#
+
+#timeout
+@5
+# sudo password
+$pass=secret
+
+# source in native TCL function run_sudo
+!source sudo.tcl
+>
+
+!run_sudo id $pass
++$mygid=gid=[0-9]+\(([a-z]+)\)
+<uid=0
+>
+; == my gid is: $mygid
+>
+
+#pau!
+
+
+
