@@ -1,41 +1,47 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
-  <meta content="text/html; charset=ISO-8859-1">
-  <meta name="AUTHOR" content="Craig Miller">
-  <style>
-	h2 {
-		background-color:#CCCCCC;}
-	pre {
- 		background-color:#f0f0f0;}
-body {
-   //background-image: url("bluestrip.gif");
-   //background-position: top left;
-   //background-repeat: repeat-y;
-   margin-left: 1%;
-   margin-right: 1%;
-}
-  </style>
-  <title>expect-lite Installation and Quick Start Guide</title>
-</head>
+<html><head>
+
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<meta name="AUTHOR" content="Craig Miller">
+<link rel="stylesheet" type="text/css" href="el.css">
+<title>expect-lite Installation and Quick Start Guide</title></head>
 <body>
-<h1 style="text-align: center;">Expect-Lite</h1>
-<h3 style="text-align: center;">Making automation scripting Simple</h3>
-<h3 style="text-align: center;">Installation and Quick Start Guide</h3>
+
+<table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
+<tbody class="page">
+<tr>
+<td style="vertical-align: top; width: 35%;"><br>
+<div style="text-align: center;"><a href="index.html"><img style="font-weight: bold; width: 200px; height: 213px; border: 0px;"  alt="greater than" src="keycap_200.jpg"></a><br>
+<h1>expect-lite</h1>
 <br>
-<hr style="width: 100%; height: 2px;">
-<h2>Quick Install</h2>
-Place expect-lite in your path. Test by typing at the prompt:<br>
+<h2>Automation for the rest of us</h2>
+<h2 style="text-align: center;">Installation and
+Quick Start Guide</h2>
+</div>
+<script type="text/javascript" src="js-side-menu.js"></script>
+<noscript><br/>Please Enable Javascript
+to see Features, Downloads, and Docs </noscript>
+</td>
+<td style="vertical-align: middle; width: 1px;" vertical-align="" top="" 5="">
+<img src="vbar.gif" style="width: 1px; height: 4000px;"></td>
+<td style="vertical-align: top; width: 5%;"><br>
+</td>
+<td style="vertical-align: top;">
+<!--- Begin of Right Column Content --->
+
+
+<h2>Download<br></h2>expect-lite can be downloaded from&nbsp;the expect-lite Project Page: <a href="http://sourceforge.net/projects/expect-lite">http://sourceforge.net/projects/expect-lite</a><br>The tar.gz package includes expect-lite, as well as over 25 examples.<br><br><h2>Quick Install</h2>Untar the expect-lite package, and copy the expect-lite file in your path (typically ~/bin/). <br><pre>cp expect-lite ~/bin/</pre>Test by typing at the prompt:<br>
 <pre>expect-lite</pre>
 If you see the help, then it is ready to go, installation is complete!<br>
 <br>
 <h2>Quick Start</h2>
-Expect-lite has many features which make it useful, and the <a href="http://expect-lite.sourceforge.net/">documenation</a> highlights
+Expect-lite has many features which make it useful, and the <a href="http://expect-lite.sourceforge.net/">documenation</a>
+highlights
 those. But to start using expect-lite quickly, you require two items:<br>
 <ol>
-  <li>a script</li>
-  <li>a host&nbsp;</li>
+<li>a script</li>
+<li>a host&nbsp;</li>
 </ol>
 Here is a quick script which you can paste into a file to test
 expect-lite,&nbsp;call it test.elt :<br>
@@ -55,18 +61,18 @@ Details</a>.<br>
 <h2>BSD-Style License</h2>
 Copyright (C) Freescale Semiconductor, Inc. 2005-2007<br>
 <br>
-See the&nbsp; <a href="#license_terms">COPYING</a> for information on
+See the&nbsp; <a href="#license_terms">COPYING</a>
+for information on
 usage and redistribution<br>
-of this file, and for a DISCLAIMER OF ALL WARRANTIES.<br>
-<h2>Download<br>
-</h2>
-Expect-lite downloads can be found on the Expect-lite Project Page: <a href="http://sourceforge.net/projects/expect-lite">http://sourceforge.net/projects/expect-lite</a><br>
-The package includes expect-lite, as well as several examples.<br>
+of this file, and for a DISCLAIMER OF ALL WARRANTIES.<br><br>
 <h2>More Details<br>
 </h2>
-<a name="more_details"></a>Expect-lite was created to prevent the
-scriptor, you, from having to write expect scripts in TCL. However with
-that in mind, there are a few TCL details one should know that will <span style="font-style: italic;">tune</span> expect-lite to perform better
+<a name="more_details"></a>Expect-lite was
+created
+to prevent the
+scriptor, you, from having to write Expect scripts in TCL. However with
+that in mind, there are a few TCL details one should know that will <span style="font-style: italic;">tune</span> expect-lite to
+perform better
 in your environment.<br>
 <br>
 Since expect-lite is written in TCL, an interpretive language, making
@@ -77,32 +83,43 @@ There are several global variables inside expect-lite which will help
 tune it to your environment. Open your favourite editor, and load
 expect-lite. The following sections will cover the tuneable variables:<br>
 <ul>
-  <li><a href="#default_timeout">Default Timeout</a></li>
-  <li>I<a href="#infinite_looop">nfinite loop protection</a></li>
-  <li><a href="#user_name_password">User name and password</a> (for
+<li><a href="#default_timeout">Default
+Timeout</a></li>
+<li>I<a href="#infinite_looop">nfinite loop
+protection</a></li>
+<li><a href="#user_name_password">User name
+and
+password</a> (for
 connect methods)</li>
-  <li><a href="#connect_method">connect methods</a> (telnet, ssh,
+<li><a href="#connect_method">connect methods</a>
+(telnet, ssh,
 ssh_key)</li>
-  <li><a href="#print_warnings">print warnings</a>&nbsp;</li>
-  <li><a href="#remote_shell">remote shell</a></li>
-  <li><a href="#delay_wait_for_host">delay wait for remote host</a></li>
-  <li><a href="#wait_for_prompt">prompt detection</a></li>
+<li><a href="#print_warnings">print warnings</a>&nbsp;</li>
+<li><a href="#remote_shell">remote shell</a></li>
+<li><a href="#delay_wait_for_host">delay
+wait for
+remote host</a></li>
+<li><a href="#wait_for_prompt">prompt
+detection</a></li>
 </ul>
-Note: the above tunable items will be migrated to expect-lite directives in future versions. This section will be deprecated. <br>
-<h2><a name="default_timeout"></a>Default Timeout<br>
+Note: the above tunable items will be migrated to expect-lite
+directives in future versions. This section will be deprecated. <br>
+<h2><a name="default_timeout"></a>Default
+Timeout<br>
 </h2>
 The nature of expect, is that something is sent, and something else is
 expected to return, expect-lite will wait until the timeout value for
 that something to return. If the required string is not returned in the
 defined time, expect-lite will declare the test failed, and return non
 zero.<br>
-<br>
 <pre>set timeout 30 </pre>
 <br>
 The default timeout is used to set a reasonable value for a timeout
 when the user script has not set a timeout. Once the user script has
 set a timeout (eg. @60), the default timeout will no longer be used.<br>
-<h2><a name="infinite_looop"></a>Infinite loop protection</h2>
+<h2><a name="infinite_looop"></a>Infinite
+loop
+protection</h2>
 With the addition of looping support in expect-lite (version 3.0.0+),
 infinite loop protection has been implemented to prevent user scripts
 from looping forever.<br>
@@ -115,14 +132,17 @@ therefore the value of _el_infinite_loop should be able to accommodate
 all desired looping in the user script. Typically this will be between
 100 and 1000 depending on how much looping is performed in the user
 scripts.<br>
-<h2><a name="user_name_password"></a>User Name and Password</h2>
+<h2><a name="user_name_password"></a>User
+Name
+and Password</h2>
 Expect-lite supports three connection methods:<br>
 <ol>
-  <li>telnet</li>
-  <li>ssh</li>
-  <li>ssh_key</li>
+<li>telnet</li>
+<li>ssh</li>
+<li>ssh_key</li>
 </ol>
-The user name and password will be used for connection methods 1 &amp;
+The user name and password will be used for connection methods 1
+&amp;
 2. Clearly method 3 is more secure since the user name and passwords
 are not placed in expect-lite. However this may not be practical for
 your environment.<br>
@@ -130,37 +150,43 @@ your environment.<br>
 If the user name is not blank (eg. set user "") access method 3 will
 use that user name rather than the one of the current login when
 exchanging ssh_keys.<br>
-<h2><a name="connect_method"></a>Connect Method<br>
+<h2><a name="connect_method"></a>Connect
+Method<br>
 </h2>
 As mentioned above, expect-lite supports three methods to connect to
 remote hosts. The ssh_key method is the most secure, as no passwords
 are utilized. However this requires setting up ssh keys prior to using
 this method. <br>
-<pre># connects to login host, and logs in as $USER<br>#<br>#	Choose one login method here<br>#	<br>#set connect_method "telnet" <br>#set connect_method "ssh" <br>set connect_method "ssh_key" </pre>
+<pre># connects to login host, and logs in as $USER<br>#<br># Choose one login method here<br># <br>#set connect_method "telnet" <br>#set connect_method "ssh" <br>set connect_method "ssh_key" </pre>
 There is a forth method, as shown in the Quick Start, where no remote
 login is performed. This method is primarily for the Quick Start
 section, and has not been extensively tested. To invoke this method the
 value of "none" is given for the remote host on the command line.<br>
 <pre>expect-lite remote_host=none cmd_file=test.elt</pre>
-<h2><a name="print_warnings"></a>Print Warnings<br>
+<h2><a name="print_warnings"></a>Print
+Warnings<br>
 </h2>
 Expect-lite will always print Errors, and should fail the test
 imediately, should it encounter and error (eg. loss of connection to
 remote host). However additional information has been made available
 under warnings. Examples of what is printed under warnings are:<br>
 <ul>
-  <li>prompt timeouts</li>
-  <li>if statement evaluations</li>
-  <li>dynamic variable assignments</li>
-  <li>running in localhost mode&nbsp;</li>
+<li>prompt timeouts</li>
+<li>if statement evaluations</li>
+<li>dynamic variable assignments</li>
+<li>running in localhost mode&nbsp;</li>
 </ul>
-<span style="font-family: monospace;"></span>This section has been deprecated. See expect-lite directives *WARN/*NOWARN<br>
-<h2><a name="remote_shell"></a>Remote Shell</h2>
+<span style="font-family: monospace;"></span>This
+section has been deprecated. See expect-lite directives *WARN/*NOWARN<br>
+<h2><a name="remote_shell"></a>Remote
+Shell</h2>
 Expect-lite has been tested, and designed to get along with bash.
 However others may want to use another shell.<br>
 <br>
 This section has been deprecated. See expect-lite directive **SHELL<br>
-<h2><a name="delay_wait_for_host"></a>Delay to wait for remote host</h2>
+<h2><a name="delay_wait_for_host"></a>Delay
+to
+wait for remote host</h2>
 Because of the nature of accessing a remote host, expect-lite may have
 to wait for a response if the access is slow (eg. over a VPN via the
 internet).<br>
@@ -169,29 +195,34 @@ The value of 100 ms is a good value for a local LAN, while 200 ms may
 be desired if running across high speed internet. As this value is
 increased the script will run slower. It is recommended that a minimum
 value be used to prevent scripts from taking too long to run.<br>
-<h2><a name="wait_for_prompt"></a>Wait for Prompt</h2>
-What is a prompt? Does it include colour? Does it end in &gt;, $, # ? <br>
+<h2><a name="wait_for_prompt"></a>Wait
+for
+Prompt</h2>
+What is a prompt? Does it include colour? Does it end in &gt;, $, #
+? <br>
 <br>
 There is an implied "wait for prompt" everytime the script writer uses
-the send command (eg. &gt;ls ) It helps by not issuing the next command
+the send command (eg. &gt;ls ) It helps by not issuing the next
+command
 before the previous command has completed.<br>
-<br>
-A generalized procedure, wait_for_prompt, has been supplied which
-should detect most prompts. With the support of <a href="./expect-lite.html#user_defined_prompt">user defined prompts</a>
+<br>With the support of <a href="./expect-lite.html#user_defined_prompt">user defined
+prompts</a>
 (in version 3.1.5), it should no longer be necessary to edit this
 procedure.<br>
 <br>
-<h2><a name="license_terms"></a>COPYING</h2>
-<br>
-<pre>Copyright (c) 2007, Freescale Semiconductor, Inc.<br>All rights reserved.<br><br>Redistribution and use in source and binary forms, with or without modification, are<br>permitted provided that the following conditions are met:<br><br>   * Redistributions of source code must retain the above copyright notice, this list<br>	of conditions and the following disclaimer.<br>   * Redistributions in binary form must reproduce the above copyright notice, this<br>	list of conditions and the following disclaimer in the documentation and/or other<br>	materials provided with the distribution.<br>   * Neither the name of the Freescale Semiconductor nor the names of its contributors<br>	may be used to endorse or promote products derived from this software without<br>	specific prior written permission.<br><br>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY<br>EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF<br>MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL<br>THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,<br>SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT<br>OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS<br>INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT<br>LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE<br>OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.<br></pre>
+
 <br>
 <br>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15 January 2009<br>
+<br>
+</td>
+</tr>
+</tbody>
+</table>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">24 May 2010<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
-<small><span style="font-style: italic;">this document for version
+<small><span style="font-style: italic;">this
+document for version
 3.5.0 or later</span><br style="font-style: italic;">
 </small>
-<br>
-</body>
-</html>
+</body></html>

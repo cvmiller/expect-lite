@@ -1,0 +1,36 @@
+
+body {
+	max-width: 900px;
+ 	text:"#000000" ;
+ 	bgcolor:"#ffffff" ;
+	 link:"#0000ee" ;"
+ 	vertical-align:top;
+
+ 	vlink:"#551a8b";
+ 	alink:"#ff0000" ;
+}
+pre {
+	background-color: #f0f0f0;
+	font-size: 14px;
+}
+h1 {
+	font-family: "Lucida Sans Unicode";
+	font-size: 36px;
+	font-weight: bold;
+	color: #000000;
+}
+h2 {
+	font-family: "Lucida Sans Unicode";
+	font-size: 20px;
+	font-weight: bold;
+	color: #999999;
+}
+.page {
+	font-family: "Lucida Sans Unicode";
+	font-size: 16px;
+}
+.mail {
+	font-size: 10px;
+	text-align: right;
+}
+

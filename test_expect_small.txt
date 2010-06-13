@@ -1,7 +1,11 @@
 # test expect include
 
 ~test_expect_include.txt
+@5
 > echo "start"
 ! puts $mytest
 ! printit "End"
 > echo "done"
+!send "ls\n"
+!expect -re "test" { puts "got test"}  timeout {puts "got nothing"}
+> echo "done2"

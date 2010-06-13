@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# make this auto-runnable! 
+# Little bootstrap bash script to run kick start expect-lite script
+# determine OS (Mac, Linux, cygwin)
+OS=`uname -s`
+HOST=localhost
+case $OS in
+	"Linux" )       SED_OPT=" -r ";;
+	"Darwin" )      SED_OPT=" -E ";;
+	"CYGWIN_NT-5.1" )   HOST=none;   
+						SED_OPT=" -r ";;
+	* )				echo "Error: Unknown OS:$OS"
+					exit 1;;
+esac
+# Convert --parms to expect-lite param=value format
+PARAMS=`echo $* | /bin/sed $SED_OPT 's;--([a-zA-Z]+) ([0-9a-zA-Z]+);\1=\2;g'`
+echo $PARAMS
+$HOME/bin/expect-lite r=$HOST c=$0 $PARAMS
+exit $?
+
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+# Masquerade Test
+#	Becomes a self running executable with bash script in the beginning
+#	Takes getopts-like parameters and converts to expect-lite parameters
+#
+#
+#	Requires expect-lite version 3.1.4
+
+!set WARN 1
+
+$answer=42
+$seed=5
+
+# quick math
+=$answer * $seed
+>
+$ztest=zero
+; === show ztest:$ztest
+>
+#~show_vars.inc
+>
+; === Answer: $answer
+>
