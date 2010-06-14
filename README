@@ -1,0 +1,126 @@
+
+                               expect-Lite
+
+                         Automation for the rest of us
+
+                      Installation and Quick Start Guide
+
+------------------------------------------------------------------------
+
+
+    Quick Install
+    -------------
+
+Un-tar the expect-lite tar ball, and place the file expect-lite in your 
+path. Test by typing at the prompt:
+
+expect-lite
+
+If you see the help, then it is ready to go, installation is complete!
+
+
+    Quick Start
+    -----------
+
+Expect-lite has many features which make it useful, and the documenation
+<http://expect-lite.sourceforge.net/> highlights those. But to start
+using expect-lite quickly, you require two items:
+
+   1. a script
+   2. a host 
+
+Here is a quick script which you can paste into a file to test
+expect-lite, call it test.elt :
+
+; ==== Ping localhost and report result ====
+@5
+>ping -c 2 localhost
++$packet_rx=([0-9]+) received
+>
+>echo "Packets received are:$packet_rx"
+
+The second item you require is a host to run your script against.
+Expect-lite is designed to log into a remote host and run your script,
+as if a person was typing the commands. However that may require setting
+up ssh keys and so forth, and this is the Quick Start section. Type the
+following to run the above script on your localhost:
+
+expect-lite r=none c=test.elt
+
+There should be output that looks similar to the following:
+
+cvmiller@maile:~/Freescale$ 
+cvmiller@maile:~/Freescale$ ping -c 2 localhost
+PING localhost (127.0.0.1) 56(84) bytes of data.
+64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.053 ms
+64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.056 ms
+
+--- localhost ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 999ms
+rtt min/avg/max/mdev = 0.053/0.054/0.056/0.007 ms
+cvmiller@maile:~/Freescale$ 
+Assigned Var:packet_rx=2
+
+
+cvmiller@maile:~/Freescale$ echo "Packets received:2"
+Packets received:2
+
+##Overall Result: PASS 
+
+Congratulations you have just run your first expect-lite script! 
+
+
+    Quick Doc
+    ---------
+
+To learn more about expect-lite please look at the documentation. expect-lite
+interprets the script based on the first  character of the line. Here's a
+short list of what is available to get you started:
+     > send to remote host, implies "wait for prompt"
+     < _MUST_ be received, or script will report failure
+     # are comment lines, and have no effect
+     ; are printable (in stdout) comments, and have no other effect
+     @ change the expect timeout value
+     ? If statement, use format ?cond?action::else_action
+
+There are many more commands supported in expect-lite, it really is worth
+reading the documentation.
+
+
+    BSD-Style License
+    -----------------
+
+Copyright (c) 2008-2010, Craig Miller
+Copyright (c) 2007, Freescale Semiconductor, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are
+permitted provided that the following conditions are met:
+
+   * Redistributions of source code must retain the above copyright notice, this list
+	of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above copyright notice, this
+	list of conditions and the following disclaimer in the documentation and/or other
+	materials provided with the distribution.
+   * Neither the name of the Freescale Semiconductor nor the names of its contributors
+	may be used to endorse or promote products derived from this software without
+	specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+
+------------------------------------------------------------------------
+13 June 2010
+http://expect-lite.sourceforge.net/
+
+this document for version 3.6.1 or later
+
