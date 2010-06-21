@@ -550,7 +550,12 @@ Released 18 January 2010 version 3.6.0
 Released 14 June 2010 version 3.6.1
 	Document release only - New Website
 	Released setup_ssh_keys.sh
-	
+
+Updated 18 June 2010 v3.6.2.d2
+	Fixed bug in closing bash sessions when using r=none
+		problem: cygwin bash would not close at end of script	
+		
+		
 
 ------------ Future Versions --------------------------
 		
@@ -576,5 +581,20 @@ o	Add *STEP - advances interact 1 line in the script
 		Also add *n, *N to step next
 				
 o	Other Directives: delay_wait_for_host, connect_method
+
+
+------------ Windows Cygwin Expect --------------------------
+Known Issues
+	No ssh loopback mode
+	No Instant-Interactive, tclx not available on cygwin
+	el_shell (IDE) does not work in *INTERACTIVE
+	
+	
+ActiveTCL Expect problems - unusable
+	No support for Interact
+	No support of SIGQUIT (used by instant-interact)
+	
+
+
 
 

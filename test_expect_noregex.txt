@@ -1,0 +1,44 @@
+
+# How to use this file
+#  Lines that begin with '>' are sent to the tempest
+#  Lines that begin with '<' _MUST_ be received from the tempest, or this config script will fail
+#  Lines beginning with # are comment lines, and have no effect
+#  Lines beginning with ; are printable (in stdout) comments, and have no other effect
+#  Lines beginning with @ change the expect timeout value
+
+#
+#	Test Expect no-regex feature
+#
+@5
+*DEBUG
+$TEST=/proc/cpuinfo
+
+!source testit.tcl
+
+# set bash var NUM
+>NUM=5
+>TAG="<HTML>"
+
+>cat $TEST
+<processor
+<<temperature* C (uncalibrated)
+<machine.+?PowerMac
+<<detected as*: 65 (PowerMac G4 AGP Graphics)
+<NewWorld
+>
+; === detect single value
+>echo $NUM
+<<5
+>
+!testit 5
+>
+*SHOW VARS
+; === detect HTML Tag
+>echo $TAG
+<<<HTML>
+>
+>echo $TAG
+<[<]H..L>
+>
+
+#Pau!

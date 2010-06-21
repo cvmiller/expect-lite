@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "3.6.1"
+set version "3.6.2.d2"
 
 #set starting expect timeout 
 set timeout 30 
@@ -2164,16 +2164,16 @@ after [expr 5 * $delay_wait_for_host]
 #To show the very end of the test, wait for that very last prompt
 # clear expect buffer
 expect -re {.*} {}
-send "\n"
+
+# exit local shell
+if { [catch {  send "exit \n" } error] } {
+	if {$WARN} {puts  "Warning: Lost connection to $remote_host \n  $error "}
+}
+
 wait_for_prompt
 
 #If we get this far, then we passed!
 if {$INFO} {puts "\n\n##Overall Result: PASS \n\n"}
-
-
-if { [catch { close $spawn_id  } error] } {
-	if {$WARN} {puts  "Warning: Lost connection to $remote_host \n   "}
-}
 
 
 if { $DEBUG_LOG==1 } { log_file }
