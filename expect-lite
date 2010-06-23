@@ -2166,10 +2166,11 @@ after [expr 5 * $delay_wait_for_host]
 expect -re {.*} {}
 
 # exit local shell
-if { [catch {  send "exit \n" } error] } {
-	if {$WARN} {puts  "Warning: Lost connection to $remote_host \n  $error "}
+if { $connect_method == "none" } {
+	if { [catch {  send "exit \n" } error] } {
+		if {$WARN} {puts  "Warning: Lost connection to $remote_host \n  $error "}
+	}
 }
-
 wait_for_prompt
 
 #If we get this far, then we passed!
