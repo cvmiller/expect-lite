@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "3.6.2.d2"
+set version "3.6.2.d4"
 
 #set starting expect timeout 
 set timeout 30 
@@ -73,7 +73,7 @@ set remote_shell ""
 
 # Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture
 # 100 ms is a good value for a local LAN, 200 ms if running across high speed internet
-set delay_wait_for_host 100
+set delay_wait_for_host 200
 
 # connects to login host, and logs in as $USER
 #
@@ -1556,7 +1556,11 @@ proc _el_script_exec {cmd_file} {
 						default {set _el(success) 1}
 						}
 					# look at the expect_out(buffer) for debugging
-					#puts "->$expect_out(buffer)<-\n"
+					if { $DEBUG } {
+						puts "\nNOT find<<$teststr>>"
+						puts "  in>>$expect_out(buffer)<<"
+						puts "\n"
+					}
 
 				}
 			^\@ 	{ 	# Update the timeout value
@@ -2165,12 +2169,11 @@ after [expr 5 * $delay_wait_for_host]
 # clear expect buffer
 expect -re {.*} {}
 
-# exit local shell
-if { $connect_method == "none" } {
-	if { [catch {  send "exit \n" } error] } {
-		if {$WARN} {puts  "Warning: Lost connection to $remote_host \n  $error "}
-	}
+# exit local or remote shell
+if { [catch {  send "exit \n" } error] } {
+	if {$WARN} {puts  "Warning: Lost connection to $remote_host \n  $error "}
 }
+
 wait_for_prompt
 
 #If we get this far, then we passed!

@@ -556,6 +556,13 @@ Updated 18 June 2010 v3.6.2.d2
 		problem: cygwin bash would not close at end of script	
 		
 		
+Updated 23 June 2010 v3.6.2.d3
+	Added Debug print out for NOT expect feature
+
+Updated 02 July 2010 v3.6.2.d4
+	Fixed bug in closing cygwin bash session when using r=ssh_host
+		Problem only showed in iTest
+
 
 ------------ Future Versions --------------------------
 		
