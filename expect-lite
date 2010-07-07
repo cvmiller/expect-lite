@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "3.6.2.d4"
+set version "3.6.2.d6"
 
 #set starting expect timeout 
 set timeout 30 
@@ -442,7 +442,22 @@ proc read_args {} {
 			puts "Error: Missing cmd_file" 
 			usage
 			}
-	} 
+	}
+
+	# Assign any Environment Variables starting with 'EL_' to Constants
+	if { $DEBUG } {
+		puts "Env Vars -> Constants:"
+	}
+	foreach key [array names env] {
+		if {[regexp {^EL_} $key] == 1 } {
+			if { $DEBUG } {
+				puts "$key=$env($key)"
+			}
+			set cli_namespace($key) $env($key)
+		}
+	}
+
+
 	# show help if command file (script) is not given on command line			
 	if { $argc < 1 && $cmd_file=="" }  {
 		usage
@@ -915,7 +930,7 @@ proc show_vars { } {
 #	returns value of var if known, or replaces $var format (for shell vars)
 #
 proc resolve_var_sub var {
-	global user_namespace cli_namespace WARN INFO
+	global user_namespace cli_namespace WARN INFO DEBUG
 
 	if { $var != "" } {
 		set append_value 1
@@ -934,7 +949,13 @@ proc resolve_var_sub var {
 			}
 
 		} else {
-			if {$INFO} {
+			# Show all constant substitutions if in DEBUG
+			if {$DEBUG} {
+				puts stdout "INFO: CONST FOUND: $user_var = $cli_namespace($user_var)"
+			}
+			# Show non ENV constant substitutions in INFO
+			if { $INFO==1 && [regexp {^EL_} $user_var]!=1 } {
+				
 				puts stdout "INFO: CONST FOUND: $user_var = $cli_namespace($user_var)"
 			}
 		}
