@@ -96,6 +96,7 @@ echo "==============="
 echo "ssh localhost"
 # this also adds localhost to known_hosts file
 ssh -o StrictHostKeyChecking=no localhost 'hostname; exit'
+ssh -o StrictHostKeyChecking=no $HOSTNAME 'hostname; exit'
 
 
 # Pau!

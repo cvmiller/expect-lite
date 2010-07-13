@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "3.6.2.d6"
+set version "3.6.2.d7"
 
 #set starting expect timeout 
 set timeout 30 
@@ -210,7 +210,7 @@ proc instant_interact_sig {} {
 		# called by script *INTERACT
 		puts stdout "\n\n Press '+++' to end interact session & return to script \n\n"
 	}
-	send "\n"
+	protected_send "\n"
 	# preserve script fork session
 	push_session_id $_el_fork(current)
 	set restart_interact 1
@@ -258,7 +258,7 @@ proc instant_interact_sig {} {
 			# Fail script?
 			exit 1
 		}
-		send "\n"
+		protected_send "\n"
 	}
 	# restore script session
 	session_id_manager [ pop_session_id ]
