@@ -563,6 +563,9 @@ Updated 02 July 2010 v3.6.2.d4
 	Fixed bug in closing cygwin bash session when using r=ssh_host
 		Problem only showed in iTest
 
+Updated 12 July 2010 v3.6.2d7 becomes release 3.6.2
+	Added support for ENV Vars to automatically become constants
+	
 
 ------------ Future Versions --------------------------
 		
