@@ -40,10 +40,10 @@
 #
 
 # echo version in usage
-set version "3.6.2.d7"
+set version "3.6.3.d1"
 
 #set starting expect timeout 
-set timeout 30 
+set timeout 10 
 
 # infinite_loop protection - Max number of looping permitted
 #	Protects against infinite loops by decrementing this number
@@ -164,7 +164,7 @@ set _incr_var "\\\+\\\$"
 set _decr_var "\\-\\\$"
 
 # cli Parameter Initialization
-set remote_host ""
+set remote_host "none"
 set cmd_file ""
 set user_dir ""
 
@@ -321,9 +321,10 @@ proc wait_for_prompt { } {
 #
 proc usage {} {
 	global version
-	puts "usage: expect-lite remote_host=<remote_host_IP> cmd_file=<command_file> \[user_dir=<user_dir>\] \[const1=value1\]"
-	puts "       or short form: expect-lite r=<remote_host_IP> c=<command_file> \[d=<user_dir>\] \[const1=value1\]"
-	puts "       eg. ./expect-lite r=host-008  c=pm_alternation.elt  d=/local/craig/SW_6_Mar/sw myvar=myvalue"
+#	puts "usage: expect-lite remote_host=<remote_host_IP> cmd_file=<command_file> \[user_dir=<user_dir>\] \[const1=value1\]"
+	puts "usage: expect-lite \[ -r <remote_host_IP>\] -c <command_file> \[-d <user_dir>\] \[const1=value1\]"
+	puts "       or: expect-lite r=<remote_host_IP> c=<command_file> \[d=<user_dir>\] \[const1=value1\]"
+	puts "       eg. ./expect-lite -r host-008  -c pm_alternation.elt  -d /local/craig/SW_6_Mar/sw myvar=myvalue"
 	puts " "
 	puts "       additional login options: user_name=<username>  user_password=<password>"
 	puts "       eg. ./expect-lite r=host-008  c=pm_alternation.elt u=superuser p=mysecret"
@@ -383,7 +384,9 @@ proc read_args {} {
 		# Walk thru additional args (should be cli constants)
 		for { set x  0 } { $x < $argc} { incr x } {
 			set optarg [ lindex $argv $x ]
+			catch {set optargval [ lindex $argv [expr $x + 1]]}
 			# look for help & debug options which overide script options
+			# added -r and -c for remote_host & cmd_file respectively
 			if { [catch { switch -glob -- $optarg {
 				-h		-
 				--help	{ usage }
@@ -391,6 +394,9 @@ proc read_args {} {
 				-vv		-
 				--verbose	{set WARN 10; set DEBUG 10}
 				-vvv		{set WARN 0; set DEBUG 10}
+				-r		{ set remote_host $optargval }
+				-c		{ set cmd_file $optargval; set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] }
+				-d		{ set user_dir $optargval }
 			} } \
 			error ] } {
 				puts "Warning: Bad input option: $error"
@@ -670,6 +676,7 @@ proc connect_localhost {remote_host} {
 		exit 1
 	}
 	send " \n"
+	
 }
 
 #
@@ -764,7 +771,6 @@ proc remote_host_init { user_dir  } {
 		wait_for_prompt
 	}
 	set timeout $_el_timeout
-
 }
 
 #
@@ -1384,6 +1390,8 @@ proc _el_script_exec {cmd_file} {
 			read_set_config_directives $_el_buf
 			# init prompt for first (default) session
 			remote_host_init $user_dir
+			# kick the prompt
+			protected_send "\n"
 		}
 		
 		# set default fork session
