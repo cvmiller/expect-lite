@@ -322,12 +322,12 @@ proc wait_for_prompt { } {
 proc usage {} {
 	global version
 #	puts "usage: expect-lite remote_host=<remote_host_IP> cmd_file=<command_file> \[user_dir=<user_dir>\] \[const1=value1\]"
-	puts "usage: expect-lite \[ -r <remote_host_IP>\] -c <command_file> \[-d <user_dir>\] \[const1=value1\]"
-	puts "       or: expect-lite r=<remote_host_IP> c=<command_file> \[d=<user_dir>\] \[const1=value1\]"
-	puts "       eg. ./expect-lite -r host-008  -c pm_alternation.elt  -d /local/craig/SW_6_Mar/sw myvar=myvalue"
+	puts "usage: expect-lite -c <command_file> \[ -r <remote_host_IP>\] \[-d <user_dir>\] \[const1=value1\]"
+	puts "       or: expect-lite c=<command_file> r=<remote_host_IP>  \[d=<user_dir>\] \[const1=value1\]"
+	puts "       eg. ./expect-lite -c pm_alternation.elt -r host-008 -d /local/craig/SW_6_Mar/sw myvar=myvalue"
 	puts " "
 	puts "       additional login options: user_name=<username>  user_password=<password>"
-	puts "       eg. ./expect-lite r=host-008  c=pm_alternation.elt u=superuser p=mysecret"
+	puts "       eg. ./expect-lite c=pm_alternation.elt r=host-008 u=superuser p=mysecret"
 	puts " "
 	puts "       additional debug options: -v|-vv|--verbose"
 	puts "            -v              prints warnings, and infos (i.e. conditionals, dynamic var assignments)"

@@ -28,7 +28,7 @@ exit $?
 # default expect-lite app
 
 # force use of Localhost (rather than none)
-LOCALHOST=localhost
+$LOCALHOST=localhost
 
 @10
 >$el r=$LOCALHOST c=self_test_directives.txt el=$el 

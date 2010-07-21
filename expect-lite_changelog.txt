@@ -566,6 +566,18 @@ Updated 02 July 2010 v3.6.2.d4
 Updated 12 July 2010 v3.6.2d7 becomes release 3.6.2
 	Added support for ENV Vars to automatically become constants
 	
+Released 13 July 2010 v3.6.2
+	Includes example script for 2010 OLS
+	
+Released 19 July 2010 v3.6.3
+	Added support for -r <host> -c <script> -d <dir> to be more linux like
+	Updated help to reflect new parameters
+	Added default connect mode "none"
+	Changed default timeout to 10 seconds
+	Added man page
+	
+
+
 
 ------------ Future Versions --------------------------
 		
