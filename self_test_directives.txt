@@ -3,7 +3,7 @@
 #
 *NODEBUG
 # Turn on warnings
-#*WARN
+*WARN
 @3
 ; === Check hello at beginning of test
 >echo hello

@@ -576,7 +576,12 @@ Released 19 July 2010 v3.6.3
 	Changed default timeout to 10 seconds
 	Added man page
 	
-
+Updated 28 July 2010 v3.6.4d2
+	Added path for telnet - fixes cygwin/windows wrong telnet issue
+	Added ANSI color to INFO,WARN,ERR
+		Can assign color=none to all
+		Added TERM detection for xterm, ansi, vt100, vt220
+	
 
 
 ------------ Future Versions --------------------------
@@ -603,6 +608,10 @@ o	Add *STEP - advances interact 1 line in the script
 		Also add *n, *N to step next
 				
 o	Other Directives: delay_wait_for_host, connect_method
+
+o	Add End of Line Sequence (EoL) as a Directive *EOL-CR *EOL-CRLF *EOL-LF
+
+o	Add *NOCOLOR
 
 
 ------------ Windows Cygwin Expect --------------------------
