@@ -4,7 +4,7 @@
 # Convert --parms to expect-lite param=value format
 PARAMS=`echo $* | /bin/sed -r 's;--([a-z_]+) ([0-9a-zA-Z]+);\1=\2;g'`
 echo $PARAMS
-expect-lite r=localhost c=$0 el=expect-lite test_host=none $PARAMS
+expect-lite r=localhost c=$0 el=expect-lite test_host=none $PARAMS d=$PWD
 exit $?
 # How to use this expect-lite file, Lines that begin with:
 #	'>' send to remote host, implies "wait for prompt"
@@ -32,7 +32,12 @@ $LOCALHOST=localhost
 
 @10
 >$el r=$LOCALHOST c=self_test_directives.txt el=$el 
+<expect-lite directive: Shell is: tcsh
+<expect-lite directive: \*NODEBUG
+<expect-lite directive: \*WARN
 <If: expr { "hello" != "hello" } |then   >echo FAIL|else  >echo Good|result0
+<expect-lite directive: \*EOLS CRLF 
+<expect-lite directive: \*EOLS LF 
 <expect-lite directive: \*NOINFO
 -<If: expr
 <expect-lite directive: \*NOWARN

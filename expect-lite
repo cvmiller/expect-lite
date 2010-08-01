@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "3.6.4.d3"
+set version "3.7.0.d5"
 
 #set starting expect timeout 
 set timeout 10 
@@ -48,7 +48,7 @@ set timeout 10
 # infinite_loop protection - Max number of looping permitted
 #	Protects against infinite loops by decrementing this number
 #	when value is Zero, _el_buffer_search will return 'not found' (-1)
-# typically this should be set in the range of 100-1000
+# typically this should be set in the range of 5000-10000
 set _el_infinite_loop 5000
 
 
@@ -91,8 +91,12 @@ set _el(prompt) ".*\$ $"
 
 # set global color for comment ; or ;; lines
 # select one of the following: none, blue, ltblue, gray, ltgray, cyan, black, pink, purple
-set g_el_comment_color ltblue
+set _el_comment_color ltblue
 
+# End of Line Sequence (eols) - typically \n or \r\n
+# some devices must have a CRLF at the end of line in order to respond
+# This is also controlled by directive *EOLS LF|CRLF
+set _el_eols "\n"
 
 
 ####################################################################################
@@ -145,6 +149,9 @@ set _el_fork_id_list { default }
 
 # set default FORK session
 set _el_fork(current) "default"
+
+# set global fork_context array to blank
+set _el_fork_context(default,eols) $_el_eols
 
 # expect-lite key characters (first char in expect-lite script)
 set _out ">"
@@ -203,11 +210,11 @@ set el_err_color red
 #	
 #
 proc check_term_type { } {
-	global g_el_comment_color el_color env
+	global _el_comment_color el_color env
 	
 	#disable global comment color if unknown
-	if { [lsearch [array names el_color] $g_el_comment_color] == -1 } {
-		set g_el_comment_color none
+	if { [lsearch [array names el_color] $_el_comment_color] == -1 } {
+		set _el_comment_color none
 	}
 	
 	if { [catch { switch -glob -- $env(TERM) {
@@ -226,7 +233,7 @@ proc check_term_type { } {
 			# set ERROR color
 			set el_err_color none
 			# set global color
-			set g_el_comment_color none		 	
+			set _el_comment_color none		 	
 		 }
 	} } \
 	error ] } {
@@ -238,7 +245,7 @@ proc check_term_type { } {
 		# set ERROR color
 		set el_err_color none
 		# set global color
-		set g_el_comment_color none		 	
+		set _el_comment_color none		 	
 		
 	}
 	
@@ -250,17 +257,17 @@ proc check_term_type { } {
 #	
 #
 proc cputs { str  {l_color ""} } {
-	global g_el_comment_color el_color
+	global _el_comment_color el_color
 
-	if {$g_el_comment_color == "none"} {
+	if {$_el_comment_color == "none"} {
 		# use no color
 		puts $str	
 	} elseif { $l_color != "" } {	
 		# use supplied color
 		puts "$el_color($l_color)$str$el_color(nocolor)"
-	} elseif {$g_el_comment_color != "none"} {
+	} elseif {$_el_comment_color != "none"} {
 		# use global color
-		puts  "$el_color($g_el_comment_color)$str$el_color(nocolor)"
+		puts  "$el_color($_el_comment_color)$str$el_color(nocolor)"
 	} 
 	
 }
@@ -294,7 +301,7 @@ if { [catch { package require Tclx 8.0 } error] } {
 #	This function is also called by *INTERACT, providing similar functionality
 #
 proc instant_interact_sig {} {
-	global remote_host _el _el_fork_id_list _el_fork DEBUG el_info_color
+	global remote_host _el _el_fork_id_list _el_fork DEBUG el_info_color _el_eols
 
 	# change user message depending on how the function is called
 	if { $_el(line) != "*INTERACT" } {
@@ -304,7 +311,7 @@ proc instant_interact_sig {} {
 		# called by script *INTERACT
 		cputs  "\n\n Press '+++' to end interact session & return to script \n\n" $el_info_color
 	}
-	protected_send "\n"
+	protected_send "$_el_eols"
 	# preserve script fork session
 	push_session_id $_el_fork(current)
 	set restart_interact 1
@@ -316,14 +323,6 @@ proc instant_interact_sig {} {
 		#		Lines starting with >,?,$,~,;,* 
 		#			send, if, var assignment, include file, comment, directives respectively
 		if { [catch { interact {
-			-echo -re {\*FORK[ ]*(.*)\r} { 
-					set fork_id $interact_out(1,string)
-					# remove any leading space or \n or \r's
-					#regsub -all {^ |[\n\r]+} $fork_id "" fork_id
-					session_id_manager $fork_id
-					send_user "\n"
-					return 
-				}
 			{+++} { # exit interact session, return to script
 				pop_session_id; set restart_interact 0 
 				return 
@@ -352,12 +351,12 @@ proc instant_interact_sig {} {
 			# Fail script?
 			exit 1
 		}
-		protected_send "\n"
+		protected_send "$_el_eols"
 	}
 	# restore script session
 	session_id_manager [ pop_session_id ]
 	set _el(success) 1
-	protected_send "\n"
+	protected_send "$_el_eols"
 }
 
 
@@ -491,6 +490,8 @@ proc read_args {} {
 				-r		{ set remote_host $optargval }
 				-c		{ set cmd_file $optargval; set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] }
 				-d		{ set user_dir $optargval }
+				-u		{ set user $optargval }
+				-p		{ set pass $optargval }
 			} } \
 			error ] } {
 				puts "Warning: Bad input option: $error"
@@ -627,7 +628,7 @@ proc connect_telnet_host {remote_host {optional_suppress_stdout "no"}} {
 #	If this is not your access method use one of the other login methods
 #
 proc zlogin { pass login_attempts } {
-	global remote_host 
+	global remote_host _el_eols
 	set timeout 2
 	set MAXLOGINATTEMPT 5
 	#set login_attempts 0
@@ -637,12 +638,12 @@ proc zlogin { pass login_attempts } {
 			-re "assword:"	{
 				# do not log password
 				set log_user 0
-				send "$pass\n" 
+				send "$pass$_el_eols" 
 				set log_user 1
 				#puts "send pass"
 				}
 			-re "Are you sure you want to continue connecting" {
-				send "yes\n"
+				send "yes$_el_eols"
 				#zlogin $pass $login_attempts
 				}
 			-re "Last login" { return }
@@ -663,11 +664,15 @@ proc zlogin { pass login_attempts } {
 #	If this is not your access method use one of the other login methods
 #
 proc connect_ssh_host {remote_host {optional_suppress_stdout "no"}} {
-	global spawn_id user pass _el_timeout DEBUG
+	global spawn_id user pass _el_timeout DEBUG env
 	# work around for older versions of expect
 	#This spawns the ssh program - auto generates spawn_id var
 	#spawn ssh -l $user $remote_host
-	set timeout 30
+	set timeout 15
+	if { $user == "" } {
+		# user username from environment
+		set user $env(USER)
+	}
 	# suppress stdout during login
 	if { ($optional_suppress_stdout == "suppress_stdout") && ($DEBUG != 1)} {
 		# turn off stdout - suppress login banners - show with -vv
@@ -700,7 +705,7 @@ proc connect_ssh_host {remote_host {optional_suppress_stdout "no"}} {
 #	If this is not your access method use one of the other login methods
 #
 proc connect_ssh_key_host {remote_host {optional_suppress_stdout "no"}} {
-	global spawn_id user pass _el_timeout DEBUG delay_wait_for_host
+	global spawn_id user pass _el_timeout DEBUG delay_wait_for_host _el_eols
 	# work around for older versions of expect
 	# Enable use of an alternet user for ssh_key method
 	# if $user is not blank, then use the alternet user
@@ -724,7 +729,7 @@ proc connect_ssh_key_host {remote_host {optional_suppress_stdout "no"}} {
 	# TODO:Auto update ~/.ssh/known_hosts if needed
 	
 	# Test the connection by sending a return
-	if { [catch { send "\n"   } error] } {
+	if { [catch { send "$_el_eols"   } error] } {
 		puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
 		# Fail script?
 		exit 1
@@ -736,7 +741,7 @@ proc connect_ssh_key_host {remote_host {optional_suppress_stdout "no"}} {
 	set timeout 5
 	expect {
 		-re "Are you sure you want to continue connecting" {
-		send "yes\n"
+		send "yes$_el_eols"
 		}
 		-re {.+} { #puts "expect-lite: Connected" }
 		timeout { }
@@ -760,7 +765,7 @@ proc connect_localhost {remote_host} {
 	# this proc just spawns a connection to a shell
 	# all other functions are handled by remote_host_init
 	
-	global remote_shell spawn_id
+	global remote_shell spawn_id _el_eols
 	# protect against empty remote_shell
 	if { $remote_shell == "" } { set remote_shell "bash" }
 	# spawn a local shell for localhost
@@ -769,7 +774,7 @@ proc connect_localhost {remote_host} {
 		# Fail script?
 		exit 1
 	}
-	send " \n"
+	send " $_el_eols"
 	
 }
 
@@ -814,7 +819,7 @@ proc protected_send { str } {
 #		starts shell on remote host, sets sane prompt, and cd's to user directory (aka user_dir) if needed
 #	
 proc remote_host_init { user_dir  } {
-	global PROMPT _el_timeout timeout remote_host remote_shell DEBUG connect_method spawn_id delay_wait_for_host
+	global PROMPT _el_timeout timeout remote_host remote_shell DEBUG connect_method spawn_id delay_wait_for_host _el_eols
 	set timeout 2
 
 	# suppress stdout during login for *FORK
@@ -826,7 +831,7 @@ proc remote_host_init { user_dir  } {
 	# ensure we are using user's desired shell, and check connection
 	if {$connect_method != "none" } {
 		# handle real remote host invocation of shell
-		protected_send "$remote_shell\n"
+		protected_send "$remote_shell$_el_eols"
 		
 	}
 	# wait for echo to appear when starting a shell
@@ -840,18 +845,18 @@ proc remote_host_init { user_dir  } {
 	switch -glob -- $remote_shell {
 		csh -
 		tcsh 	{ set _prompt "%c02 %# %L"
-					protected_send "set prompt = \"$_prompt\"\n" 
+					protected_send "set prompt = \"$_prompt\"$_el_eols" 
 					expect -re {.+prompt.+} { }
 				}
 		sh -
 		ksh -
 		bash		{ set _prompt "\"\[\\u@\\h:\\w\]\\$ \"" 
-					protected_send "export PS1=$_prompt\n" 
+					protected_send "export PS1=$_prompt$_el_eols" 
 					expect -re {.+PS1.+} { }
 				}
 		default 	{ set _prompt "\$ " 
-					protected_send "export PS1=\'$_prompt\'\n" 
-					protected_send "set prompt = \"$_prompt\"\n" }
+					protected_send "export PS1=\'$_prompt\'$_el_eols" 
+					protected_send "set prompt = \"$_prompt\"$_el_eols" }
 	}
 	# clear expect_out(buffer)
 	#expect -re {.+} {}
@@ -861,7 +866,7 @@ proc remote_host_init { user_dir  } {
 	
 	#only change directory if user_dir was passed as an arg, otherwise, user will set it in expect-lite script
 	if { $user_dir != "" } {
-		protected_send "cd $user_dir\n"
+		protected_send "cd $user_dir$_el_eols"
 		wait_for_prompt
 	}
 	set timeout $_el_timeout
@@ -872,7 +877,8 @@ proc remote_host_init { user_dir  } {
 #
 #
 proc session_id_manager { fork_id } {
-	global spawn_id _el_fork _el_fork_id_list INFO connect_method remote_host _el timeout DEBUG user_dir el_info_color
+	global spawn_id _el_fork _el_fork_id_list INFO connect_method remote_host _el timeout 
+	global DEBUG user_dir el_info_color _el_eols _el_fork_context
 
 	if { $fork_id == "default" } {
 		# set fork session back to default if count > 0
@@ -904,6 +910,8 @@ proc session_id_manager { fork_id } {
 			incr _el_fork(count)
 			# update list of fork_id's
 			lappend _el_fork_id_list $fork_id
+			# set default eols for this session
+			set _el_fork_context($fork_id,eols) $_el_eols
 		}
 		if { $_el_fork($fork_id) == "default" } {
 			set spawn_id  $_el_fork(default)
@@ -1291,7 +1299,7 @@ proc _el_buffer_search {line_buffer line_ptr line_search} {
 #
 proc _el_script_exec {cmd_file} {
 	global remote_host _out _out_nowait _in _in_noregex _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
-	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 g_el_comment_color el_info_color el_warn_color el_err_color
+	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 _el_comment_color el_info_color el_warn_color el_err_color _el_eols _el_fork_context
 		
 	set prev_line ""
 	set comment_line ""
@@ -1303,8 +1311,8 @@ proc _el_script_exec {cmd_file} {
 	set _el_cont_lines ""
 	
 	# set default session (aka fork)
-	set current_session "default"
-	
+	set current_session $_el_fork(current)
+	#fork_id
 
 	#
 	# Dereference Vars if needed in $_el(line) as read from cmd file	
@@ -1489,7 +1497,7 @@ proc _el_script_exec {cmd_file} {
 			# init prompt for first (default) session
 			remote_host_init $user_dir
 			# kick the prompt
-			protected_send "\n"
+			protected_send "$_el_eols"
 		}
 		
 		# set default fork session
@@ -1556,8 +1564,8 @@ proc _el_script_exec {cmd_file} {
 					after 10
 
 					# Check of remote_host is still connected before sending string
-					if { [catch { send  "[_el_strip_char $_el(line) $_out_nowait]\n"  } error] } {
-						puts stderr "CONNECT ERROR: Lost connection to $remote_host \n   $error \nExiting..."
+					if { [catch { send  "[_el_strip_char $_el(line) $_out_nowait]$_el_eols"  } error] } {
+						cputs "CONNECT ERROR: Lost connection to $remote_host \n   $error \nExiting..." $el_err_color
 						# Fail script
 						exit 1
 					}
@@ -1577,7 +1585,7 @@ proc _el_script_exec {cmd_file} {
 					set _el(success) 1
 					
 					# Check of remote_host is still connected before sending string
-					if { [catch { send   "[_el_strip_char $_el(line) $_out]\n"  } error] } {
+					if { [catch { send   "[_el_strip_char $_el(line) $_out]$_el_eols"  } error] } {
 						puts stderr "CONNECT ERROR: Lost connection to $remote_host \n   $error \nExiting..."
 						# Fail script
 						exit 1
@@ -1697,8 +1705,8 @@ proc _el_script_exec {cmd_file} {
 					# execute expect lines if present
 					_el_exec_expect
 					if {([regexp \[^0-9\ \]+ [_el_strip_char $_el(line) $_timeout]])} {
-						puts "ERROR: Bad Timeout Value: [_el_strip_char $_el(line) $_timeout] "
-						send "quit\n"
+						cputs "ERROR: Bad Timeout Value: [_el_strip_char $_el(line) $_timeout] " el_err_color
+						send "quit$_el_eols"
 						# Stop the script Now!
 						exit 1
 					} else {
@@ -1857,7 +1865,7 @@ proc _el_script_exec {cmd_file} {
 					# execute expect lines if present
 					_el_exec_expect
 					
-					cputs [_el_strip_char $_el(line) $_stdout_comment_nobuf] $g_el_comment_color
+					cputs [_el_strip_char $_el(line) $_stdout_comment_nobuf] $_el_comment_color
 					
 				}
 			^\;	{	# Send "comment" to stdout buffered
@@ -1935,7 +1943,7 @@ proc _el_script_exec {cmd_file} {
 								puts "\nAssigned Var:$user_var=$capture_val\n"
 							}
 							# Trigger a new prompt
-							send "\n"
+							send "$_el_eols"
 							}
 						# expect should never timeout, but just in case
 						timeout {
@@ -2128,7 +2136,8 @@ proc _el_script_exec {cmd_file} {
 							if {$DEBUG != 10 } { set DEBUG 0 }
 							
 						}
-						"\\*NOCOLOR"	{	# Turn off INFO logging
+						"\\*NOCOLOR"	-
+						"\\*NOCOLOUR"	{	# Turn off Color logging
 							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
 							# set INFO color
 							set el_info_color none
@@ -2137,7 +2146,7 @@ proc _el_script_exec {cmd_file} {
 							# set ERROR color
 							set el_err_color none
 							# set global color
-							set g_el_comment_color none		 	
+							set _el_comment_color none		 	
 						}
 						"\\*TERM"	{	# Terminate but Pass Test
 							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
@@ -2151,7 +2160,15 @@ proc _el_script_exec {cmd_file} {
 							set _el(success) 0
 							_el_fail_test
 						}
-						"\\*SHOW VARS"	{	# Show EL variables
+						"\\*EOLS LF"	{	# Set End of Line Sequence to LF
+							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
+							set _el_eols "\n"
+						}
+						"\\*EOLS CRLF"	{	# Set End of Line Sequence to CRLF
+							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
+							set _el_eols "\r\n"
+						}
+						"\\*SHOW VARS"	{	# Show expect-lite variables
 							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
 							show_vars
 						}
@@ -2164,7 +2181,6 @@ proc _el_script_exec {cmd_file} {
 						}
 						"\\*FORK*"	{	# Spawn/Switch to a new session
 							set fork_list [split $_el(line)]
-							
 							if { [llength $fork_list] > 2 } {
 								if {$WARN} {
 									cputs "\n\nWarning: FORK: Too Many Names: $_el(line)\n" $el_warn_color
@@ -2172,13 +2188,19 @@ proc _el_script_exec {cmd_file} {
 							} elseif {[llength $fork_list] == 2 } {
 								# set the fork_id to the passed value
 								set fork_id [lindex $fork_list 1]
-							
+								# store current eols in current session fork_context
+								set _el_fork_context($current_session,eols) $_el_eols
+								
 							} elseif {[llength $fork_list] == 1 } {
 								# no arguments to *FORK, then display current session name
 								set fork_id $current_session
 							}
 							# spawn/switch to fork_id session
 							set current_session [session_id_manager $fork_id]
+							# set eols from new fork_id_context
+							set _el_eols $_el_fork_context($current_session,eols)
+
+							
 						}
 					}			
 				}
@@ -2240,7 +2262,7 @@ proc _el_script_exec {cmd_file} {
 			if { $_el(success) != 1 } {
 				# allow fail script to set success, and continue if need be
 				if {$INFO} {cputs "\n\n##Overall Result: FAILED \n\n" $el_err_color }
-				send "quit\n"
+				send "quit$_el_eols"
 				exit 1
 			}
 		}
@@ -2309,7 +2331,7 @@ after [expr 5 * $delay_wait_for_host]
 expect -re {.*} {}
 
 # exit local or remote shell
-if { [catch {  send "exit \n" } error] } {
+if { [catch {  send "exit $_el_eols" } error] } {
 	if {$WARN} {cputs  "Warning: Lost connection to $remote_host \n  $error " $el_warn_color}
 }
 

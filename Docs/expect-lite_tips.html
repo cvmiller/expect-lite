@@ -2,15 +2,13 @@
 <html><head>
 <meta content="text/html; charset=ISO-8859-1">
 <meta name="AUTHOR" content="Craig Miller">
-<link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Tips</title>
-
-</head>
+<link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Tips</title></head>
 <body>
 <table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
 <tbody class="page">
 <tr>
 <td style="vertical-align: top; width: 35%;"><br>
-<div style="text-align: center;"><a href="index.html"><img style="font-weight: bold; width: 200px; height: 213px; border: 0px;"  alt="greater than" src="keycap_200.jpg"></a><br>
+<div style="text-align: center;"><a href="index.html"><img style="border: 0px none ; font-weight: bold; width: 200px; height: 213px;" alt="greater than" src="keycap_200.jpg"></a><br>
 <h1>expect-lite</h1>
 <br>
 <h2>Automation for the rest of us</h2>
@@ -35,14 +33,14 @@ techniques have proven quite useful. The purpose of the document is to
 provide some additional information to assist the user of expect-lite
 in debugging scripts, and tips to make expect-lite script writing even
 easier. Familiarity with expect-lite is assumed, if not, please refer
-to the <a href="http://expect-lite.sourceforge.net/">expect-lite
+to the <a href="./expect-lite_doc.html">expect-lite
 documentation</a>.<br>
 <br>
 <h2>Contents</h2>
 Some Tips and Techniques for expect-lite:<br>
 <ul>
 <li><a href="#interact"><span style="font-weight: bold;">Interact</span></a>
-The easiest debugging aid to use<br>
+Setting a breakpoint, the easiest debugging aid to use<br>
 </li>
 <li><a style="font-weight: bold;" href="#fail_then_interact">Fail
 then Interact</a> Using the 'fail script' feature as a debugging
@@ -64,10 +62,10 @@ Some rules of thumb when writing expect-lite scripts<br>
 </span></li>
 </ul>
 <br>
-<h2><a name="interact"></a>Interact<br>
+<h2><a name="interact"></a>Interact - setting breakpoints<br>
 </h2>
 Interact may be the
-quickest, easiest, and overall best debugging aid. Interact is a mode
+quickest, easiest, and overall best debugging aid. It is equivalent to setting a breakpoint in the script. Interact is a mode
 which turns control of the keyboard over to the user, so
 that one may type directly to the process on the remote host With
 version 3.5.0 there are two methods to invoke Interact: programmatic,
@@ -88,15 +86,16 @@ over to the user for an interactive session.<br>
 method is <span style="font-weight: bold;">instant-interact</span>.
 This feature requires a tcl package Tclx to be installed, and will
 automatically be enabled when the package is present. With the feature
-enabled, the user can press '^\' (control+backslash) at anytime and
-enter Interact. This is the easiest, and fastest way to debug a script.<br>
+enabled, the user can press '^\' (control+backslash) at anytime
+creating a breakpoint on the fly. This is the easiest, and fastest way
+to debug a script.<br>
 <br>
 <h3><a name="debugging"></a>Debugging
 with the
 el_shell</h3>
 To make debugging of scripts even easier, both methods of <span style="font-weight: bold;">interact</span>
-support a limited expect-lite "shell". In this "el_shell", expect-lite
-script commands can be typed, even assigning variables inside the
+support a limited expect-lite Integrated Debugger Environment (IDE). In this IDE, expect-lite
+script commands can be typed, even assigning variables and displaying them, inside the
 paused script, for example:<br>
 <pre>$MYVAR=today<br><br>*SHOW VARS<br>Var:0 Value:0<br>Var:MYVAR Value:today<br>Var:TEST Value:/proc/cpuinfo<br><br>&gt;&gt;pwd<br>pwd<br>/home/user<br></pre>
 <br>
@@ -258,14 +257,13 @@ does not require escaping: &lt;&lt;0.005 secs (5 micro secs)</li>
 '&lt;&lt;'
 often. Check for valid results
 when possible. A script which expects nothing will never fail!</li>
-<li>Use printable comments ';' often. Think of it as
-writing
-a note to oneself, it will make reading log files much easier.</li>
+<li>Use printable comments ';'&nbsp; and ';;' often. Think of it as
+writing a note to oneself, it will make reading log files much easier.
+As of version 3.7.0 printable comments will be coloured <span style="color: rgb(51, 51, 255);">blue</span> (this is user configurable).</li>
 </ul>
 <h2><a name="summary"></a>Summary</h2>
 By using these troubleshooting aids, it should be even easier to write
-and debug expect-lite scripts. Feel free to send me any tips. <a href="mailto:cvmiller@sourceforge.net">cvmiller at
-sourceforge dot net</a><br>
+and debug expect-lite scripts. Feel free to send me any tips. <a href="mailto:cvmiller@gmail.com">cvmiller at gmail dot com</a><br>
 <br>
 <h2>Why Expect-lite</h2>
 Expect-lite was written to create quick and easy automation of
@@ -276,12 +274,12 @@ repetitive tasks.<br>
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">24 May 2010<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">31 July 2010<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this
 document for version
-3.6.0 or later</span><br style="font-style: italic;">
+3.7.0 or later</span><br style="font-style: italic;">
 </small>
 <br>
 </body></html>

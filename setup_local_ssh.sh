@@ -18,7 +18,7 @@ function usage {
 
 # Script Defaults	   
 numopts=0
-VERSION=0.95
+VERSION=0.96
 SSH_HOME=$HOME/.ssh
 
 

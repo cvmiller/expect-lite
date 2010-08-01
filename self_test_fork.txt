@@ -65,6 +65,10 @@ $fork_session2=MY_2nd_HOST
 >cd /tmp/session2
 >pwd
 </tmp/session2
+*EOLS CRLF
+; === Look for 6 prompts
+>
+>
 >
 >hostname
 >sleep 2
@@ -84,6 +88,10 @@ $fork_session2=MY_2nd_HOST
 ; ======== "SESSION 2b"
 >>pwd
 </tmp/session2
+; === Look for 4 prompts
+>
+>
+
 >cd /tmp
 # remove temp directory
 >rmdir session2

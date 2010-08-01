@@ -12,7 +12,7 @@
 <tbody class="page">
 <tr>
 <td style="vertical-align: top; width: 35%;"><br>
-<div style="text-align: center;"><a href="index.html"><img style="font-weight: bold; width: 200px; height: 213px; border: 0px;"  alt="greater than" src="keycap_200.jpg"></a><br>
+<div style="text-align: center;"><a href="index.html"><img style="border: 0px none ; font-weight: bold; width: 200px; height: 213px;" alt="greater than" src="keycap_200.jpg"></a><br>
 <h1>expect-lite</h1>
 <br>
 <h2>Automation for the rest of us</h2>
@@ -51,7 +51,7 @@ Expect-lite is designed to log into a remote host and run your script,
 as if a person was typing the commands. However that may require
 setting up ssh keys and so forth, and this is the Quick Start section.
 Type the following to run the above script on your localhost:<br>
-<pre>expect-lite r=none c=test.elt</pre>
+<pre>expect-lite -c test.elt -r none</pre>
 There should be output that looks similar to the following:<br>
 <pre>cvmiller@maile:~/Freescale$ <br>cvmiller@maile:~/Freescale$ ping -c 2 localhost<br>PING localhost (127.0.0.1) 56(84) bytes of data.<br>64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.053 ms<br>64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.056 ms<br><br>--- localhost ping statistics ---<br>2 packets transmitted, 2 received, 0% packet loss, time 999ms<br>rtt min/avg/max/mdev = 0.053/0.054/0.056/0.007 ms<br>cvmiller@maile:~/Freescale$ <br>Assigned Var:packet_rx=2<br><br><br>cvmiller@maile:~/Freescale$ echo "Packets received:2"<br>Packets received:2<br><br>##Overall Result: PASS <br></pre>
 Congratulations you have just run your first expect-lite script! To
@@ -72,10 +72,10 @@ created
 to prevent the
 scriptor, you, from having to write Expect scripts in TCL. However with
 that in mind, there are a few TCL details one should know that will <span style="font-style: italic;">tune</span> expect-lite to
-perform better
+perform best
 in your environment.<br>
 <br>
-Since expect-lite is written in TCL, an interpretive language, making
+Since expect-lite is written in Expect/TCL, an interpretive language, making
 changes to the global variables controlling the behaviour does not
 require recompilation.<br>
 <br>
@@ -100,10 +100,10 @@ ssh_key)</li>
 wait for
 remote host</a></li>
 <li><a href="#wait_for_prompt">prompt
-detection</a></li>
+detection</a></li><li><a href="#comment_color">User comment colour</a></li>
 </ul>
-Note: the above tunable items will be migrated to expect-lite
-directives in future versions. This section will be deprecated. <br>
+Note: &nbsp;As the above tunable items are migrated to expect-lite
+directives, this section will be deprecated. <br>
 <h2><a name="default_timeout"></a>Default
 Timeout<br>
 </h2>
@@ -112,7 +112,7 @@ expected to return, expect-lite will wait until the timeout value for
 that something to return. If the required string is not returned in the
 defined time, expect-lite will declare the test failed, and return non
 zero.<br>
-<pre>set timeout 30 </pre>
+<pre>set timeout 10</pre>
 <br>
 The default timeout is used to set a reasonable value for a timeout
 when the user script has not set a timeout. Once the user script has
@@ -123,14 +123,14 @@ protection</h2>
 With the addition of looping support in expect-lite (version 3.0.0+),
 infinite loop protection has been implemented to prevent user scripts
 from looping forever.<br>
-<pre>set _el_infinite_loop 500</pre>
+<pre>set _el_infinite_loop 5000</pre>
 Expect-lite detects an infinite loop by decrementing this value each
 time the script loops. Once this value is zero, expect-lite will print
 and Error, and fail the test. It is important to know that expect-lite
 does not detect multiple sequencial loops in the user script, and
 therefore the value of _el_infinite_loop should be able to accommodate
 all desired looping in the user script. Typically this will be between
-100 and 1000 depending on how much looping is performed in the user
+5000 and 10000 depending on how much looping is performed in the user
 scripts.<br>
 <h2><a name="user_name_password"></a>User
 Name
@@ -159,18 +159,23 @@ are utilized. However this requires setting up ssh keys prior to using
 this method. <br>
 <pre># connects to login host, and logs in as $USER<br>#<br># Choose one login method here<br># <br>#set connect_method "telnet" <br>#set connect_method "ssh" <br>set connect_method "ssh_key" </pre>
 There is a forth method, as shown in the Quick Start, where no remote
-login is performed. This method is primarily for the Quick Start
-section, and has not been extensively tested. To invoke this method the
+login is performed. This method was designed primarily for the Quick Start
+section, however, it can be used for most scripts (such as in the Cygwin environment). To invoke this method the
 value of "none" is given for the remote host on the command line.<br>
-<pre>expect-lite remote_host=none cmd_file=test.elt</pre>
+<pre>expect-lite remote_host=none cmd_file=test.elt<br></pre>Even when
+no remote host is required, it is best to log into the localhost, since
+the underlying Expect has problems with synchronization (between send
+and expect strings) when a remote host is not specified. The provided
+shell script 'setup_local_ssh.sh' (in the Tools directory) will setup
+the localhost with ssh keys. It is only necessary to run it once:<br><pre>./Tools/setup_local_ssh.sh</pre>
 <h2><a name="print_warnings"></a>Print
 Warnings<br>
-</h2>
+</h2><span style="text-decoration: line-through;">
 Expect-lite will always print Errors, and should fail the test
 imediately, should it encounter and error (eg. loss of connection to
 remote host). However additional information has been made available
-under warnings. Examples of what is printed under warnings are:<br>
-<ul>
+under warnings. Examples of what is printed under warnings are:</span><br style="text-decoration: line-through;">
+<ul style="text-decoration: line-through;">
 <li>prompt timeouts</li>
 <li>if statement evaluations</li>
 <li>dynamic variable assignments</li>
@@ -179,9 +184,9 @@ under warnings. Examples of what is printed under warnings are:<br>
 <span style="font-family: monospace;"></span>This
 section has been deprecated. See expect-lite directives *WARN/*NOWARN<br>
 <h2><a name="remote_shell"></a>Remote
-Shell</h2>
+Shell</h2><span style="text-decoration: line-through;">
 Expect-lite has been tested, and designed to get along with bash.
-However others may want to use another shell.<br>
+However others may want to use another shell.</span><br>
 <br>
 This section has been deprecated. See expect-lite directive **SHELL<br>
 <h2><a name="delay_wait_for_host"></a>Delay
@@ -197,32 +202,32 @@ increased the script will run slower. It is recommended that a minimum
 value be used to prevent scripts from taking too long to run.<br>
 <h2><a name="wait_for_prompt"></a>Wait
 for
-Prompt</h2>
+Prompt</h2><span style="text-decoration: line-through;">
 What is a prompt? Does it include colour? Does it end in &gt;, $, #
-? <br>
-<br>
+? </span><br style="text-decoration: line-through;">
+<br style="text-decoration: line-through;"><span style="text-decoration: line-through;">
 There is an implied "wait for prompt" everytime the script writer uses
 the send command (eg. &gt;ls ) It helps by not issuing the next
 command
-before the previous command has completed.<br>
-<br>With the support of <a href="./expect-lite.html#user_defined_prompt">user defined
+before the previous command has completed.</span><br>
+<br>This section has been deprecated. With the support of <a href="./expect-lite.html#user_defined_prompt">user defined
 prompts</a>
 (in version 3.1.5), it should no longer be necessary to edit this
 procedure.<br>
-<br>
-
-<br>
+<br><h2><a name="comment_color"></a>User Comment Colour</h2>By default
+printable comments using the ';' or ';;' are printed in light blue.
+However there are a range of colour choices which can be set.<br><pre># set global color for comment ; or ;; lines<br># select one of the following: none, blue, ltblue, gray, ltgray, cyan, <br>#   black, pink, purple<br>set _el_comment_color ltblue</pre>
 <br>
 <br>
 </td>
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">24 May 2010<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">31 July 2010<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this
 document for version
-3.5.0 or later</span><br style="font-style: italic;">
+3.7.0 or later</span><br style="font-style: italic;">
 </small>
 </body></html>

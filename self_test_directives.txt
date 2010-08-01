@@ -15,6 +15,12 @@
 # set tcsh for test, but not at beginning of file
 **SHELL=tcsh
 
+# set End of Line Sequence (eols)
+*EOLS CRLF
+>
+*EOLS LF
+>
+
 *NOINFO
 #; === Quiet check with NOINFO
 $temp=fine

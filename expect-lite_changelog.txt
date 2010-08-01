@@ -583,6 +583,13 @@ Updated 28 July 2010 v3.6.4d2
 		Added TERM detection for xterm, ansi, vt100, vt220
 	
 
+Updated 30 July 2010 v3.7.0d5
+	Added *NOCOLOR directive
+	Added *EOLS LF|CRLF directive
+		Sends \n or \r\n
+		Made fork context to hold eols per session
+	Cleaned up *INTERACT - passes *FORK down with other commands
+	
 
 ------------ Future Versions --------------------------
 		
@@ -611,7 +618,7 @@ o	Other Directives: delay_wait_for_host, connect_method
 
 o	Add End of Line Sequence (EoL) as a Directive *EOL-CR *EOL-CRLF *EOL-LF
 
-o	Add *NOCOLOR
+x	Add *NOCOLOR
 
 
 ------------ Windows Cygwin Expect --------------------------
