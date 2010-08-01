@@ -56,7 +56,7 @@ values<br>
 </li>
 <li style="font-weight: bold;"><a href="#define_narrowly">Define
 '&lt;' narrowly</a> <span style="font-weight: normal;">Avoid
-mis-matches by being specific on what is expected</span></li>
+mis-matches by being specific on what is expected</span></li><li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#decreasing_log_chatter"><span style="font-weight: bold;">Decreasing</span></a> log chatter<br></span></li><li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#removing_color"><span style="font-weight: bold;">Removing colour</span></a> from output<br></span></li>
 <li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#tips"><span style="font-weight: bold;">General Tips</span></a>
 Some rules of thumb when writing expect-lite scripts<br>
 </span></li>
@@ -91,8 +91,7 @@ creating a breakpoint on the fly. This is the easiest, and fastest way
 to debug a script.<br>
 <br>
 <h3><a name="debugging"></a>Debugging
-with the
-el_shell</h3>
+with the IDE</h3>
 To make debugging of scripts even easier, both methods of <span style="font-weight: bold;">interact</span>
 support a limited expect-lite Integrated Debugger Environment (IDE). In this IDE, expect-lite
 script commands can be typed, even assigning variables and displaying them, inside the
@@ -150,7 +149,7 @@ entire string that is being searched (in).<br>
 <br>
 For example, for the given expect-lite code:<br>
 <pre>&gt;cat $tmp_file<br>&lt;Proto \[LAN\]Addr:Port =&gt; Addr:Port \[WAN\]Addr:Port &lt;= Addr:Port<br>&lt;6[ \t]+[0-9a-f:]{11,14}[ \t]+[0-9a-f]{8}:22<br></pre>
-With the --show_forest option, the output will appear with the
+With the --verbose option, the output will appear with the
 additional lines:<br>
 <pre>cat /proj/regression/tmp/junk<br>Dec 31 1969 19:43:12:025952:INFO :CLI :cli.c:2945:_cli_handle_short_cmd:<br> Execute command: "fwdstat".<br>Proto [LAN]Addr:Port =&gt; Addr:Port [WAN]Addr:Port &lt;= Addr:Port<br> 6 c0a85001:41696 c0a81401:22 c0a81401:22 c0a81402:32770<br><br>find&lt;&lt;Proto \[LAN\]Addr:Port =&gt; Addr:Port \[WAN\]Addr:Port &lt;= Addr:Port&gt;&gt;<br> in&lt;&lt;cat /proj/regression/tmp/junk<br>Dec 31 1969 19:43:12:025952:INFO :CLI :cli.c:2945:_cli_handle_short_cmd:<br> Execute command: "fwdstat".<br>Proto [LAN]Addr:Port =&gt; Addr:Port [WAN]Addr:Port &lt;= Addr:Port&gt;&gt;<br><br>find&lt;&lt;6[ \t]+[0-9a-f:]{11,14}[ \t]+[0-9a-f]{8}:22&gt;&gt;<br> in&lt;&lt;<br> 6 c0a85001:41696 c0a81401:22&gt;&gt;<br></pre>
 Both the 'find' and 'in' text are wrapped in &lt;&lt;
@@ -211,7 +210,7 @@ to see what is
 being matched, and to
 assist in refining the '&lt;' statements.<br>
 <br>
-<h2><a name="tips"></a>Decreasing the
+<h2><a name="decreasing_log_chatter"></a>Decreasing the
 log
 chatter<br>
 </h2>
@@ -226,7 +225,12 @@ If while debugging the script, it is desirable to see the additional
 logging info (chatter), it can be turned on via the command line with
 the -v parameter:<br>
 <pre>expect-lite -v r=myhost c=myscript<br></pre>
-<br>
+<br><h2><a name="removing_color"></a>Removing Colour from output</h2>In
+an automated environment, it is probably not desirable to have ANSI
+color sequences embedded in the logs. Although it is possible to use
+the expect-lite directive *NOCOLOUR in each script to turn off colour,
+there is an easier way. Define the terminal type to a dumb terminal,
+such as tty.<br><pre>export TERM=tty</pre>expect-lite will detect the dumb terminal type and turn off colour output automatically.<br>
 <h2><a name="tips"></a>General Tips</h2>
 Here are some simple tips when script writing:<br>
 <ul>

@@ -616,7 +616,7 @@ o	Add *STEP - advances interact 1 line in the script
 				
 o	Other Directives: delay_wait_for_host, connect_method
 
-o	Add End of Line Sequence (EoL) as a Directive *EOL-CR *EOL-CRLF *EOL-LF
+x	Add End of Line Sequence (EoL) as a Directive *EOL-CR *EOL-CRLF *EOL-LF
 
 x	Add *NOCOLOR
 
