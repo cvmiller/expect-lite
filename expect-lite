@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "3.7.0.d5"
+set version "3.7.0"
 
 #set starting expect timeout 
 set timeout 10 
