@@ -590,7 +590,9 @@ Updated 30 July 2010 v3.7.0d5
 		Made fork context to hold eols per session
 	Cleaned up *INTERACT - passes *FORK down with other commands
 	
-
+Released 2 August 2010 3.7.0
+	Release of 3.7.0d5 as 3.7.0
+	
 ------------ Future Versions --------------------------
 		
 Future
