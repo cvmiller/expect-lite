@@ -1,4 +1,4 @@
-#
+# 
 # Test expect-lite directives (requires version 3.5.0 or later)
 #
 *NODEBUG
@@ -20,6 +20,7 @@
 >
 *EOLS LF
 >
+
 
 *NOINFO
 #; === Quiet check with NOINFO

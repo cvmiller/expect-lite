@@ -1,6 +1,9 @@
 # include File
 !set user_namespace(el_script) $cmd_file
 >
+#*INTERACT
+>sleep 3
+>
 ; === Script: $el_script
 $HELLO=Hi There
 > echo $HELLO

@@ -19,7 +19,7 @@ $manarch=i386
 ; ==== Set Timeout ====
 @5
 >id
-#<craig|cmiller
+<craig|cmiller|cvmiller
 
 $tmp=/proj/regression/tmp/generalRegression/tc_gzip_reserve.elt/
 $junk=orbit-root
@@ -34,10 +34,17 @@ $junk2=$junk/some/path
 >else 
 >echo "" 
 >fi
+
+
+>sleep 3
+>echo "test_include.txt"
 +$INCLUDE=\n([0-9a-zA-Z\._]+)
 
-~$INCLUDE
+#~$INCLUDE
+~test_include.txt
 
 >echo "Returned from include file"
+<file
+*INTERACT
 >
 #pau

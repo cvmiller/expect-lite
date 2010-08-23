@@ -592,18 +592,22 @@ Updated 30 July 2010 v3.7.0d5
 	
 Released 2 August 2010 3.7.0
 	Release of 3.7.0d5 as 3.7.0
+
+
+
 	
 ------------ Future Versions --------------------------
 		
 Future
 o	Update for more config directives (put in own proc)
 
-o	Self checking code - increments WARNs and checks count at end
+x	Self checking code - increments WARNs and checks count at end
 		May not need with self_self_tests
 		
-o	*PASS (sets $_el(success) to 1) - not in 3.2.0
+x	*PASS (sets $_el(success) to 1) - not in 3.2.0
+		implemented at *TERM
 	
-o	Directive: *INTERACT		a shell which provides interaction
+x	Directive: *INTERACT		a shell which provides interaction
 		Allows expect-lite commands (to switch sessions) - add later
 		Create interact function
 			simulates expect interact
@@ -611,17 +615,25 @@ o	Directive: *INTERACT		a shell which provides interaction
 			interprets commands via _el_script_exec "|command"
 		write separately from expect-lite to test
 
-o	Add *LAST - prints out last 5 lines of expect-lite script - shows where user is
-
-o	Add *STEP - advances interact 1 line in the script
-		Also add *n, *N to step next
-				
 o	Other Directives: delay_wait_for_host, connect_method
 
 x	Add End of Line Sequence (EoL) as a Directive *EOL-CR *EOL-CRLF *EOL-LF
 
 x	Add *NOCOLOR
 
+------------ Future Version 4.0 --------------------------
+
+x	Add *STEP - advances and executes interact 1 line in the script
+		Also add *NEXT and ^N
+
+x	Add *LAST - prints out last 5 lines of expect-lite script - shows where user is
+		implemented as *SHOW N, where N can be + or -
+
+Created 2expect-lite as 4.0.0d1 - 22 Aug 2010
+	Reworked buffers completely (now global array)
+	Updated buffer read to only read in script lines
+	Added *STEP, *LAST functionality
+	
 
 ------------ Windows Cygwin Expect --------------------------
 Known Issues
