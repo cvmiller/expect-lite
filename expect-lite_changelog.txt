@@ -590,17 +590,22 @@ Updated 30 July 2010 v3.7.0d5
 		Made fork context to hold eols per session
 	Cleaned up *INTERACT - passes *FORK down with other commands
 	
-Released 2 August 2010 3.7.0
+Released 2 August 2010 v3.7.0
 	Release of 3.7.0d5 as 3.7.0
 
 
+Updated 26 August 2010 v3.7.1d4
+	Fixed errant color issues (when TERM=tty)
+	Added *EXP_INFO, *NOEXP_INFO - shows expected lines in stdout
+		Added CLI argument -w to turn on *EXP_INFO
+	Added custom color to comment lines, if first word is recognized color
+		e.g. ;red This comment is red
+	
 
 	
 ------------ Future Versions --------------------------
 		
 Future
-o	Update for more config directives (put in own proc)
-
 x	Self checking code - increments WARNs and checks count at end
 		May not need with self_self_tests
 		
@@ -632,8 +637,18 @@ x	Add *LAST - prints out last 5 lines of expect-lite script - shows where user i
 Created 2expect-lite as 4.0.0d1 - 22 Aug 2010
 	Reworked buffers completely (now global array)
 	Updated buffer read to only read in script lines
-	Added *STEP, *LAST functionality
+	Added *STEP, *SHOW N (lines) functionality
+
+o	Add IDE paste '>' to avoid wait_for_prompt, on first line
+
+o	Get Dyn Var working in IDE mode
+
+o	IDE Cooked mode '-reset' to help with backspace problem
 	
+o	Update for more config directives (put in own proc)
+
+o	Add directive **CONNECT_METHOD
+
 
 ------------ Windows Cygwin Expect --------------------------
 Known Issues

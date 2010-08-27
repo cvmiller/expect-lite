@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.x Alpha"
+set version "4.0.4 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -66,6 +66,9 @@ set WARN 1
 
 # Print Info messages to stdout (when set to 1 = TRUE, 0 = FALSE)
 set INFO 1
+
+# Print Expect Info messages to stdout (when set to 1 = TRUE, 0 = FALSE)
+set EXP_INFO 1
 
 # Select remote shell to spawn after logging into remote host 
 set remote_shell "bash"
@@ -219,7 +222,7 @@ set el_err_color red
 #	
 #
 proc check_term_type { } {
-	global _el_comment_color el_color env
+	global _el_comment_color el_color env el_info_color el_warn_color el_err_color
 	
 	#disable global comment color if unknown
 	if { [lsearch [array names el_color] $_el_comment_color] == -1 } {
@@ -377,7 +380,7 @@ proc instant_interact_sig {} {
 						}
 					}
 				}
-			-echo -re {^\*SHOW[ ]*(.*)\r} {
+			-echo -reset -re {^\*SHOW[ ]*(.*)\r} {
 					set param $interact_out(1,string)
 					switch -regexp -- $param {
 						"VARS"	show_vars
@@ -511,7 +514,7 @@ proc parse_cmd_file_nopath { cmd_file } {
 #
 proc read_args {} {
 	global argc argv remote_host cmd_file user_dir env connect_method user pass
-	global cli_namespace timeout_multiplier arg0 WARN DEBUG el_warn_color el_err_color
+	global cli_namespace timeout_multiplier arg0 WARN DEBUG EXP_INFO el_warn_color el_err_color
 
 	# default timeout_multiplier multiplier to 1
 	set cli_namespace($timeout_multiplier) 1
@@ -535,6 +538,8 @@ proc read_args {} {
 				-vv		-
 				--verbose	{set WARN 10; set DEBUG 10}
 				-vvv		{set WARN 0; set DEBUG 10}
+				-w		-
+				--verify	{set EXP_INFO 10; set INFO 10}
 				-r		{ set remote_host $optargval }
 				-c		{ set cmd_file $optargval; set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] }
 				-d		{ set user_dir $optargval }
@@ -1038,21 +1043,51 @@ proc _el_strip_char { string char } {
 }
 
 
+
+#
+#	Find a color in a comment line
+#	
+#
+proc find_color { str } {
+	global el_color
+	
+	set fcolor ""
+	# detect first word of comment, if it is a color, then so use it
+	set l_str [split $str]
+	set first_word [lindex $l_str 0 ]
+	#puts "------------------>$l_str|$first_word|[lsearch [array names el_color] $first_word ]|"
+	if {[lsearch [array names el_color] $first_word ] != -1} {
+		set fcolor $first_word
+	}
+	return $fcolor
+}
+
 #
 #	Prints a comment line (begins with a ';')
 #	
 #
 proc print_comment_line { } {
-	global comment_line timeout_line
+	global comment_line timeout_line el_info_color el_color
+
+	
+	# initialize font color
+	if { $comment_line != "" } {
+		set fcolor [find_color $comment_line]
+		if { $fcolor != "" } {
+			# remove first word
+			regsub "$fcolor" $comment_line "" comment_line
+		}
+	}
+	
 	# print ';' printable comment
 	if { $comment_line != "" } {
 		#puts "\n$comment_line\n"
-		cputs "\n$comment_line\n"
+		cputs "\n$comment_line\n" $fcolor
 		set comment_line ""
 		} 
 	# print new expect timeout value (if needed)
 	if { $timeout_line != "" } {
-		puts "\n$timeout_line\n"
+		cputs "\n$timeout_line\n" $el_info_color
 		set timeout_line ""
 		} 
 
@@ -1353,11 +1388,13 @@ proc _el_buffer_show { num_of_lines buf_stack} {
 #		However search items used as looping labels should be unique!
 #
 proc _el_buffer_search {line_ptr line_search buf_stack} {
-	global _el_infinite_loop WARN INFO el_color el_info_color el_err_color _el_buf
+	global _el_infinite_loop WARN INFO el_color el_info_color el_err_color _el_comment_color _el_buf
 	# search down first
 	if {$INFO} {
 		# start INFO color
-		puts  -nonewline $el_color($el_info_color)
+		if {$_el_comment_color == "none"} {
+			puts  -nonewline $el_color($el_info_color)
+		}
 		puts -nonewline "\nJumping to label"
 		
 	}
@@ -1398,7 +1435,7 @@ proc _el_buffer_search {line_ptr line_search buf_stack} {
 #
 proc _el_script_exec {cmd_file} {
 	global remote_host _out _out_nowait _in _in_noregex _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
-	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 _el_comment_color el_info_color el_warn_color el_err_color _el_eols _el_fork_context _el_buf
+	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 _el_comment_color el_info_color el_warn_color el_err_color _el_eols _el_fork_context _el_buf EXP_INFO
 		
 	set prev_line ""
 	set comment_line ""
@@ -1718,6 +1755,10 @@ proc _el_script_exec {cmd_file} {
 						#puts "  found_in<<$expect_out(0,string)>>"
 						puts "\n"
 					}
+					# show expect found string
+					if { $EXP_INFO && $DEBUG==0 && $_el(success)==1 } {
+						cputs "<<$expect_out(0,string)" $el_info_color
+					}
 				}
 			^\<	{ 	# Expect teststr or set success to 0 and fail test	'<'=use regex
 					set _el(success) 0
@@ -1764,6 +1805,12 @@ proc _el_script_exec {cmd_file} {
 						#puts "  found_in<<$expect_out(0,string)>>"
 						puts "\n"
 					}
+					# show expect found string
+					if { $EXP_INFO && $DEBUG==0 && $_el(success)==1} {
+						regsub ".*($teststr)" $expect_out(buffer) {\1} foundstr
+						cputs "<$foundstr" $el_info_color
+					}
+					
 				}
 			^\-<	{ 	# NOT Expect teststr and If it is found then set success to 0 and fail test
 					set _el(success) 0
@@ -1967,7 +2014,18 @@ proc _el_script_exec {cmd_file} {
 					# execute expect lines if present
 					_el_exec_expect
 					
-					cputs [_el_strip_char $_el(line) $_stdout_comment_nobuf] $_el_comment_color
+					# Find color at beginning of comment line and use it, if not, use default comment color
+					set unbuf_comment [_el_strip_char $_el(line) $_stdout_comment_nobuf]
+					set unbuf_color [find_color $unbuf_comment] 
+					if { $unbuf_color != "" } {
+						# remove first word
+						regsub "$unbuf_color" $unbuf_comment "" unbuf_comment
+						# use custom color
+						cputs $unbuf_comment $unbuf_color
+					} else {
+						# use default comment color
+						cputs $unbuf_comment $_el_comment_color
+					}
 					
 				}
 			^\;	{	# Send "comment" to stdout buffered
@@ -2211,15 +2269,19 @@ proc _el_script_exec {cmd_file} {
 					print_comment_line
 					# Process the directive
 					switch -glob $_el(line) {	
-						"\\*INFO"	{	# Turn off INFO logging
+						"\\*INFO"	{	# Turn on INFO logging
 							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
 							set INFO 1
 						}
-						"\\*WARN"	{	# Turn off WARN logging
+						"\\*EXP_INFO"	{	# Turn on Expect INFO logging
+							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
+							set EXP_INFO 1
+						}
+						"\\*WARN"	{	# Turn on WARN logging
 							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
 							set WARN 1
 						}
-						"\\*DEBUG"	{	# Turn off WARN logging
+						"\\*DEBUG"	{	# Turn on DEBUG logging
 							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
 							set DEBUG 1
 						}
@@ -2228,6 +2290,10 @@ proc _el_script_exec {cmd_file} {
 							# do not disable if CLI has enabled
 							if {$INFO != 10 } { set INFO 0 }
 							
+						}
+						"\\*NOEXP_INFO"	{	# Turn off Expect INFO logging
+							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
+							if {$EXP_INFO != 10 } { set EXP_INFO 0 }
 						}
 						"\\*NOWARN"	{	# Turn off WARN logging
 							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
