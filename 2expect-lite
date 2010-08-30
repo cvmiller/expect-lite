@@ -285,26 +285,16 @@ proc cputs { str  {l_color ""} } {
 }
 
 
+
 # 
-# 
-#	Signal Handler, which places user into instant-interactive(tm) session
+#	Expect Signal Handler, which places user into instant-interactive(tm) session
 #	Default signal is SIGQUIT or ^\
 #
-#	package is required only to handle instant interact feature via ^\
-#	feature will be disabled if package is not available
 #
-if { [catch { package require Tclx 8.0 } error] } {
-	if {$WARN} {
-		cputs  "\n\nWarning: unable to locate Tclx package" $el_warn_color
-		cputs  "Warning: Instant-Interact \'^\\\' feature is disabled \n\n" $el_warn_color
-	}
-} else {
-	#trap SIGQUIT for Instant-Interact
-	
-	signal trap SIGQUIT instant_interact_sig
-	#signal trap SIGKILL instant_interact_sig
-	if {$INFO} { cputs "\nINFO: Instant-Interact \'^\\\' feature is enabled \n" $el_info_color}
-}
+trap {
+	instant_interact_sig
+} SIGQUIT
+
 
 # 
 # 
@@ -334,6 +324,7 @@ proc instant_interact_sig {} {
 		#	Experimental: also interprets subset of expect-lite script commands
 		#		Lines starting with >,?,$,~,;,* 
 		#			send, if, var assignment, include file, comment, directives respectively
+		stty -raw
 		if { [catch { interact {
 			{+++} { # exit interact session, return to script
 				pop_session_id; set restart_interact 0 
@@ -348,7 +339,7 @@ proc instant_interact_sig {} {
 				puts "[ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ] | $_el_buf($_el_buf(stack),ptr)"
 				#exit 
 				}
-			-echo -re {\016|^\*STEP|^\*NEXT}	{ # ^N = Next Step
+			-echo -re {^\016|^\023|^\*STEP|^\*NEXT}	{ # ^N = Next Step
 				# increment buffer line pointer
 				incr _el_buf($_el_buf(stack),ptr)
 				# read line from buffer
@@ -380,7 +371,7 @@ proc instant_interact_sig {} {
 						}
 					}
 				}
-			-echo -reset -re {^\*SHOW[ ]*(.*)\r} {
+			-echo  -re {^\*SHOW[ ]*(.*)\r} {
 					set param $interact_out(1,string)
 					switch -regexp -- $param {
 						"VARS"	show_vars
@@ -408,6 +399,7 @@ proc instant_interact_sig {} {
 	session_id_manager [ pop_session_id ]
 	set _el(success) 1
 	protected_send "$_el_eols"
+	stty raw
 }
 
 
