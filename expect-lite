@@ -1,4 +1,4 @@
-#!/usr/bin/expect 
+#!/usr/bin/expect --
 
 ##################################################################################
 #
@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "3.7.1.d4"
+set version "3.7.1.d7"
 
 #set starting expect timeout 
 set timeout 10 
@@ -49,7 +49,7 @@ set timeout 10
 #	Protects against infinite loops by decrementing this number
 #	when value is Zero, _el_buffer_search will return 'not found' (-1)
 # typically this should be set in the range of 5000-10000
-set _el_infinite_loop 5000
+set _el_infinite_loop 10000
 
 
 # hardcoded login values - only used for telnet, and ssh logins
@@ -68,7 +68,7 @@ set WARN 1
 set INFO 1
 
 # Print Expect Info messages to stdout (when set to 1 = TRUE, 0 = FALSE)
-set EXP_INFO 1
+set EXP_INFO 0
 
 # Select remote shell to spawn after logging into remote host 
 set remote_shell "bash"
@@ -76,7 +76,7 @@ set remote_shell ""
 
 # Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture
 # 100 ms is a good value for a local LAN, 200 ms if running across high speed internet
-set delay_wait_for_host 200
+set delay_wait_for_host 100
 
 # connects to login host, and logs in as $USER
 #
@@ -261,15 +261,24 @@ proc check_term_type { } {
 proc cputs { str  {l_color ""} } {
 	global _el_comment_color el_color 
 
+	proc protect_puts { str } {
+		# catch stdout errors and quit
+		if { [catch { puts $str } error] } {
+			# catch stderr error and quit
+			catch {puts stderr "ERROR:$error"}
+			exit 1
+		}
+	}
+
 	if {$_el_comment_color == "none"} {
 		# use no color
-		puts $str	
+		protect_puts $str	
 	} elseif { $l_color != "" } {	
 		# use supplied color
-		puts "$el_color($l_color)$str$el_color(nocolor)"
+		protect_puts "$el_color($l_color)$str$el_color(nocolor)"
 	} elseif {$_el_comment_color != "none"} {
 		# use global color
-		puts  "$el_color($_el_comment_color)$str$el_color(nocolor)"
+		protect_puts "$el_color($_el_comment_color)$str$el_color(nocolor)"
 	} 
 	
 }
@@ -344,6 +353,7 @@ proc instant_interact_sig {} {
 			-echo -re {(^>|^\?|^\$|^~|^;|^\*)(.+)\r} {
 					#### Experimental: Limited support for EL commands in Interact
 					if {$DEBUG} {puts "\nDEBUG: Evaluating:$interact_out(1,string)$interact_out(2,string)\n"}
+					protected_send "$_el_eols"
 					_el_script_exec "\|$interact_out(1,string)$interact_out(2,string)"
 					return
 				}
@@ -424,7 +434,8 @@ proc usage {} {
 	puts "       additional login options: user_name=<username>  user_password=<password>"
 	puts "       eg. ./expect-lite c=pm_alternation.elt r=host-008 u=superuser p=mysecret"
 	puts " "
-	puts "       additional debug options: -v|-vv|--verbose"
+	puts "       additional logging options: -V|-v|-vv|--verbose"
+	puts "            -V              prints \'expected\' lines (i.e lines beginning with < & << )"
 	puts "            -v              prints warnings, and infos (i.e. conditionals, dynamic var assignments)"
 	puts "            -vv|--verbose   prints warnings and debug (i.e. expect match info) "
 	puts "       eg. ./expect-lite -v r=host-008  c=pm_alternation.elt "
@@ -489,8 +500,8 @@ proc read_args {} {
 				-vv		-
 				--verbose	{set WARN 10; set DEBUG 10}
 				-vvv		{set WARN 0; set DEBUG 10}
-				-w		-
-				--verify	{set EXP_INFO 10; set INFO 10}
+				-V		-
+				--expect	{set EXP_INFO 10; set INFO 10}
 				-r		{ set remote_host $optargval }
 				-c		{ set cmd_file $optargval; set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] }
 				-d		{ set user_dir $optargval }
@@ -500,6 +511,7 @@ proc read_args {} {
 			error ] } {
 				puts "Warning: Bad input option: $error"
 			}
+			#puts "->$optarg"
 			#general vars
 			if [ regexp {.+=.*} $optarg ] {
 				# detect and parse args in format "var=value"

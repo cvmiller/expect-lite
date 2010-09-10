@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.4 Alpha"
+set version "4.0.7 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -269,21 +269,28 @@ proc check_term_type { } {
 #	
 #
 proc cputs { str  {l_color ""} } {
-	global _el_comment_color el_color
+	global _el_comment_color el_color 
+
+	proc protect_puts { str } {
+		# catch stdout errors and quit
+		if { [catch { puts $str } error] } {
+			puts stderr "ERROR:$error"
+			exit 1
+		}
+	}
 
 	if {$_el_comment_color == "none"} {
 		# use no color
-		puts $str	
+		protect_puts $str	
 	} elseif { $l_color != "" } {	
 		# use supplied color
-		puts "$el_color($l_color)$str$el_color(nocolor)"
+		protect_puts "$el_color($l_color)$str$el_color(nocolor)"
 	} elseif {$_el_comment_color != "none"} {
 		# use global color
-		puts  "$el_color($_el_comment_color)$str$el_color(nocolor)"
+		protect_puts "$el_color($_el_comment_color)$str$el_color(nocolor)"
 	} 
 	
 }
-
 
 
 # 
@@ -324,9 +331,8 @@ proc instant_interact_sig {} {
 		#	Experimental: also interprets subset of expect-lite script commands
 		#		Lines starting with >,?,$,~,;,* 
 		#			send, if, var assignment, include file, comment, directives respectively
-		stty -raw
 		if { [catch { interact {
-			{+++} { # exit interact session, return to script
+			-re {\+\+\+|^\x1B\x63} { #DEBUGGER '+++' or ALT-c to exit interact session, continue script
 				pop_session_id; set restart_interact 0 
 				return 
 				}
@@ -334,12 +340,12 @@ proc instant_interact_sig {} {
 				puts "\nExiting interact & expect-lite.\n"
 				exit 
 				}
-			\005	{ # test
-				#_el_buffer_show 1 $_el_buf(stack) 
-				puts "[ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ] | $_el_buf($_el_buf(stack),ptr)"
+			-reset \005	{ # test
+				_el_script_exec "\|>> pwd"
+				_el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
 				#exit 
 				}
-			-echo -re {^\016|^\023|^\*STEP|^\*NEXT}	{ # ^N = Next Step
+			-echo -re {^\x1B\x6E|^\x1B\x73|^\*STEP|^\*NEXT}	{ #DEBUGGER ALT-s = Next Step
 				# increment buffer line pointer
 				incr _el_buf($_el_buf(stack),ptr)
 				# read line from buffer
@@ -371,7 +377,15 @@ proc instant_interact_sig {} {
 						}
 					}
 				}
-			-echo  -re {^\*SHOW[ ]*(.*)\r} {
+			-re {\x1B([1-9])} {	#DEBUGGER ALT-1to9 Show last 1-9 lines
+					set param $interact_out(1,string)
+					set param [ expr $param * -1 ]
+					_el_buffer_show $param $_el_buf(stack)
+				}
+			-re {\x1B\x77} {	#DEBUGGER ALT-w Show Vars
+					show_vars
+				}
+			-echo -reset -re {^\*SHOW[ ]*(.*)\r} {
 					set param $interact_out(1,string)
 					switch -regexp -- $param {
 						"VARS"	show_vars
@@ -381,9 +395,13 @@ proc instant_interact_sig {} {
 					}
 					return
 				}
-			-echo -re {(^>|^\?|^\$|^~|^;|^\*|^\+)(.+)\r} {
+			-echo -re {(^>>|^>|^\?|^\$|^~|^;|^\*|^\+)(.+)\r} {
 					#### Experimental: Limited support for EL commands in Interact
 					if {$DEBUG} {puts "\nDEBUG: Evaluating:$interact_out(1,string)$interact_out(2,string)\n"}
+					# > don't wait for prompt, conver to >>
+					if { $interact_out(1,string) == ">" } {
+						set interact_out(1,string) ">>"
+					}
 					_el_script_exec "\|$interact_out(1,string)$interact_out(2,string)"
 					return
 				}
@@ -465,7 +483,8 @@ proc usage {} {
 	puts "       additional login options: user_name=<username>  user_password=<password>"
 	puts "       eg. ./expect-lite c=pm_alternation.elt r=host-008 u=superuser p=mysecret"
 	puts " "
-	puts "       additional debug options: -v|-vv|--verbose"
+	puts "       additional logging options: -V|-v|-vv|--verbose"
+	puts "            -V              prints \'expected\' lines (i.e lines beginning with < & << )"
 	puts "            -v              prints warnings, and infos (i.e. conditionals, dynamic var assignments)"
 	puts "            -vv|--verbose   prints warnings and debug (i.e. expect match info) "
 	puts "       eg. ./expect-lite -v r=host-008  c=pm_alternation.elt "
@@ -530,7 +549,7 @@ proc read_args {} {
 				-vv		-
 				--verbose	{set WARN 10; set DEBUG 10}
 				-vvv		{set WARN 0; set DEBUG 10}
-				-w		-
+				-V		-
 				--verify	{set EXP_INFO 10; set INFO 10}
 				-r		{ set remote_host $optargval }
 				-c		{ set cmd_file $optargval; set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] }

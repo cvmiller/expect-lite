@@ -602,6 +602,11 @@ Updated 26 August 2010 v3.7.1d4
 		e.g. ;red This comment is red
 	
 
+Updated 10 Sept 2010 v3.7.1d7
+	Fixed ^\ during a pipe to 'tee' - would give call trace
+		Now expect-lite just exits with error
+	Changed -w to -V to show *EXP_INFO
+	
 	
 ------------ Future Versions --------------------------
 		
@@ -638,10 +643,20 @@ Created 2expect-lite as 4.0.0d1 - 22 Aug 2010
 	Reworked buffers completely (now global array)
 	Updated buffer read to only read in script lines
 	Added *STEP, *SHOW N (lines) functionality
+	
+9/10/10 - Added ALT commands to IDE
+	ALT-s	step
+	ALT-w	show vars
+	ALT-c	continue (aka +++)
+	ALT-1-9	show last N lines (1 to 9)
+	
+o	Add IDE help - ALT-h
 
-o	Add IDE paste '>' to avoid wait_for_prompt, on first line
+x	Add IDE paste '>' to avoid wait_for_prompt, on first line
 
 o	Get Dyn Var working in IDE mode
+		Need to escape chars before sending to _el_exec, such as $ [ ] 
+			e.g. _el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
 
 o	IDE Cooked mode '-reset' to help with backspace problem
 	
