@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.7 Alpha"
+set version "4.0.8 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -292,6 +292,25 @@ proc cputs { str  {l_color ""} } {
 	
 }
 
+# 
+#	Interact help
+#	
+#
+#
+proc interact_help { } {
+	send_user "\n"
+	send_user "IDE: Help\n"
+	send_user "  Key1		Key2		Action\n"
+	send_user "  ----		----		------\n"
+	send_user "  ALT+s		ctrl+S		Step\n"
+	send_user "  ALT+c		+++		Continue\n"
+	send_user "  ALT+w		*SHOW VARS	Show Vars\n"
+	send_user "  ALT+\[1-9\]	*LAST|*NEXT	Show N lines of script\n"
+	send_user "  ctrl+D			Quit & Exit expect-lite\n"
+	send_user "  ALT+H		*HELP		this help\n"
+	#send_user "\n"
+	return
+}
 
 # 
 #	Expect Signal Handler, which places user into instant-interactive(tm) session
@@ -332,7 +351,7 @@ proc instant_interact_sig {} {
 		#		Lines starting with >,?,$,~,;,* 
 		#			send, if, var assignment, include file, comment, directives respectively
 		if { [catch { interact {
-			-re {\+\+\+|^\x1B\x63} { #DEBUGGER '+++' or ALT-c to exit interact session, continue script
+			-re {\+\+\+|^\x1B\x63|\xe3} { #DEBUGGER '+++' or ALT-c to exit interact session, continue script
 				pop_session_id; set restart_interact 0 
 				return 
 				}
@@ -345,15 +364,15 @@ proc instant_interact_sig {} {
 				_el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
 				#exit 
 				}
-			-echo -re {^\x1B\x6E|^\x1B\x73|^\*STEP|^\*NEXT}	{ #DEBUGGER ALT-s = Next Step
-				# increment buffer line pointer
+			-re {^\x1B\x6E|^\x1B\x73|^\xf3|^\x13}	{ #DEBUGGER ALT-s = Next Step
+				# increment buffer line pointer - also ^S
 				incr _el_buf($_el_buf(stack),ptr)
 				# read line from buffer
 				set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
 				
 				switch -regexp -- $line { 
-					^\< {	
-							# skip expect lines
+					{^\<|^\+\$} {	
+							# skip expect lines & Dyn-Vars (for now)
 							cputs "$line"  $el_info_color
 							protected_send "$_el_eols"
 						}
@@ -377,13 +396,39 @@ proc instant_interact_sig {} {
 						}
 					}
 				}
-			-re {\x1B([1-9])} {	#DEBUGGER ALT-1to9 Show last 1-9 lines
-					set param $interact_out(1,string)
-					set param [ expr $param * -1 ]
+			-re {\x1B([1-9])|([\xb1-\xb9])} {	#DEBUGGER ALT-1to9 Show last 1-9 lines
+					#send_user "=====>[scan $interact_out(0,string) %c]"
+					if { [scan $interact_out(0,string) %c] < 176 } {
+						# set to esc number
+						set param $interact_out(1,string)
+					} else {
+						# set to \xbN number
+						set param [ expr [scan $interact_out(0,string) %c] - 176 ]
+					}
 					_el_buffer_show $param $_el_buf(stack)
+					protected_send "$_el_eols"
 				}
-			-re {\x1B\x77} {	#DEBUGGER ALT-w Show Vars
+			-echo -re {^\*LAST} {	#DEBUGGER ALT-5 Show last 5 lines
+					_el_buffer_show -5 $_el_buf(stack)
+					protected_send "$_el_eols"
+				}
+			-echo -re {^\*NEXT} {	#DEBUGGER ALT+5 Show next 5 lines
+					_el_buffer_show 5 $_el_buf(stack)
+					protected_send "$_el_eols"
+				}
+			-re {\x1B\x77|\xf7} {	#DEBUGGER ALT-w Show Vars
 					show_vars
+					protected_send "$_el_eols"
+				}
+			-re {\x1B\x68|\xe8} {	#DEBUGGER ALT-h Show help
+					# xterm will pass ALT-h
+					interact_help
+					protected_send "$_el_eols"
+				}
+			-echo -re {^\*HELP} {	#DEBUGGER Show help
+					# Linux terminal won't pass ALT-h, use *HELP
+					interact_help
+					protected_send "$_el_eols"
 				}
 			-echo -reset -re {^\*SHOW[ ]*(.*)\r} {
 					set param $interact_out(1,string)
@@ -395,14 +440,24 @@ proc instant_interact_sig {} {
 					}
 					return
 				}
-			-echo -re {(^>>|^>|^\?|^\$|^~|^;|^\*|^\+)(.+)\r} {
-					#### Experimental: Limited support for EL commands in Interact
-					if {$DEBUG} {puts "\nDEBUG: Evaluating:$interact_out(1,string)$interact_out(2,string)\n"}
-					# > don't wait for prompt, conver to >>
-					if { $interact_out(1,string) == ">" } {
-						set interact_out(1,string) ">>"
+			-echo -re  {(^>>|^>|^\?[iI][fF]|^\$|^~|^;|^\*|^\+)(.+)\r} {
+					#### Experimental: support for EL commands in Interact
+					#### Permits pasting of multiple commands into Interact session
+					# create list of multiple pasted commands
+					set cli_list [split $interact_out(0,string) "\r"]
+					if {$DEBUG} {
+						send_user "\nDEBUG: Evaluating:\n"
+						foreach d_item $cli_list {
+							send_user "\t$d_item\n"
+						}
 					}
-					_el_script_exec "\|$interact_out(1,string)$interact_out(2,string)"
+					#send_user "=====>$cli_list"
+					foreach item $cli_list {
+						#send_user "===I==>$item\n"
+						if { $item != "" } {
+							_el_script_exec "\|$item"
+						}
+					}
 					return
 				}
 			} }  \
@@ -1371,7 +1426,7 @@ proc _el_buffer_show { num_of_lines buf_stack} {
 	proc print_line { line } {
 		global el_info_color
 		if { $line != -1 } {
-			cputs "	$line" $el_info_color
+			cputs "$line" $el_info_color
 		}
 	} 
 	# end print_line
@@ -1721,8 +1776,11 @@ proc _el_script_exec {cmd_file} {
 					
 				}
 			^\>	{	# Wait for Prompt and send the line
-			
-					wait_for_prompt
+					
+					# do not wait for prompt if only one_line
+					if { $_one_line == 0 } {
+						wait_for_prompt
+					}
 					print_comment_line
 					# execute expect lines if present
 					_el_exec_expect

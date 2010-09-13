@@ -36,7 +36,15 @@ $junk2=$junk/some/path
 >fi
 
 
->sleep 3
+>sleep 2
+*INTERACT
+
+> echo hello
+?if 1 == 1 ? ; === if statement
+
+>> pwd
++$P=\n/home/([a-z]+)
+
 >echo "test_include.txt"
 +$INCLUDE=\n([0-9a-zA-Z\._]+)
 

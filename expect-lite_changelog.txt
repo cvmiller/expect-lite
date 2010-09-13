@@ -600,12 +600,15 @@ Updated 26 August 2010 v3.7.1d4
 		Added CLI argument -w to turn on *EXP_INFO
 	Added custom color to comment lines, if first word is recognized color
 		e.g. ;red This comment is red
+	Added *PASS - synonym for *TERM
 	
 
 Updated 10 Sept 2010 v3.7.1d7
 	Fixed ^\ during a pipe to 'tee' - would give call trace
 		Now expect-lite just exits with error
 	Changed -w to -V to show *EXP_INFO
+
+Updated 10 Sept 2010 v4.0.8 Alpha
 	
 	
 ------------ Future Versions --------------------------
@@ -635,9 +638,12 @@ x	Add *NOCOLOR
 
 x	Add *STEP - advances and executes interact 1 line in the script
 		Also add *NEXT and ^N
+		Implemented at ALT-n
 
 x	Add *LAST - prints out last 5 lines of expect-lite script - shows where user is
 		implemented as *SHOW N, where N can be + or -
+		Implemented as ALT-1-9 (shows next 1-9 lines)
+			*LAST shows most recent 5 lines executed
 
 Created 2expect-lite as 4.0.0d1 - 22 Aug 2010
 	Reworked buffers completely (now global array)
@@ -648,21 +654,32 @@ Created 2expect-lite as 4.0.0d1 - 22 Aug 2010
 	ALT-s	step
 	ALT-w	show vars
 	ALT-c	continue (aka +++)
-	ALT-1-9	show last N lines (1 to 9)
+	ALT-1-9	show next N lines (1 to 9)
 	
-o	Add IDE help - ALT-h
+x	Add IDE help - ALT-h
 
 x	Add IDE paste '>' to avoid wait_for_prompt, on first line
 
-o	Get Dyn Var working in IDE mode
+x	Get Dyn Var working in IDE mode
 		Need to escape chars before sending to _el_exec, such as $ [ ] 
 			e.g. _el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
+		Works via paste only! 
 
 o	IDE Cooked mode '-reset' to help with backspace problem
 	
 o	Update for more config directives (put in own proc)
 
 o	Add directive **CONNECT_METHOD
+
+o	Write SIGPIPE handler to exit el gracefully
+		SIGPIPE - raised when pipe child is killed
+
+x	Fix IDE '?' issue
+		Require '?if'
+		
+o	Update Man Page
+
+o	Update Docs with new IDE info
 
 
 ------------ Windows Cygwin Expect --------------------------
