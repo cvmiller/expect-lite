@@ -666,12 +666,13 @@ x	Get Dyn Var working in IDE mode
 		Works via paste only! 
 
 o	IDE Cooked mode '-reset' to help with backspace problem
+		Probably won't be fixed in 4.0.x
 	
 o	Update for more config directives (put in own proc)
 
 o	Add directive **CONNECT_METHOD
 
-o	Write SIGPIPE handler to exit el gracefully
+x	Write SIGPIPE handler to exit el gracefully
 		SIGPIPE - raised when pipe child is killed
 
 x	Fix IDE '?' issue
