@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.8 Alpha"
+set version "4.0.9 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -293,6 +293,17 @@ proc cputs { str  {l_color ""} } {
 }
 
 # 
+#	Expect Signal Handler, which checks for broken stdout pipe
+#	Default signal is SIGPIPE
+#
+#
+trap {
+	catch { puts stderr "\nERROR:Broken Pipe\n" }
+	exit 2
+} SIGPIPE
+
+
+# 
 #	Interact help
 #	
 #
@@ -300,14 +311,15 @@ proc cputs { str  {l_color ""} } {
 proc interact_help { } {
 	send_user "\n"
 	send_user "IDE: Help\n"
-	send_user "  Key1		Key2		Action\n"
-	send_user "  ----		----		------\n"
-	send_user "  ALT+s		ctrl+S		Step\n"
-	send_user "  ALT+c		+++		Continue\n"
-	send_user "  ALT+w		*SHOW VARS	Show Vars\n"
-	send_user "  ALT+\[1-9\]	*LAST|*NEXT	Show N lines of script\n"
-	send_user "  ctrl+D			Quit & Exit expect-lite\n"
-	send_user "  ALT+H		*HELP		this help\n"
+	send_user "  Key     Action\n"
+	send_user "  ----    ------\n"
+	send_user "  .s      Step\n"
+	send_user "  +++     Continue\n"
+	send_user "  .v      Show Vars\n"
+	send_user "  .1to9   Show N next lines of script\n"
+	send_user "  .-1to9  Show N lines of script\n"
+	send_user "  ctrl+D  Quit & Exit expect-lite\n"
+	send_user "  .h      this help\n"
 	#send_user "\n"
 	return
 }
@@ -351,7 +363,7 @@ proc instant_interact_sig {} {
 		#		Lines starting with >,?,$,~,;,* 
 		#			send, if, var assignment, include file, comment, directives respectively
 		if { [catch { interact {
-			-re {\+\+\+|^\x1B\x63|\xe3} { #DEBUGGER '+++' or ALT-c to exit interact session, continue script
+			-re {\+\+\+|^\.c} { #DEBUGGER '+++' or .c to exit interact session, continue script
 				pop_session_id; set restart_interact 0 
 				return 
 				}
@@ -364,8 +376,8 @@ proc instant_interact_sig {} {
 				_el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
 				#exit 
 				}
-			-re {^\x1B\x6E|^\x1B\x73|^\xf3|^\x13}	{ #DEBUGGER ALT-s = Next Step
-				# increment buffer line pointer - also ^S
+			-re {^\.s}	{ #DEBUGGER .s = Next Step
+				# increment buffer line pointer 
 				incr _el_buf($_el_buf(stack),ptr)
 				# read line from buffer
 				set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
@@ -396,37 +408,20 @@ proc instant_interact_sig {} {
 						}
 					}
 				}
-			-re {\x1B([1-9])|([\xb1-\xb9])} {	#DEBUGGER ALT-1to9 Show last 1-9 lines
-					#send_user "=====>[scan $interact_out(0,string) %c]"
-					if { [scan $interact_out(0,string) %c] < 176 } {
-						# set to esc number
-						set param $interact_out(1,string)
-					} else {
-						# set to \xbN number
-						set param [ expr [scan $interact_out(0,string) %c] - 176 ]
-					}
+			-re {^[.]([-]?[1-9])} {	#DEBUGGER .-1to9 Show next or last 1-9 lines
+					# .1to9 or .-1to9
+					#send_user "=====>[scan $interact_out(0,string) %c]|$interact_out(0,string)"
+					catch { set param "$interact_out(1,string)" } error 
+					#catch { set param "$interact_out(2,string)" } error 
+					
 					_el_buffer_show $param $_el_buf(stack)
 					protected_send "$_el_eols"
 				}
-			-echo -re {^\*LAST} {	#DEBUGGER ALT-5 Show last 5 lines
-					_el_buffer_show -5 $_el_buf(stack)
-					protected_send "$_el_eols"
-				}
-			-echo -re {^\*NEXT} {	#DEBUGGER ALT+5 Show next 5 lines
-					_el_buffer_show 5 $_el_buf(stack)
-					protected_send "$_el_eols"
-				}
-			-re {\x1B\x77|\xf7} {	#DEBUGGER ALT-w Show Vars
+			-re {^\.v} {	#DEBUGGER .v Show Vars
 					show_vars
 					protected_send "$_el_eols"
 				}
-			-re {\x1B\x68|\xe8} {	#DEBUGGER ALT-h Show help
-					# xterm will pass ALT-h
-					interact_help
-					protected_send "$_el_eols"
-				}
-			-echo -re {^\*HELP} {	#DEBUGGER Show help
-					# Linux terminal won't pass ALT-h, use *HELP
+			-re {^\.h} {	#DEBUGGER .h Show help
 					interact_help
 					protected_send "$_el_eols"
 				}
@@ -440,7 +435,7 @@ proc instant_interact_sig {} {
 					}
 					return
 				}
-			-echo -re  {(^>>|^>|^\?[iI][fF]|^\$|^~|^;|^\*|^\+)(.+)\r} {
+			-echo -re  {(^>>|^>|^\?[iI][fF]|^\$|^~|^;|^\*|^\+\$|^=\$)(.+)\r} {
 					#### Experimental: support for EL commands in Interact
 					#### Permits pasting of multiple commands into Interact session
 					# create list of multiple pasted commands
@@ -1494,6 +1489,120 @@ proc _el_buffer_search {line_ptr line_search buf_stack} {
 #	End of Buffer management functions
 #
 
+#
+#	Set Global expect-lite Directives
+#	
+#
+proc _el_global_directive { g_dir_str } {
+	global INFO EXP_INFO WARN DEBUG el_info_color el_warn_color el_err_color _el_comment_color
+	global _el_eols _el_fork_context fork_id 
+	
+	switch -glob $g_dir_str {	
+		"\\*INFO"	{	# Turn on INFO logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set INFO 1
+		}
+		"\\*EXP_INFO"	{	# Turn on Expect INFO logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set EXP_INFO 1
+		}
+		"\\*WARN"	{	# Turn on WARN logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set WARN 1
+		}
+		"\\*DEBUG"	{	# Turn on DEBUG logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set DEBUG 1
+		}
+		"\\*NOINFO"	{	# Turn off INFO logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# do not disable if CLI has enabled
+			if {$INFO != 10 } { set INFO 0 }
+
+		}
+		"\\*NOEXP_INFO"	{	# Turn off Expect INFO logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			if {$EXP_INFO != 10 } { set EXP_INFO 0 }
+		}
+		"\\*NOWARN"	{	# Turn off WARN logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# do not disable if CLI has enabled
+			if {$WARN != 10 } { set WARN 0 }
+
+		}
+		"\\*NODEBUG"	{	# Turn off DEBUG logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# do not disable if CLI has enabled
+			if {$DEBUG != 10 } { set DEBUG 0 }
+
+		}
+		"\\*NOCOLOR"	-
+		"\\*NOCOLOUR"	{	# Turn off Color logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# set INFO color
+			set el_info_color none
+			# set WARN color
+			set el_warn_color none
+			# set ERROR color
+			set el_err_color none
+			# set global color
+			set _el_comment_color none		 	
+		}
+		"\\*TERM"	{	# Terminate but Pass Test
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			_el_fail_test PASS
+		}
+		"\\*FAIL"	{	# Terminate and Fail Test
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# set test to fail
+			set _el(success) 0
+			_el_fail_test
+		}
+		"\\*EOLS LF"	{	# Set End of Line Sequence to LF
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set _el_eols "\n"
+		}
+		"\\*EOLS CRLF"	{	# Set End of Line Sequence to CRLF
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set _el_eols "\r\n"
+		}
+		"\\*SHOW VARS"	{	# Show expect-lite variables
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			show_vars
+		}
+		"\\*INTERACT"	{	# place into expect interact mode
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			#TODO: Allow interact to switch sessions with basic el_shell
+			# using simple expect interact for now
+			# Jump to interact
+			instant_interact_sig
+		}
+		"\\*FORK*"	{	# Spawn/Switch to a new session
+			set fork_list [split $g_dir_str]
+			if { [llength $fork_list] > 2 } {
+				if {$WARN} {
+					cputs "\n\nWarning: FORK: Too Many Names: $g_dir_str\n" $el_warn_color
+				}
+			} elseif {[llength $fork_list] == 2 } {
+				# set the fork_id to the passed value
+				set fork_id [lindex $fork_list 1]
+				# store current eols in current session fork_context
+				set _el_fork_context($current_session,eols) $_el_eols
+
+			} elseif {[llength $fork_list] == 1 } {
+				# no arguments to *FORK, then display current session name
+				set fork_id $current_session
+			}
+			# spawn/switch to fork_id session
+			set current_session [session_id_manager $fork_id]
+			# set eols from new fork_id_context
+			set _el_eols $_el_fork_context($current_session,eols)
+
+
+		}
+	}
+
+}
 
 #
 #	Heart of expect-lite, reads through script file, and takes appropriate action (based on switch statement)
@@ -2337,110 +2446,9 @@ proc _el_script_exec {cmd_file} {
 					_el_exec_expect
 					print_comment_line
 					# Process the directive
-					switch -glob $_el(line) {	
-						"\\*INFO"	{	# Turn on INFO logging
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							set INFO 1
-						}
-						"\\*EXP_INFO"	{	# Turn on Expect INFO logging
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							set EXP_INFO 1
-						}
-						"\\*WARN"	{	# Turn on WARN logging
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							set WARN 1
-						}
-						"\\*DEBUG"	{	# Turn on DEBUG logging
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							set DEBUG 1
-						}
-						"\\*NOINFO"	{	# Turn off INFO logging
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							# do not disable if CLI has enabled
-							if {$INFO != 10 } { set INFO 0 }
-							
-						}
-						"\\*NOEXP_INFO"	{	# Turn off Expect INFO logging
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							if {$EXP_INFO != 10 } { set EXP_INFO 0 }
-						}
-						"\\*NOWARN"	{	# Turn off WARN logging
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							# do not disable if CLI has enabled
-							if {$WARN != 10 } { set WARN 0 }
-							
-						}
-						"\\*NODEBUG"	{	# Turn off DEBUG logging
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							# do not disable if CLI has enabled
-							if {$DEBUG != 10 } { set DEBUG 0 }
-							
-						}
-						"\\*NOCOLOR"	-
-						"\\*NOCOLOUR"	{	# Turn off Color logging
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							# set INFO color
-							set el_info_color none
-							# set WARN color
-							set el_warn_color none
-							# set ERROR color
-							set el_err_color none
-							# set global color
-							set _el_comment_color none		 	
-						}
-						"\\*TERM"	{	# Terminate but Pass Test
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							_el_fail_test PASS
-						}
-						"\\*FAIL"	{	# Terminate and Fail Test
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							# set test to fail
-							set _el(success) 0
-							_el_fail_test
-						}
-						"\\*EOLS LF"	{	# Set End of Line Sequence to LF
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							set _el_eols "\n"
-						}
-						"\\*EOLS CRLF"	{	# Set End of Line Sequence to CRLF
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							set _el_eols "\r\n"
-						}
-						"\\*SHOW VARS"	{	# Show expect-lite variables
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							show_vars
-						}
-						"\\*INTERACT"	{	# place into expect interact mode
-							cputs "\nexpect-lite directive: $_el(line) " $el_info_color
-							#TODO: Allow interact to switch sessions with basic el_shell
-							# using simple expect interact for now
-							# Jump to interact
-							instant_interact_sig
-						}
-						"\\*FORK*"	{	# Spawn/Switch to a new session
-							set fork_list [split $_el(line)]
-							if { [llength $fork_list] > 2 } {
-								if {$WARN} {
-									cputs "\n\nWarning: FORK: Too Many Names: $_el(line)\n" $el_warn_color
-								}
-							} elseif {[llength $fork_list] == 2 } {
-								# set the fork_id to the passed value
-								set fork_id [lindex $fork_list 1]
-								# store current eols in current session fork_context
-								set _el_fork_context($current_session,eols) $_el_eols
-								
-							} elseif {[llength $fork_list] == 1 } {
-								# no arguments to *FORK, then display current session name
-								set fork_id $current_session
-							}
-							# spawn/switch to fork_id session
-							set current_session [session_id_manager $fork_id]
-							# set eols from new fork_id_context
-							set _el_eols $_el_fork_context($current_session,eols)
-
-							
-						}
-					}			
+					_el_global_directive $_el(line)
+					
+			
 				}
 			default {	# blank lines are allowed
 						
