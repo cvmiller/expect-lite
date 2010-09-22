@@ -35,6 +35,9 @@ $junk2=$junk/some/path
 >echo "" 
 >fi
 
+*INFINITE_LOOP 10
+>echo hello
+*INFINITE_LOOP abc
 
 >sleep 2
 *INTERACT

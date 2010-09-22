@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.9 Alpha"
+set version "4.0.12 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -68,7 +68,7 @@ set WARN 1
 set INFO 1
 
 # Print Expect Info messages to stdout (when set to 1 = TRUE, 0 = FALSE)
-set EXP_INFO 1
+set EXP_INFO 0
 
 # Select remote shell to spawn after logging into remote host 
 set remote_shell "bash"
@@ -311,15 +311,15 @@ trap {
 proc interact_help { } {
 	send_user "\n"
 	send_user "IDE: Help\n"
-	send_user "  Key     Action\n"
-	send_user "  ----    ------\n"
-	send_user "  .s      Step\n"
-	send_user "  +++     Continue\n"
-	send_user "  .v      Show Vars\n"
-	send_user "  .1to9   Show N next lines of script\n"
-	send_user "  .-1to9  Show N lines of script\n"
-	send_user "  ctrl+D  Quit & Exit expect-lite\n"
-	send_user "  .h      this help\n"
+	send_user "  Key          Action\n"
+	send_user "  ----        ------\n"
+	send_user "  <tab>s      Step\n"
+	send_user "  <tab>c      Continue\n"
+	send_user "  <tab>v      Show Vars\n"
+	send_user "  <tab>1to9   Show N next lines of script\n"
+	send_user "  <tab>-1to9  Show N lines of script\n"
+	send_user "  ctrl+D      Quit & Exit expect-lite\n"
+	send_user "  <tab>h      this help\n"
 	#send_user "\n"
 	return
 }
@@ -363,7 +363,7 @@ proc instant_interact_sig {} {
 		#		Lines starting with >,?,$,~,;,* 
 		#			send, if, var assignment, include file, comment, directives respectively
 		if { [catch { interact {
-			-re {\+\+\+|^\.c} { #DEBUGGER '+++' or .c to exit interact session, continue script
+			-re {\+\+\+|^\tc} { #DEBUGGER '+++' or .c to exit interact session, continue script
 				pop_session_id; set restart_interact 0 
 				return 
 				}
@@ -376,7 +376,7 @@ proc instant_interact_sig {} {
 				_el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
 				#exit 
 				}
-			-re {^\.s}	{ #DEBUGGER .s = Next Step
+			-re {^\ts}	{ #DEBUGGER .s = Next Step
 				# increment buffer line pointer 
 				incr _el_buf($_el_buf(stack),ptr)
 				# read line from buffer
@@ -408,7 +408,7 @@ proc instant_interact_sig {} {
 						}
 					}
 				}
-			-re {^[.]([-]?[1-9])} {	#DEBUGGER .-1to9 Show next or last 1-9 lines
+			-re {^\t([-]?[1-9])} {	#DEBUGGER .-1to9 Show next or last 1-9 lines
 					# .1to9 or .-1to9
 					#send_user "=====>[scan $interact_out(0,string) %c]|$interact_out(0,string)"
 					catch { set param "$interact_out(1,string)" } error 
@@ -417,23 +417,13 @@ proc instant_interact_sig {} {
 					_el_buffer_show $param $_el_buf(stack)
 					protected_send "$_el_eols"
 				}
-			-re {^\.v} {	#DEBUGGER .v Show Vars
+			-re {^\tv} {	#DEBUGGER .v Show Vars
 					show_vars
 					protected_send "$_el_eols"
 				}
-			-re {^\.h} {	#DEBUGGER .h Show help
+			-re {\th} {	#DEBUGGER .h Show help
 					interact_help
 					protected_send "$_el_eols"
-				}
-			-echo -reset -re {^\*SHOW[ ]*(.*)\r} {
-					set param $interact_out(1,string)
-					switch -regexp -- $param {
-						"VARS"	show_vars
-						"LAST"	{ _el_buffer_show -1 $_el_buf(stack) }
-						{[-0-9+]+}	{ _el_buffer_show $param $_el_buf(stack)}
-						""		{ cputs "\n*SHOW <VARS | LAST | N>" $el_info_color }
-					}
-					return
 				}
 			-echo -re  {(^>>|^>|^\?[iI][fF]|^\$|^~|^;|^\*|^\+\$|^=\$)(.+)\r} {
 					#### Experimental: support for EL commands in Interact
@@ -1428,14 +1418,13 @@ proc _el_buffer_show { num_of_lines buf_stack} {
 	
 	if {$num_of_lines > 0} {
 		cputs "Printing next $num_of_lines line(s) of script:" $el_info_color
-		for {set n $_el_buf($buf_stack,ptr) } {$n<[expr $num_of_lines + $_el_buf($buf_stack,ptr)]} {incr n} {
+		set num_of_lines [expr $num_of_lines + 1 ]
+		for {set n [expr $_el_buf($buf_stack,ptr) +1]} {$n<[expr $num_of_lines + $_el_buf($buf_stack,ptr)]} {incr n} {
 			print_line [ _el_buffer_read $n $buf_stack ]
 		}
 	} else {
 		cputs "Printing last [expr {abs($num_of_lines)}] line(s) of script:" $el_info_color
 		for {set n [expr  $_el_buf($buf_stack,ptr) + $num_of_lines]  } {$n <  $_el_buf($buf_stack,ptr)} {incr n } {
-			#puts "here2"
-			
 			print_line [ _el_buffer_read $n $buf_stack ]
 		}
 	}
@@ -1495,7 +1484,7 @@ proc _el_buffer_search {line_ptr line_search buf_stack} {
 #
 proc _el_global_directive { g_dir_str } {
 	global INFO EXP_INFO WARN DEBUG el_info_color el_warn_color el_err_color _el_comment_color
-	global _el_eols _el_fork_context fork_id 
+	global _el_eols _el_fork_context _el_current_session _el_infinite_loop
 	
 	switch -glob $g_dir_str {	
 		"\\*INFO"	{	# Turn on INFO logging
@@ -1579,29 +1568,43 @@ proc _el_global_directive { g_dir_str } {
 		}
 		"\\*FORK*"	{	# Spawn/Switch to a new session
 			set fork_list [split $g_dir_str]
+
 			if { [llength $fork_list] > 2 } {
 				if {$WARN} {
 					cputs "\n\nWarning: FORK: Too Many Names: $g_dir_str\n" $el_warn_color
 				}
+				# invalid *FORK command, exit this function
+				return
 			} elseif {[llength $fork_list] == 2 } {
 				# set the fork_id to the passed value
 				set fork_id [lindex $fork_list 1]
 				# store current eols in current session fork_context
-				set _el_fork_context($current_session,eols) $_el_eols
+				set _el_fork_context($_el_current_session,eols) $_el_eols
 
 			} elseif {[llength $fork_list] == 1 } {
 				# no arguments to *FORK, then display current session name
-				set fork_id $current_session
+				set fork_id $_el_current_session
 			}
 			# spawn/switch to fork_id session
-			set current_session [session_id_manager $fork_id]
+			set _el_current_session [session_id_manager $fork_id]
 			# set eols from new fork_id_context
-			set _el_eols $_el_fork_context($current_session,eols)
+			set _el_eols $_el_fork_context($_el_current_session,eols)
 
 
 		}
 	}
-
+	# end switch glob
+	
+	# set values with a parameter (using regex)
+	switch -regexp $g_dir_str {	
+		"\\*INFINITE_LOOP [0-9]+"	{	# expect-lite infinite loop value
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set varlist [split $g_dir_str ]
+			set _el_infinite_loop [lindex $varlist 1]
+		}
+		
+	}
+	# end switch regex
 }
 
 #
@@ -1611,6 +1614,7 @@ proc _el_global_directive { g_dir_str } {
 proc _el_script_exec {cmd_file} {
 	global remote_host _out _out_nowait _in _in_noregex _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
 	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 _el_comment_color el_info_color el_warn_color el_err_color _el_eols _el_fork_context _el_buf EXP_INFO
+	global _el_current_session
 		
 	set prev_line ""
 	set comment_line ""
@@ -1622,7 +1626,7 @@ proc _el_script_exec {cmd_file} {
 	set _el_cont_lines ""
 	
 	# set default session (aka fork)
-	set current_session $_el_fork(current)
+	set _el_current_session $_el_fork(current)
 	#fork_id
 
 	#
@@ -2461,16 +2465,16 @@ proc _el_script_exec {cmd_file} {
 		if {$_el(success) != 1 && [regexp "^$_in" $_el(line)]==1  } {
 			cputs "\n\n FAILED COMMAND:[_el_strip_char $prev_line $_out] \n" $el_err_color
 			cputs "    Expect Failed:$teststr\n" $el_err_color
-			if { $current_session != "default" } {
-				cputs "    Current Fork Session: $current_session \n\n" $el_err_color
+			if { $_el_current_session != "default" } {
+				cputs "    Current Fork Session: $_el_current_session \n\n" $el_err_color
 			}
 		}
 		# Fail the test if NOT Expect fails
 		if {$_el(success) != 1 && [regexp "^$_not_in" $_el(line)]==1  } {
 			cputs "\n\n FAILED COMMAND:[_el_strip_char $prev_line $_out] \n" $el_err_color
 			cputs "    Expect Found:$teststr\n\n" $el_err_color
-			if { $current_session != "default" } {
-				cputs "    Current Fork Session: $current_session \n\n" $el_err_color
+			if { $_el_current_session != "default" } {
+				cputs "    Current Fork Session: $_el_current_session \n\n" $el_err_color
 			}
 		}
 		# Fail the test, and invoke Fail_script
