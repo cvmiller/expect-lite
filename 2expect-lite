@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.12 Alpha"
+set version "4.0.14 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -132,8 +132,14 @@ set cli_namespace(#) " "
 # declare global array _el (for internal expect-lite vars)
 set _el(0) 0
 
+# clear NOFAIL flag 1=test should have failed
+set _el(test_failed) 0 
+
 # debugging aid: turn on to display match string and expect buffer
 set DEBUG 0
+
+# keep script running to end: turn on to never fail test
+set NOFAIL 0
 
 # global constant for timeout_multiplier mode
 set timeout_multiplier "timeout_multiplier"
@@ -313,13 +319,13 @@ proc interact_help { } {
 	send_user "IDE: Help\n"
 	send_user "  Key          Action\n"
 	send_user "  ----        ------\n"
-	send_user "  <tab>s      Step\n"
-	send_user "  <tab>c      Continue\n"
-	send_user "  <tab>v      Show Vars\n"
-	send_user "  <tab>1to9   Show N next lines of script\n"
-	send_user "  <tab>-1to9  Show N lines of script\n"
+	send_user "  <esc>s      Step\n"
+	send_user "  <esc>c      Continue\n"
+	send_user "  <esc>v      Show Vars\n"
+	send_user "  <esc>1to9   Show N next lines of script\n"
+	send_user "  <esc>-1to9  Show N lines of script\n"
 	send_user "  ctrl+D      Quit & Exit expect-lite\n"
-	send_user "  <tab>h      this help\n"
+	send_user "  <esc>h      this help\n"
 	#send_user "\n"
 	return
 }
@@ -363,7 +369,7 @@ proc instant_interact_sig {} {
 		#		Lines starting with >,?,$,~,;,* 
 		#			send, if, var assignment, include file, comment, directives respectively
 		if { [catch { interact {
-			-re {\+\+\+|^\tc} { #DEBUGGER '+++' or .c to exit interact session, continue script
+			-re {\+\+\+|^\x1b\x63} { #DEBUGGER '+++' or .c to exit interact session, continue script
 				pop_session_id; set restart_interact 0 
 				return 
 				}
@@ -376,24 +382,47 @@ proc instant_interact_sig {} {
 				_el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
 				#exit 
 				}
-			-re {^\ts}	{ #DEBUGGER .s = Next Step
+			-re {^\x1bs}	{ #DEBUGGER .s = Next Step
 				# increment buffer line pointer 
 				incr _el_buf($_el_buf(stack),ptr)
 				# read line from buffer
 				set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
 				
 				switch -regexp -- $line { 
-					{^\<|^\+\$} {	
-							# skip expect lines & Dyn-Vars (for now)
-							cputs "$line"  $el_info_color
-							protected_send "$_el_eols"
-						}
 					{^\*INT}	{ 
 							# skip interact lines
 							cputs "$line"  $el_info_color
 							protected_send "$_el_eols"
 						}
-					^\>|^\~	{	# send line out or include a file
+					^\>	{	# send line out and clump any following lines with < or +$
+							# clear clump list
+							set cli_list ""
+							# add lines to clump
+							while {$line!=-1} {
+								lappend cli_list $line 
+								incr _el_buf($_el_buf(stack),ptr)
+								# read line from buffer
+								set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
+								#puts "===L==>$line"
+								# is line part of clump
+								if {[regexp {^\<|^\+\$} $line] == 0} {
+									# no roll back pointer
+									incr _el_buf($_el_buf(stack),ptr) -1
+									set line -1
+								}
+							}					
+							# send clump to _el_script_exec
+							#send_user "=====>$cli_list"
+							foreach item $cli_list {
+								if { $item != "" } {
+									cputs "$item"  $el_info_color
+									_el_script_exec "\|$item"
+								}
+							}
+							
+							# end clump send
+						}
+					^\~	{	# include a file
 							cputs "$line"  $el_info_color
 							# kick the prompt
 							protected_send "$_el_eols"
@@ -408,7 +437,7 @@ proc instant_interact_sig {} {
 						}
 					}
 				}
-			-re {^\t([-]?[1-9])} {	#DEBUGGER .-1to9 Show next or last 1-9 lines
+			-re {^\x1b([-]?[1-9])} {	#DEBUGGER .-1to9 Show next or last 1-9 lines
 					# .1to9 or .-1to9
 					#send_user "=====>[scan $interact_out(0,string) %c]|$interact_out(0,string)"
 					catch { set param "$interact_out(1,string)" } error 
@@ -417,11 +446,11 @@ proc instant_interact_sig {} {
 					_el_buffer_show $param $_el_buf(stack)
 					protected_send "$_el_eols"
 				}
-			-re {^\tv} {	#DEBUGGER .v Show Vars
+			-re {^\x1bv} {	#DEBUGGER .v Show Vars
 					show_vars
 					protected_send "$_el_eols"
 				}
-			-re {\th} {	#DEBUGGER .h Show help
+			-re {\x1bh} {	#DEBUGGER .h Show help
 					interact_help
 					protected_send "$_el_eols"
 				}
@@ -627,6 +656,10 @@ proc read_args {} {
 						}
 				} 
 				
+			}
+			#cli-based directives (in form *DIRECTIVE)
+			if [ regexp {\*[A-Z_]+} $optarg] {
+				_el_global_directive $optarg
 			}
 		}
 
@@ -1484,7 +1517,7 @@ proc _el_buffer_search {line_ptr line_search buf_stack} {
 #
 proc _el_global_directive { g_dir_str } {
 	global INFO EXP_INFO WARN DEBUG el_info_color el_warn_color el_err_color _el_comment_color
-	global _el_eols _el_fork_context _el_current_session _el_infinite_loop
+	global _el_eols _el_fork_context _el_current_session _el_infinite_loop NOFAIL
 	
 	switch -glob $g_dir_str {	
 		"\\*INFO"	{	# Turn on INFO logging
@@ -1592,6 +1625,10 @@ proc _el_global_directive { g_dir_str } {
 
 
 		}
+		"\\*NOFAIL"	{	# Never fail the test
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			if {$NOFAIL != 10 } { set NOFAIL 1 }
+		}
 	}
 	# end switch glob
 	
@@ -1614,7 +1651,7 @@ proc _el_global_directive { g_dir_str } {
 proc _el_script_exec {cmd_file} {
 	global remote_host _out _out_nowait _in _in_noregex _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
 	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 _el_comment_color el_info_color el_warn_color el_err_color _el_eols _el_fork_context _el_buf EXP_INFO
-	global _el_current_session
+	global _el_current_session NOFAIL
 		
 	set prev_line ""
 	set comment_line ""
@@ -2497,10 +2534,7 @@ proc _el_script_exec {cmd_file} {
 				
 				# Make Recursive Call
 				_el_script_exec $include_path_file
-				
-				# don't allow script to go any further
-				set _el(success) 0
-				
+								
 				# special short cut to allow main script to continue
 				if { [info exists _el(continue)] == 1 } {
 					if { $_el(continue) == 1 } { set _el(success) 1 }
@@ -2509,6 +2543,11 @@ proc _el_script_exec {cmd_file} {
 				#puts "success->$_el(success)"
 				#puts "FS>$_el_fail_script"	
 			}
+			# last chance to let script continue, even though it should fail
+			if {$NOFAIL} {
+				set _el(success) 1
+				set _el(test_failed) 1
+			} 			
 			if { $_el(success) != 1 } {
 				# allow fail script to set success, and continue if need be
 				if {$INFO} {cputs "\n\n##Overall Result: FAILED \n\n" $el_err_color }
@@ -2587,9 +2626,15 @@ if { [catch {  send "exit $_el_eols" } error] } {
 
 wait_for_prompt
 
-#If we get this far, then we passed!
-if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $el_info_color }
-
+# Print result of test
+if {$_el(test_failed)} {
+	# test must have failed somewhere but NOFAIL was true
+	if {$INFO} {cputs "\n\n##Overall Result: FAILED (*NOFAIL on)\n\n" $el_err_color }
+	exit 1
+} else {
+	#If we get this far, then we passed!
+	if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $el_info_color }
+}
 
 if { $DEBUG_LOG==1 } { log_file }
 

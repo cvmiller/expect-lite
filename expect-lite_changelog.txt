@@ -658,6 +658,9 @@ x	Write SIGPIPE handler to exit el gracefully
 x	Fix IDE '?' issue
 		Require '?if'
 
+x	Add directive *NOFAIL
+
+
 
 22 Aug 2010 - Created 2expect-lite as 4.0.0d1 
 	Reworked buffers completely (now global array)
@@ -691,15 +694,20 @@ x	Fix IDE '?' issue
 	Added directive *INFINITE_LOOP N
 		What happens when number is already exceeded? It is always decremented, you get N left
 
-20 Sept 2010 - 4012 - changed IDE char to <tab>
+20 Sept 2010 - 4.0.12 - changed IDE char to <tab>
 	The '.' interferred with IP addresses!
+	<tab> interferred with tab completion
+	Changed to <esc>
 
-
-o	Add directive *NOFAIL
+23 Sept 2010 - 4.0.14 - Added *NOFAIl
+	Also added any *DIRECTIVE on the CLI (not **SHELL)
+	Added 'clumping' to step function so expect & capture work
+	
 
 o	Step function - 
 		Create 'clumping' where a > will also invoke following lines with <,<<, +$
-
+		set *NOFAIL during IDE
+		
 o	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
 	
