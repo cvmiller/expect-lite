@@ -658,6 +658,9 @@ x	Write SIGPIPE handler to exit el gracefully
 x	Fix IDE '?' issue
 		Require '?if'
 
+x	Update for more config directives (x put in own proc)
+		Added *INFINITE_LOOP N
+
 x	Add directive *NOFAIL
 
 
@@ -703,22 +706,33 @@ x	Add directive *NOFAIL
 	Also added any *DIRECTIVE on the CLI (not **SHELL)
 	Added 'clumping' to step function so expect & capture work
 	
+26 Sept 2010 - 40.15 - added NOFAIL to IDE
+	Added warning
+
 
 o	Step function - 
 		Create 'clumping' where a > will also invoke following lines with <,<<, +$
-		set *NOFAIL during IDE
+		x set *NOFAIL during IDE
+		Step back? Repeat?
+
+o	Check expect version - Protect against cygwin version
+	# check version
+	if { [exp_version] < "5.46.0" } {
+		puts "older version of expect\n"
+	}
+	Conditional on switch statement in IDE
 		
 o	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
 	
-x	Update for more config directives (x put in own proc)
-		Added *INFINITE_LOOP N
-
 o	Add directive **CONNECT_METHOD
+
+o	Update help to 80 columns wide
 		
 o	Update Man Page
 
 o	Update Docs with new IDE info
+	Add *DIRECTIVES on CLI secion
 
 
 ------------ Windows Cygwin Expect --------------------------

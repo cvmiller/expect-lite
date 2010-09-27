@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.14 Alpha"
+set version "4.0.15 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -347,7 +347,7 @@ trap {
 #	This function is also called by *INTERACT, providing similar functionality
 #
 proc instant_interact_sig {} {
-	global remote_host _el _el_fork_id_list _el_fork DEBUG el_info_color _el_eols _el_buf expect_out el_warn_color
+	global remote_host _el _el_fork_id_list _el_fork DEBUG NOFAIL el_info_color _el_eols _el_buf expect_out el_warn_color
 
 	# change user message depending on how the function is called
 	if { $_el(line) != "*INTERACT" } {
@@ -357,6 +357,8 @@ proc instant_interact_sig {} {
 		# called by script *INTERACT
 		cputs  "\n\n Press '+++' to end interact session & return to script \n\n" $el_info_color
 	}
+	# do not allow script to fail during IDE
+	incr NOFAIL
 	protected_send "$_el_eols"
 	# preserve script fork session
 	push_session_id $_el_fork(current)
@@ -455,7 +457,7 @@ proc instant_interact_sig {} {
 					protected_send "$_el_eols"
 				}
 			-echo -re  {(^>>|^>|^\?[iI][fF]|^\$|^~|^;|^\*|^\+\$|^=\$)(.+)\r} {
-					#### Experimental: support for EL commands in Interact
+					#### Support for EL commands in Interact
 					#### Permits pasting of multiple commands into Interact session
 					# create list of multiple pasted commands
 					set cli_list [split $interact_out(0,string) "\r"]
@@ -486,6 +488,8 @@ proc instant_interact_sig {} {
 	session_id_manager [ pop_session_id ]
 	set _el(success) 1
 	protected_send "$_el_eols"
+	# restore NOFAIL
+	incr NOFAIL -1
 	stty raw
 }
 
@@ -2594,6 +2598,14 @@ proc _el_script_exec {cmd_file} {
 #
 
 read_args
+
+# Check Expect Version, warn if old
+# if { [exp_version] < "5.42.0" } {
+# 	puts "Warning: older version of expect\n"
+# }
+if [catch { exp_version 5.45.0 } msg ] {
+	puts "\nWarning: $msg\n"
+}
 
 # check terminal type for use of colors
 check_term_type
