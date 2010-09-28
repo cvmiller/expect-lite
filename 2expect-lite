@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.15 Alpha"
+set version "4.0.17 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -322,8 +322,8 @@ proc interact_help { } {
 	send_user "  <esc>s      Step\n"
 	send_user "  <esc>c      Continue\n"
 	send_user "  <esc>v      Show Vars\n"
-	send_user "  <esc>1to9   Show N next lines of script\n"
-	send_user "  <esc>-1to9  Show N lines of script\n"
+	send_user "  <esc>0to9   Show N next lines of script\n"
+	send_user "  <esc>-1to-9 Show N previous lines of script\n"
 	send_user "  ctrl+D      Quit & Exit expect-lite\n"
 	send_user "  <esc>h      this help\n"
 	#send_user "\n"
@@ -371,7 +371,7 @@ proc instant_interact_sig {} {
 		#		Lines starting with >,?,$,~,;,* 
 		#			send, if, var assignment, include file, comment, directives respectively
 		if { [catch { interact {
-			-re {\+\+\+|^\x1b\x63} { #DEBUGGER '+++' or .c to exit interact session, continue script
+			-re {\+\+\+|^\x1b\x63|^`c} { #DEBUGGER '+++' or .c to exit interact session, continue script
 				pop_session_id; set restart_interact 0 
 				return 
 				}
@@ -384,7 +384,7 @@ proc instant_interact_sig {} {
 				_el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
 				#exit 
 				}
-			-re {^\x1bs}	{ #DEBUGGER .s = Next Step
+			-re {^\x1bs|`s}	{ #DEBUGGER .s = Next Step
 				# increment buffer line pointer 
 				incr _el_buf($_el_buf(stack),ptr)
 				# read line from buffer
@@ -436,23 +436,28 @@ proc instant_interact_sig {} {
 					default {
 							cputs "$line" $el_info_color
 							_el_script_exec "\|$line"
+							if {$_el(test_failed) == 1 } {
+								# step failed? kick the prompt
+								protected_send "$_el_eols"
+							}
+							
 						}
 					}
 				}
-			-re {^\x1b([-]?[1-9])} {	#DEBUGGER .-1to9 Show next or last 1-9 lines
+			-re {^(\x1b|`)([-]?[0-9])} {	#DEBUGGER .-1to9 Show next or last 1-9 lines
 					# .1to9 or .-1to9
 					#send_user "=====>[scan $interact_out(0,string) %c]|$interact_out(0,string)"
-					catch { set param "$interact_out(1,string)" } error 
-					#catch { set param "$interact_out(2,string)" } error 
+					#catch { set param "$interact_out(1,string)" } error 
+					catch { set param "$interact_out(2,string)" } error 
 					
 					_el_buffer_show $param $_el_buf(stack)
 					protected_send "$_el_eols"
 				}
-			-re {^\x1bv} {	#DEBUGGER .v Show Vars
+			-re {^\x1bv|`v} {	#DEBUGGER .v Show Vars
 					show_vars
 					protected_send "$_el_eols"
 				}
-			-re {\x1bh} {	#DEBUGGER .h Show help
+			-re {\x1bh|`h} {	#DEBUGGER .h Show help
 					interact_help
 					protected_send "$_el_eols"
 				}
@@ -1459,11 +1464,16 @@ proc _el_buffer_show { num_of_lines buf_stack} {
 		for {set n [expr $_el_buf($buf_stack,ptr) +1]} {$n<[expr $num_of_lines + $_el_buf($buf_stack,ptr)]} {incr n} {
 			print_line [ _el_buffer_read $n $buf_stack ]
 		}
-	} else {
+	} elseif {$num_of_lines < 0} {
 		cputs "Printing last [expr {abs($num_of_lines)}] line(s) of script:" $el_info_color
 		for {set n [expr  $_el_buf($buf_stack,ptr) + $num_of_lines]  } {$n <  $_el_buf($buf_stack,ptr)} {incr n } {
 			print_line [ _el_buffer_read $n $buf_stack ]
 		}
+	} else {
+		# print current line
+		cputs "Printing current line of script:" $el_info_color
+			print_line [ _el_buffer_read $_el_buf($buf_stack,ptr) $buf_stack ]
+	
 	}
 }
 
@@ -2603,7 +2613,7 @@ read_args
 # if { [exp_version] < "5.42.0" } {
 # 	puts "Warning: older version of expect\n"
 # }
-if [catch { exp_version 5.45.0 } msg ] {
+if [catch { exp_version 5.42.0 } msg ] {
 	puts "\nWarning: $msg\n"
 }
 
@@ -2639,7 +2649,7 @@ if { [catch {  send "exit $_el_eols" } error] } {
 wait_for_prompt
 
 # Print result of test
-if {$_el(test_failed)} {
+if {$_el(test_failed) && $NOFAIL} {
 	# test must have failed somewhere but NOFAIL was true
 	if {$INFO} {cputs "\n\n##Overall Result: FAILED (*NOFAIL on)\n\n" $el_err_color }
 	exit 1

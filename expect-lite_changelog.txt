@@ -702,25 +702,32 @@ x	Add directive *NOFAIL
 	<tab> interferred with tab completion
 	Changed to <esc>
 
-23 Sept 2010 - 4.0.14 - Added *NOFAIl
+23 Sept 2010 - 4.0.14 - Added *NOFAILS
 	Also added any *DIRECTIVE on the CLI (not **SHELL)
 	Added 'clumping' to step function so expect & capture work
 	
 26 Sept 2010 - 40.15 - added NOFAIL to IDE
 	Added warning
 
+27 Sept 2010 - 4.0.17 
+	Added "kick the prompt" on expect-lite failed lines inside IDE
+	Added back quote as IDE char in additon to <esc>	
+
+
+
 
 o	Step function - 
 		Create 'clumping' where a > will also invoke following lines with <,<<, +$
 		x set *NOFAIL during IDE
 		Step back? Repeat?
+	x Added "kick the prompt" on expect-lite failed lines
 
 o	Check expect version - Protect against cygwin version
 	# check version
 	if { [exp_version] < "5.46.0" } {
 		puts "older version of expect\n"
 	}
-	Conditional on switch statement in IDE
+	Conditional on switch statement in IDE?
 		
 o	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
