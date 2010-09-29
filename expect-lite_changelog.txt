@@ -742,9 +742,11 @@ o	IDE Cooked mode '-reset' to help with backspace problem
 o	Add directive **CONNECT_METHOD
 
 o	Update README file - delete '-r none'
+
+o	Write self test scripts for IDE
 		
 o	Update Man Page
-		Add *NOFAIL
+		x Add *NOFAIL
 
 o	Update Docs with new IDE info
 	Add *DIRECTIVES on CLI secion
