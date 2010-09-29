@@ -64,7 +64,7 @@ $junk2=$junk/some/path
 *INTERACT
 
 > echo hello
-?if 1 == 1 ? ; === if statement
+?if 1 == 1 ? %PAU
 
 >> pwd
 +$P=\n/home/([a-z]+)
@@ -75,6 +75,7 @@ $junk2=$junk/some/path
 #~$INCLUDE
 ~test_include.txt
 
+%PAU
 >echo "Returned from include file"
 <file
 *INTERACT

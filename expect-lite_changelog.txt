@@ -663,6 +663,8 @@ x	Update for more config directives (x put in own proc)
 
 x	Add directive *NOFAIL
 
+x	Update help to 80 columns wide
+
 
 
 22 Aug 2010 - Created 2expect-lite as 4.0.0d1 
@@ -711,15 +713,20 @@ x	Add directive *NOFAIL
 
 27 Sept 2010 - 4.0.17 
 	Added "kick the prompt" on expect-lite failed lines inside IDE
-	Added back quote as IDE char in additon to <esc>	
+	Added back quote (for cygwin) as IDE char in additon to <esc>	
+	Updated help screen to 80 chars wide
 
+28 Sept 2010 - 4.0.18
+	Added skip function <esc>k
+	Fixed jump to label ?if 1==1?%LABEL
 
 
 
 o	Step function - 
 		Create 'clumping' where a > will also invoke following lines with <,<<, +$
 		x set *NOFAIL during IDE
-		Step back? Repeat?
+		Step back? Repeat? NO
+		o Add Skip function
 	x Added "kick the prompt" on expect-lite failed lines
 
 o	Check expect version - Protect against cygwin version
@@ -734,9 +741,10 @@ o	IDE Cooked mode '-reset' to help with backspace problem
 	
 o	Add directive **CONNECT_METHOD
 
-o	Update help to 80 columns wide
+o	Update README file - delete '-r none'
 		
 o	Update Man Page
+		Add *NOFAIL
 
 o	Update Docs with new IDE info
 	Add *DIRECTIVES on CLI secion

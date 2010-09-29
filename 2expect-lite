@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.17 Alpha"
+set version "4.0.18 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -320,12 +320,13 @@ proc interact_help { } {
 	send_user "  Key          Action\n"
 	send_user "  ----        ------\n"
 	send_user "  <esc>s      Step\n"
+	send_user "  <esc>k      sKip next step\n"
 	send_user "  <esc>c      Continue\n"
-	send_user "  <esc>v      Show Vars\n"
+	send_user "  <esc>v      show Vars\n"
 	send_user "  <esc>0to9   Show N next lines of script\n"
 	send_user "  <esc>-1to-9 Show N previous lines of script\n"
 	send_user "  ctrl+D      Quit & Exit expect-lite\n"
-	send_user "  <esc>h      this help\n"
+	send_user "  <esc>h      this Help\n"
 	#send_user "\n"
 	return
 }
@@ -384,12 +385,15 @@ proc instant_interact_sig {} {
 				_el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
 				#exit 
 				}
-			-re {^\x1bs|`s}	{ #DEBUGGER .s = Next Step
+			-re {(^\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
+				# determine next or skip step
+				catch { set param "$interact_out(2,string)" } error 
+				
 				# increment buffer line pointer 
 				incr _el_buf($_el_buf(stack),ptr)
 				# read line from buffer
 				set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
-				
+				#puts "==BUF====>$_el_buf($_el_buf(stack),ptr)||$line\n"
 				switch -regexp -- $line { 
 					{^\*INT}	{ 
 							# skip interact lines
@@ -408,38 +412,56 @@ proc instant_interact_sig {} {
 								#puts "===L==>$line"
 								# is line part of clump
 								if {[regexp {^\<|^\+\$} $line] == 0} {
-									# no roll back pointer
+									#No more clump, roll back pointer
 									incr _el_buf($_el_buf(stack),ptr) -1
 									set line -1
 								}
 							}					
 							# send clump to _el_script_exec
-							#send_user "=====>$cli_list"
+							#send_user "=====>$cli_list||$_el_buf(stack)"
 							foreach item $cli_list {
 								if { $item != "" } {
-									cputs "$item"  $el_info_color
-									_el_script_exec "\|$item"
+									if { $param == "k" } {
+										cputs "Skipping:$item"  $el_info_color
+										protected_send "$_el_eols"
+									} else {
+										# execute next step
+										cputs "$item"  $el_info_color
+										_el_script_exec "\|$item" $_el_buf(stack)
+										#_el_script_exec "\|$item"
+									}
 								}
 							}
 							
 							# end clump send
 						}
 					^\~	{	# include a file
-							cputs "$line"  $el_info_color
-							# kick the prompt
-							protected_send "$_el_eols"
-							_el_script_exec "\|$line"
+							if { $param == "k" } {
+								cputs "Skipping:$line"  $el_info_color
+								protected_send "$_el_eols"
+							} else {
+								cputs "$line"  $el_info_color
+								# kick the prompt
+								protected_send "$_el_eols"
+								_el_script_exec "\|$line"
+							}
 						}
 					"-1" {
 							cputs "End of File" $el_warn_color
 						}
 					default {
-							cputs "$line" $el_info_color
-							_el_script_exec "\|$line"
-							if {$_el(test_failed) == 1 } {
-								# step failed? kick the prompt
+							if { $param == "k" } {
+								cputs "Skipping:$line"  $el_info_color
 								protected_send "$_el_eols"
+							} else {
+								cputs "$line" $el_info_color
+								_el_script_exec "\|$line"  $_el_buf(stack)
+								if {$_el(test_failed) == 1 } {
+									# step failed? kick the prompt
+									protected_send "$_el_eols"
+								}
 							}
+							
 							
 						}
 					}
@@ -476,7 +498,9 @@ proc instant_interact_sig {} {
 					foreach item $cli_list {
 						#send_user "===I==>$item\n"
 						if { $item != "" } {
-							_el_script_exec "\|$item"
+							# call _el_script_exe in 'one-line' mode 
+							# add buf_stack context to allow jumping to labels
+							_el_script_exec "\|$item" $_el_buf(stack)
 						}
 					}
 					return
@@ -554,25 +578,29 @@ proc wait_for_prompt { } {
 proc usage {} {
 	global version
 #	puts "usage: expect-lite remote_host=<remote_host_IP> cmd_file=<command_file> \[user_dir=<user_dir>\] \[const1=value1\]"
-	puts "usage: expect-lite -c <command_file> \[ -r <remote_host_IP>\] \[-d <user_dir>\] \[const1=value1\]"
-	puts "       or: expect-lite c=<command_file> r=<remote_host_IP>  \[d=<user_dir>\] \[const1=value1\]"
-	puts "       eg. ./expect-lite -c pm_alternation.elt -r host-008 -d /local/craig/SW_6_Mar/sw myvar=myvalue"
+	puts "usage: expect-lite -c <command_file> \[ -r <remote_host_IP>\] \[-d <user_dir>\] \\ "
+	puts "              \[const1=value1\] \[*DIRECTIVE\]"
+	puts "   or: expect-lite c=<command_file> r=<remote_host_IP>  \[d=<user_dir>\]      \\ "
+	puts "              \[const1=value1\] \[*DIRECTIVE\]"
+	puts "   eg. ./expect-lite -c pm_alt.elt -r host8 -d /home/sw myvar=myvalue *NOFAIL"
 	puts " "
-	puts "       additional login options: user_name=<username>  user_password=<password>"
-	puts "       eg. ./expect-lite c=pm_alternation.elt r=host-008 u=superuser p=mysecret"
+	puts "   additional login options: user_name=<username>  user_password=<password>"
+	puts "   eg. ./expect-lite c=pm_alternation.elt r=host-008 u=superuser p=mysecret"
 	puts " "
-	puts "       additional logging options: -V|-v|-vv|--verbose"
-	puts "            -V              prints \'expected\' lines (i.e lines beginning with < & << )"
-	puts "            -v              prints warnings, and infos (i.e. conditionals, dynamic var assignments)"
-	puts "            -vv|--verbose   prints warnings and debug (i.e. expect match info) "
-	puts "       eg. ./expect-lite -v r=host-008  c=pm_alternation.elt "
+	puts "   additional logging options: -V|-v|-vv|--verbose"
+	puts "        -V        prints \'expected\' lines (i.e lines beginning with < & << )"
+	puts "        -v        prints warnings, and infos (i.e. conditionals,  "
+	puts "                                   dynamic var assignments)"
+	puts "        -vv|--verbose   prints warnings and debug (i.e. expect match info) "
+	puts "   eg. ./expect-lite -vv r=host8  c=pm_alt.elt "
 	puts " "
 	puts "If set, the following environment variables will be used: "
-	puts "       EL_REMOTE_HOST"
-	puts "       EL_CMD_FILE"
-	puts "       EL_USER_DIR"
+	puts "   EL_REMOTE_HOST"
+	puts "   EL_CMD_FILE"
+	puts "   EL_USER_DIR"
+	puts "   EL_*"
 	puts " "
-	puts "       Version $version by Craig Miller"
+	puts "   Version $version by Craig Miller"
 	exit 0
 }
 
@@ -1662,7 +1690,7 @@ proc _el_global_directive { g_dir_str } {
 #	Heart of expect-lite, reads through script file, and takes appropriate action (based on switch statement)
 #	
 #
-proc _el_script_exec {cmd_file} {
+proc _el_script_exec {cmd_file {buf_stack ""}} {
 	global remote_host _out _out_nowait _in _in_noregex _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
 	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 _el_comment_color el_info_color el_warn_color el_err_color _el_eols _el_fork_context _el_buf EXP_INFO
 	global _el_current_session NOFAIL
@@ -2208,7 +2236,7 @@ proc _el_script_exec {cmd_file} {
 								set _el_buf($buf_stack,ptr) [_el_buffer_search $_el_buf($buf_stack,ptr) $_action $buf_stack]
 							} else {
 								# Interpret action with recursive call to _el_script_exec
-								_el_script_exec "\|$_action" 
+								_el_script_exec "\|$_action" $buf_stack
 							}
 						} elseif { $_else_action != "" } {
 							# remove any leading and trailing space from else_action
