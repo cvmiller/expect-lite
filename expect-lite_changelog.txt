@@ -720,6 +720,8 @@ x	Update help to 80 columns wide
 	Added skip function <esc>k
 	Fixed jump to label ?if 1==1?%LABEL
 
+29 Sept 2010 - 4.0.19
+	Fixed ragged columns on show_vars
 
 
 o	Step function - 
@@ -742,6 +744,15 @@ o	IDE Cooked mode '-reset' to help with backspace problem
 o	Add directive **CONNECT_METHOD
 
 o	Update README file - delete '-r none'
+
+o	Explore alternative to rhost=none
+		Can expect run without spawn? What happens to *FORK?
+
+o 	Fix paste '<' line, why is expect_out buffer empty? Where is the expect_out buffer cleared?
+	OR ignore it, swallow it with dummy get - applies to Dyn Vars as well, better to support < +$var
+
+o	Compile cygwin version of expect - v5.45 works!
+		Pack up expect.exe, libtcl8.5.dll, expect5.45.dll put in /usr/bin
 
 o	Write self test scripts for IDE
 		

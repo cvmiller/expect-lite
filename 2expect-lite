@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.18 Alpha"
+set version "4.0.19 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -1227,16 +1227,25 @@ proc parray { name } {
 }
 
 #
-#	Used for debugging only, Prints all user vars
-#	Called by *SHOW VARS
+#	Prints all user vars
+#	Called by *SHOW VARS & IDE <esc>v
 #
 proc show_vars { } {
 	global user_namespace
+	set blank "                    "
+	set blank_len [string length $blank]
 	set var_list [array names user_namespace]
 	set var_list_sorted [lsort $var_list]
 	puts "DEBUG Info: Printing all expect-lite variables"
 	foreach ii $var_list_sorted {
-		  puts "Var:$ii \t\t\Value:$user_namespace($ii)"
+		# create aligned columns
+		set ii_len [string length $ii]
+		set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
+		#puts "|$ii_blank|$blank_len,$ii_len"
+		# don't print array initialization var (zero)
+		if { $ii != 0 } {
+			puts "Var:$ii $ii_blank Value:$user_namespace($ii)"
+		}
 	}
 }
 
