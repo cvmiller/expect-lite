@@ -724,11 +724,20 @@ x	Update help to 80 columns wide
 	Fixed ragged columns on show_vars
 
 
+1 Oct 2010 - 4.0.20
+	Fixed Cygwin/Win Paste in IDE
+	
+	
+	
+o	Add Constants to *SHOW VARS view
+
+o	Fix '<<' and square brackets (requires escaping)
+
 o	Step function - 
 		Create 'clumping' where a > will also invoke following lines with <,<<, +$
 		x set *NOFAIL during IDE
 		Step back? Repeat? NO
-		o Add Skip function
+		x Add Skip function
 	x Added "kick the prompt" on expect-lite failed lines
 
 o	Check expect version - Protect against cygwin version
@@ -736,7 +745,6 @@ o	Check expect version - Protect against cygwin version
 	if { [exp_version] < "5.46.0" } {
 		puts "older version of expect\n"
 	}
-	Conditional on switch statement in IDE?
 		
 o	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
@@ -745,11 +753,12 @@ o	Add directive **CONNECT_METHOD
 
 o	Update README file - delete '-r none'
 
-o	Explore alternative to rhost=none
-		Can expect run without spawn? What happens to *FORK?
+x	Explore alternative to rhost=none
+		Can expect run without spawn? No, Interact will not work. 
 
-o 	Fix paste '<' line, why is expect_out buffer empty? Where is the expect_out buffer cleared?
+x 	Fix paste '<' line, why is expect_out buffer empty? Where is the expect_out buffer cleared?
 	OR ignore it, swallow it with dummy get - applies to Dyn Vars as well, better to support < +$var
+	Fixed: Used expect to capture rest of paste from Cygwin
 
 o	Compile cygwin version of expect - v5.45 works!
 		Pack up expect.exe, libtcl8.5.dll, expect5.45.dll put in /usr/bin

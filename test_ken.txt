@@ -1,7 +1,6 @@
-@7
+@3
 >echo "hello ken"
->sleep 5
->pwd
 <ken
->sleep 3
+>
+*INTERACT
 >
