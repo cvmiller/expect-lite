@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.20 Alpha"
+set version "4.0.21 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -483,31 +483,38 @@ proc instant_interact_sig {} {
 					interact_help
 					protected_send "$_el_eols"
 				}
-			-echo -re  {(^>>|^>|^\?[iI][fF]|^\$|^~|^;|^\*|^\+\$|^=\$)(.+)\r} {
+			-echo -re  {(^>[>a-zA-Z0-9]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z])(.+)\r} {
 					#### Support for EL commands in Interact
 					#### Permits pasting of multiple commands into Interact session
 					# create list of multiple pasted commands
 					set cli_list [split $interact_out(0,string) "\r"]
+					
+					# OS identification - .dll or "" = Cygwin, .so=Linux, .dylib=MacOS X
+					set os_id [info sharedlibextension]
+					if { $os_id == ".dll" || $os_id == "" } {
+						# Special expect to pick up Cygwin Pasted lines, which come one at a time
+						while 1 {
+							expect_user {
+								-re {(.+)\r} {
+									# strip newlines and add to cli_list
+									regsub {\n|\r|\r\n} $expect_out(1,string) "" cli_item
+									lappend cli_list $cli_item
+									} 
+								-timeout 1 timeout { break }
+								-re \003 {puts "\nAck!\n"; exit 1}
+								}
+							}
+							# end while
+					}
+					#end if os_id
 					if {$DEBUG} {
 						send_user "\nDEBUG: Evaluating:\n"
 						foreach d_item $cli_list {
 							send_user "\t$d_item\n"
 						}
 					}
-					# Special expect to pick up Cygwin Pasted lines, which come one at a time
-					while 1 {
-						expect_user {
-							-re {(.+)\r} {
-								# add to cli_list
-								lappend cli_list $expect_out(1,string)
-								} 
-							-timeout 1 timeout { break }
-							-re \003 {puts "\nAck!\n"; exit 1}
-							}
-						}
-						# end while
 					
-					#send_user "=====>$cli_list"
+					#send_user "\n=====>$cli_list\n"
 					foreach item $cli_list {
 						#send_user "===I==>$item\n"
 						if { $item != "" } {
@@ -1240,24 +1247,37 @@ proc parray { name } {
 }
 
 #
-#	Prints all user vars
+#	Prints all user vars and constants
 #	Called by *SHOW VARS & IDE <esc>v
 #
 proc show_vars { } {
-	global user_namespace
+	global user_namespace cli_namespace
+	
 	set blank "                    "
 	set blank_len [string length $blank]
 	set var_list [array names user_namespace]
 	set var_list_sorted [lsort $var_list]
+
 	puts "DEBUG Info: Printing all expect-lite variables"
 	foreach ii $var_list_sorted {
 		# create aligned columns
 		set ii_len [string length $ii]
 		set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
-		#puts "|$ii_blank|$blank_len,$ii_len"
+		# is a constant overiding the var?
+		if { [info exists cli_namespace($ii) ] } {
+			set iii_len [string length $cli_namespace($ii)]
+			set iii_blank [string range $blank 1 [expr $blank_len - $iii_len]]
+		}
 		# don't print array initialization var (zero)
 		if { $ii != 0 } {
-			puts "Var:$ii $ii_blank Value:$user_namespace($ii)"
+			if { [info exists cli_namespace($ii) ] } { 
+				# print var, value, Const
+				puts "Var:$ii $ii_blank Value:$user_namespace($ii) $iii_blank Const:$cli_namespace($ii)"
+			} else {
+				# print var, value
+				puts "Var:$ii $ii_blank Value:$user_namespace($ii)"
+
+			}
 		}
 	}
 }
@@ -2025,7 +2045,7 @@ proc _el_script_exec {cmd_file {buf_stack ""}} {
 					set teststr [_el_strip_char $_el(line) $_in_noregex]
 
 					# catch expect, just in case
-					if {[catch {expect "$teststr" { set _el(success) 1 } } error  ] } {
+					if {[catch {expect -ex "$teststr" { set _el(success) 1 } } error  ] } {
 						if {$WARN} {
 							cputs "\nExpect error: Expect-lite: $error\n" $el_err_color
 						}
@@ -2664,7 +2684,7 @@ read_args
 # 	puts "Warning: older version of expect\n"
 # }
 if [catch { exp_version 5.42.0 } msg ] {
-	puts "\nWarning: $msg\n"
+	cputs "\nWarning: $msg\n" $el_err_color
 }
 
 # check terminal type for use of colors

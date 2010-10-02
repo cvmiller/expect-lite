@@ -53,7 +53,7 @@ $junk2=$junk/some/path
 >if  [ $manarch = i386 ]; then  
 >echo "test_include.txt"
 >else 
->echo "" 
+>echo "ppc" 
 >fi
 
 *INFINITE_LOOP 10
@@ -78,6 +78,9 @@ $junk2=$junk/some/path
 %PAU
 >echo "Returned from include file"
 <file
+>echo "[test]"
+<<[test]
+
 *INTERACT
 >
 #pau
