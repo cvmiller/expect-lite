@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.21 Alpha"
+set version "4.0.22 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -54,7 +54,7 @@ set _el_infinite_loop 5000
 
 # hardcoded login values - only used for telnet, and ssh logins
 set user "root"
-set pass "root"
+set pass ""
 # User is now used by ssh_key method as well. If user is blank then the default
 #	user will be used (the user running the script). However if $user is defined
 #	then ssh_key will use the following command: ssh $user@$host
@@ -648,9 +648,13 @@ proc parse_cmd_file_nopath { cmd_file } {
 #		EL_REMOTE_HOST
 #		EL_CMD_FILE
 #		EL_USER_DIR
+#		EL_connect_method
+#		EL_user
+#		EL_pass
+#		EL_delay_wait_for_host
 #
 proc read_args {} {
-	global argc argv remote_host cmd_file user_dir env connect_method user pass
+	global argc argv remote_host cmd_file user_dir env connect_method user pass delay_wait_for_host
 	global cli_namespace timeout_multiplier arg0 WARN DEBUG EXP_INFO el_warn_color el_err_color
 
 	# default timeout_multiplier multiplier to 1
@@ -660,6 +664,11 @@ proc read_args {} {
 	if { $remote_host=="" } { catch { set remote_host $env(EL_REMOTE_HOST)} }
 	if { $cmd_file=="" } { catch { set cmd_file $env(EL_CMD_FILE)} }
 	if { $user_dir=="" } { catch { set user_dir $env(EL_USER_DIR)} }
+
+	if { $user=="" } { catch { set user $env(EL_user)} }
+	if { $pass=="" } { catch { set pass $env(EL_pass)} }
+	catch { set connect_method $env(EL_connect_method)} 
+	catch { set delay_wait_for_host $env(EL_delay_wait_for_host)} 
 
 	if { $argc >= 1 ||  $cmd_file!="" }  {
 		# Walk thru additional args (should be cli constants)
@@ -752,7 +761,6 @@ proc read_args {} {
 		}
 	}
 
-
 	# show help if command file (script) is not given on command line			
 	if { $argc < 1 && $cmd_file=="" }  {
 		usage
@@ -784,7 +792,7 @@ proc parse_cmd_file_path { cmd_file } {
 proc connect_telnet_host {remote_host {optional_suppress_stdout "no"}} {
 	global spawn_id user pass _el_timeout _el_telnet DEBUG
 	#This spawns the telnet program - auto generates spawn_id var
-	set timeout 15
+	set timeout 5
 	if { ($optional_suppress_stdout == "suppress_stdout") && ($DEBUG != 1)} {
 		# turn off stdout - suppress login banners - show with -vv
 		log_user 0
@@ -795,7 +803,7 @@ proc connect_telnet_host {remote_host {optional_suppress_stdout "no"}} {
 		exit 1
 	}
 	#The script expects login
-	expect "ogin:" 
+	expect "ogin:"
 
 	#The script sends the user variable
 	if { [catch { send "$user\r"   } error] } {
@@ -804,7 +812,7 @@ proc connect_telnet_host {remote_host {optional_suppress_stdout "no"}} {
 		exit 1
 	}
 	#The script expects Password
-	expect -re "assword:" 
+	expect "assword:" 
 
 	#The script sends the password variable
 	# do not log password
@@ -824,10 +832,10 @@ proc connect_telnet_host {remote_host {optional_suppress_stdout "no"}} {
 proc zlogin { pass login_attempts } {
 	global remote_host _el_eols
 	set timeout 2
-	set MAXLOGINATTEMPT 5
+	set MAXLOGINATTEMPT 10
 	#set login_attempts 0
 	while { $login_attempts < $MAXLOGINATTEMPT} {
-		#puts "login: $login_attempts"
+		#puts "loop: $login_attempts"
 		expect {
 			-re "assword:"	{
 				# do not log password
@@ -841,7 +849,8 @@ proc zlogin { pass login_attempts } {
 				#zlogin $pass $login_attempts
 				}
 			-re "Last login" { return }
-			-re {.+} { #puts "expect-lite: Connected" }
+			-re "Tomato" { return }
+			-re {.+\n} { #expect connected  }
 
 		 }
 		 incr login_attempts
@@ -2408,8 +2417,8 @@ proc _el_script_exec {cmd_file {buf_stack ""}} {
 								#puts "\nAssigned Var:$user_var=|$capture_val|\n"
 								cputs "\nAssigned Var:$user_var=$capture_val\n" $el_info_color
 							}
-							# Trigger a new prompt
-							protected_send "$_el_eols"
+							# Trigger a new prompt - commented out cvm 10/2/10
+							#protected_send "$_el_eols"
 							}
 						# expect should never timeout, but just in case
 						timeout {

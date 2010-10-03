@@ -40,8 +40,7 @@ documentation</a>.<br>
 Some Tips and Techniques for expect-lite:<br>
 <ul>
 <li><a href="#interact"><span style="font-weight: bold;">Interact</span></a>
-Setting a breakpoint, the easiest debugging aid to use<br>
-</li>
+Setting a breakpoint, the easiest debugging aid to use</li><li><a style="font-weight: bold;" href="#ide">IDE</a> Integrated Debugger Environment</li>
 <li><a style="font-weight: bold;" href="#fail_then_interact">Fail
 then Interact</a> Using the 'fail script' feature as a debugging
 aid</li>
@@ -84,20 +83,52 @@ over to the user for an interactive session.<br>
 <br>
 <a name="instant_interact"></a>The other
 method is <span style="font-weight: bold;">instant-interact</span>.
-This feature requires a tcl package Tclx to be installed, and will
-automatically be enabled when the package is present. With the feature
-enabled, the user can press '^\' (control+backslash) at anytime
+This feature no longer requires the tcl package Tclx to be installed. The user can press '^\' (control+backslash) at anytime
 creating a breakpoint on the fly. This is the easiest, and fastest way
-to debug a script.<br>
+to debug a script, dropping the user into the IDE.<br>
 <br>
-<h3><a name="debugging"></a>Debugging
-with the IDE</h3>
+<h2><a name="ide"></a>Debugging
+with the IDE</h2>
 To make debugging of scripts even easier, both methods of <span style="font-weight: bold;">interact</span>
-support a limited expect-lite Integrated Debugger Environment (IDE). In this IDE, expect-lite
-script commands can be typed, even assigning variables and displaying them, inside the
+support the new and powerful expect-lite Integrated Debugger
+Environment (IDE). Inside the IDE, it is possible to do many things:<br><ol><li>Type command directly to the remote host (router, embedded system, Linux box)</li><li>Step or sKip line by line through the expect-lite script</li><li>Show all expect-lite variables and constants</li><li>Show the most recently executed lines, or the next few lines of the script</li><li>Paste
+expect-lite script line(s) into the IDE and have the execute. This is
+really cool, since it will dereference any variables in the pasted
+text, or allow you to run just a few lines of script over and over</li><li>The IDE can't die, since *NOFAIL automatically enabled while in the IDE.</li></ol><span style="font-weight: bold;"><a name="stepping_skipping_showing"></a>Stepping, sKipping and Showing</span><br>In
+the above list, #1 is the same as previous versions of expect-lite.
+Stepping, sKipping, and Showing are new in the IDE (#2, #3, #4). These
+commands are all two-keystroke commands. The first key is the escape
+key (or esc) followed by s, k, c, v, h and 0 through 9. These keys are
+not echoed to the screen, nor are they received by the remote host. to
+represent the key presses&nbsp;[type &lt;esc&gt;h] has been added to
+the text for completeness.<br><pre>[type &lt;esc&gt;h]<br>IDE: Help<br>  Key          Action<br>  ----        ------<br>  &lt;esc&gt;s      Step<br>  &lt;esc&gt;k      sKip next step<br>  &lt;esc&gt;c      Continue<br>  &lt;esc&gt;v      show Vars<br>  &lt;esc&gt;0to9   Show N next lines of script<br>  &lt;esc&gt;-1to-9 Show N previous lines of script<br>  ctrl+D      Quit &amp; Exit expect-lite<br>  &lt;esc&gt;h      this Help</pre>Showing
+the lines of the script running up to the breakpoint, the current line,
+or the next few lines of the script can all be displayed by typing
+&lt;esc&gt; and a number. If the number is negative, say -3, then the
+last 3 lines will be displayed. The following example is displaying the
+next 5 lines of the script:<br><pre>[type &lt;esc&gt;5]<br>$ Printing next 5 line(s) of script:<br>&gt; echo hello<br>?if 1 == 1 ? %PAU<br>&gt;&gt; pwd<br>+$P=\n/home/([a-z]+)<br>&gt;echo "test_include.txt"<br></pre>Typing &lt;esc&gt;0 will display the current line in the script:<br><pre>[type &lt;esc&gt;0]<br>$ Printing current line of script:<br>*INTERACT</pre><br>To exit the IDE and continue the execution of the script type &lt;esc&gt;c &nbsp;This is the same as typing &nbsp;'+++'<br><br><span style="font-weight: bold;"><a name="typing_into_the_ide"></a>Typing commands directly into the IDE</span><br>In this IDE, expect-lite
+script commands can be typed directly into the terminal, even assigning variables and displaying them, inside the
 paused script, for example:<br>
-<pre>$MYVAR=today<br><br>*SHOW VARS<br>Var:0 Value:0<br>Var:MYVAR Value:today<br>Var:TEST Value:/proc/cpuinfo<br><br>&gt;&gt;pwd<br>pwd<br>/home/user<br></pre>
-<br>
+<pre>$MYVAR=today<br>[type &lt;esc&gt;v]<br>$ DEBUG Info: Printing all expect-lite variables<br>Var:MYVAR                 Value:today<br>Var:junk                  Value:orbit-root<br>Var:manarch               Value:i386                   Const:ppc<br><br>&gt;&gt;pwd<br>pwd<br>/home/user<br></pre>
+Note that variables are printed with any overriding constants.<br><br><span style="font-weight: bold;"><a name="pasting"></a>Pasting into the IDE</span><br>Of
+course, typing is useful, but copy and paste is much easier. Pasting
+lines into the IDE can be really helpful in debugging a script. For
+example, you may want to debug a dynamic variable assignment. The
+script may have the following lines:<br><pre>&gt;ifconfig<br># get IP address of loopback interface<br>&lt;lo<br>+$ip_addr=inet addr:([0-9.]+)<br></pre>This
+code snippet displays all the interfaces on this machine, expecting lo
+will clear the capture buffer above 'lo', thus removing the info from
+the eth0 interface. The dynamic variable will capture any numbers and
+periods after the words 'inet addr:'<br><br>By copying the lines from the script and pasting them into the IDE the terminall will display following:<br><pre>$ ifconfig<br>eth0      Link encap:Ethernet  HWaddr 00:30:65:98:e5:4a  <br>          inet addr:10.1.1.125  Bcast:10.1.1.255  Mask:255.255.255.0<br>          inet6 addr: fe80::230:65ff:fe98:e54a/64 Scope:Link<br>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1<br>          ...<br>          Interrupt:41 Base address:0x6c00 <br><br>lo        Link encap:Local Loopback  <br>          inet addr:127.0.0.1  Mask:255.0.0.0<br>          inet6 addr: ::1/128 Scope:Host<br>          UP LOOPBACK RUNNING  MTU:16436  Metric:1<br>          ...<br><span style="color: rgb(0, 153, 0);">Assigned Var:ip_addr=127.0.0.1</span><br>$</pre><span style="font-weight: bold;"><a name="ide_cant_die"></a>IDE, It lives!</span><br>It
+is possible to paste in lines which would normally fail the script.
+However getting kicked out of the script while one is debugging is not
+only irritating but not all that useful. For example, using similar
+script lines to above:<br><pre>&gt;ifconfig<br>&lt;eth2<br></pre>Since
+there is no eth2 interface on this machine the script snippet will
+fail. However, the *NOFAIL directive is automatically enabled inside
+the IDE, there pasting the snippet results in:<br><pre>$ ifconfig<br>eth0      Link encap:Ethernet  HWaddr 00:30:65:98:e5:4a  <br>          inet addr:10.1.1.125  Bcast:10.1.1.255  Mask:255.255.255.0<br>          ...<br> <span style="color: red;">FAILED COMMAND: </span><br style="color: red;"><span style="color: red;">    Expect Failed:eth2</span><br>$<br></pre><br>However,
+instead of the expect-lite exiting, and declaring the script has
+failed, it remains in the IDE (interact, or the breakpoint), ready to
+receive another command.<br><br><br>
 <h2><a name="fail_then_interact"></a>Fail
 then
 Interact<br>

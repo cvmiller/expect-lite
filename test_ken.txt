@@ -1,6 +1,27 @@
 @3
 >echo "hello ken"
 <ken
+
+$EL_jtag=
+?if $EL_jtag == ? $jtag=192.168.1.100 :: $jtag=$EL_jtag
+
+>ifconfig
+# get IP address of loopback interface
+<lo
++$ip_addr=inet addr:([0-9.]+)
+
+>
+; === Sudo stuff
+*/.+: $/
+
+#*NOINFO
+>sudo cat /etc/resolv.conf
++$challenge=[Pp](assword) for
+?if $challenge == assword ? >>$EL_rootpass
+
 >
 *INTERACT
 >
+
+#!expect -re "assword" { send $EL_rootpass } timeout {puts "=====>Lost it"}
+!stty -echo; send  $EL_rootpass ; stty echo

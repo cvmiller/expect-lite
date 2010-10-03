@@ -708,7 +708,7 @@ x	Fix '<<' and square brackets (requires escaping)
 	<tab> interferred with tab completion
 	Changed to <esc>
 
-23 Sept 2010 - 4.0.14 - Added *NOFAILS
+23 Sept 2010 - 4.0.14 - Added *NOFAIL
 	Also added any *DIRECTIVE on the CLI (not **SHELL)
 	Added 'clumping' to step function so expect & capture work
 	
@@ -737,6 +737,15 @@ x	Fix '<<' and square brackets (requires escaping)
 	Added RED old expect-lite version warning
 	Added more protection for IDE paste, fixed blank line paste (cygwin)
 	
+	Added Env Var support: EL_connect_method, EL_user, EL_pass, EL_delay_wait_for_host
+	
+
+
+o	Dyn Var - triggers new prompt, interfeers with sudo. Why new prompt?
+
+o	Fix Paste overwrite (add newlines?)
+
+o	Pasting in failed command does not show command (this is a one_line issue)
 
 o	Update script to state oldest expect version supported (still 5.31?, or 5.43?)
 	
@@ -756,8 +765,6 @@ x	Check expect version - Protect against cygwin version
 o	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
 	
-o	Add directive **CONNECT_METHOD
-
 o	Update README file - delete '-r none'
 
 x	Explore alternative to rhost=none
@@ -777,6 +784,13 @@ o	Write self test scripts for IDE
 		
 o	Update Man Page
 		x Add *NOFAIL
+
+o	Update docs with IDE
+		Create an Env Vars section 
+		EL_connect_method, EL_user, EL_pass, EL_delay_wait_for_host
+
+o	Add directive **CONNECT_METHOD
+
 
 o	Update Docs with new IDE info
 	Add *DIRECTIVES on CLI secion
