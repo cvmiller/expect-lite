@@ -41,9 +41,7 @@ Some Tips and Techniques for expect-lite:<br>
 <ul>
 <li><a href="#interact"><span style="font-weight: bold;">Interact</span></a>
 Setting a breakpoint, the easiest debugging aid to use</li><li><a style="font-weight: bold;" href="#ide">IDE</a> Integrated Debugger Environment</li>
-<li><a style="font-weight: bold;" href="#fail_then_interact">Fail
-then Interact</a> Using the 'fail script' feature as a debugging
-aid</li>
+
 <li><a style="font-weight: bold;" href="#finding_in">Finding
 In...</a>
 --verbose, a debugging aid that displays what expect-lite '&lt;'
@@ -99,14 +97,14 @@ the above list, #1 is the same as previous versions of expect-lite.
 Stepping, sKipping, and Showing are new in the IDE (#2, #3, #4). These
 commands are all two-keystroke commands. The first key is the escape
 key (or esc) followed by s, k, c, v, h and 0 through 9. These keys are
-not echoed to the screen, nor are they received by the remote host. to
+not echoed to the screen, nor are they received by the remote host. To
 represent the key presses&nbsp;[type &lt;esc&gt;h] has been added to
 the text for completeness.<br><pre>[type &lt;esc&gt;h]<br>IDE: Help<br>  Key          Action<br>  ----        ------<br>  &lt;esc&gt;s      Step<br>  &lt;esc&gt;k      sKip next step<br>  &lt;esc&gt;c      Continue<br>  &lt;esc&gt;v      show Vars<br>  &lt;esc&gt;0to9   Show N next lines of script<br>  &lt;esc&gt;-1to-9 Show N previous lines of script<br>  ctrl+D      Quit &amp; Exit expect-lite<br>  &lt;esc&gt;h      this Help</pre>Showing
 the lines of the script running up to the breakpoint, the current line,
 or the next few lines of the script can all be displayed by typing
 &lt;esc&gt; and a number. If the number is negative, say -3, then the
 last 3 lines will be displayed. The following example is displaying the
-next 5 lines of the script:<br><pre>[type &lt;esc&gt;5]<br>$ Printing next 5 line(s) of script:<br>&gt; echo hello<br>?if 1 == 1 ? %PAU<br>&gt;&gt; pwd<br>+$P=\n/home/([a-z]+)<br>&gt;echo "test_include.txt"<br></pre>Typing &lt;esc&gt;0 will display the current line in the script:<br><pre>[type &lt;esc&gt;0]<br>$ Printing current line of script:<br>*INTERACT</pre><br>To exit the IDE and continue the execution of the script type &lt;esc&gt;c &nbsp;This is the same as typing &nbsp;'+++'<br><br><span style="font-weight: bold;"><a name="typing_into_the_ide"></a>Typing commands directly into the IDE</span><br>In this IDE, expect-lite
+next 5 lines of the script:<br><pre>[type &lt;esc&gt;5]<br>$ Printing next 5 line(s) of script:<br>&gt; echo hello<br>?if 1 == 1 ? %PAU<br>&gt;&gt; pwd<br>+$P=\n/home/([a-z]+)<br>&gt;echo "test_include.txt"<br></pre>Typing &lt;esc&gt;0 will display the current line in the script:<br><pre>[type &lt;esc&gt;0]<br>$ Printing current line of script:<br>*INTERACT</pre><br>To exit the IDE and continue the execution of the script type &lt;esc&gt;c &nbsp;This is the same as typing &nbsp;'+++'<br><br><span style="font-weight: bold;"><a name="typing_into_the_ide"></a>Typing commands directly into the IDE</span><br>In the IDE, expect-lite
 script commands can be typed directly into the terminal, even assigning variables and displaying them, inside the
 paused script, for example:<br>
 <pre>$MYVAR=today<br>[type &lt;esc&gt;v]<br>$ DEBUG Info: Printing all expect-lite variables<br>Var:MYVAR                 Value:today<br>Var:junk                  Value:orbit-root<br>Var:manarch               Value:i386                   Const:ppc<br><br>&gt;&gt;pwd<br>pwd<br>/home/user<br></pre>
@@ -125,48 +123,9 @@ only irritating but not all that useful. For example, using similar
 script lines to above:<br><pre>&gt;ifconfig<br>&lt;eth2<br></pre>Since
 there is no eth2 interface on this machine the script snippet will
 fail. However, the *NOFAIL directive is automatically enabled inside
-the IDE, there pasting the snippet results in:<br><pre>$ ifconfig<br>eth0      Link encap:Ethernet  HWaddr 00:30:65:98:e5:4a  <br>          inet addr:10.1.1.125  Bcast:10.1.1.255  Mask:255.255.255.0<br>          ...<br> <span style="color: red;">FAILED COMMAND: </span><br style="color: red;"><span style="color: red;">    Expect Failed:eth2</span><br>$<br></pre><br>However,
-instead of the expect-lite exiting, and declaring the script has
-failed, it remains in the IDE (interact, or the breakpoint), ready to
-receive another command.<br><br><br>
-<h2><a name="fail_then_interact"></a>Fail
-then
-Interact<br>
-</h2>
-There is a secret back door to expect-lite, which reverses a script
-failure. Instead of halting and failing, the script can use the fail
-script (a special include script) mechanism to include a debugging aid.<br>
-<br>
-Add the following debugging script near the beginning of the script
-which is being debugged:<br>
-<pre>*~debug.inc<br></pre>
-<br>
-The actual debugging script is as follows:<br>
-<pre>#<br># debug.inc<br>#<br>*INTERACT<br>&gt;<br># allow script to continue<br>!set _el(continue) 1<br>&gt;<br>; === Continuing Script<br>&gt;<br><br></pre>
-When a script fails, it will print the usual command failed, and what
-it was expecting, then expect-lite will call the fail script
-(debug.inc). Once debug.inc is run, it drops the user into interact
-mode. This provides the opportunity to <span style="font-style: italic;">fix</span> the error
-(perhaps there was a
-missing command). Once the fix is done, typing '+++' will return from
-the interact session and the script will continue (in this case, still
-debug.inc). <br>
-<br>
-Now this is where the secret backdoor part comes in. There is a line of
-embedded expect in debug.inc:<br>
-<pre>!set _el(continue) 1<br></pre>
-This tells expect-lite to not halt the test, but in fact, to continue
-the test as if no failure had occurred (very sneaky). Lastly, debug.inc
-prints into the log that it is continuing the script, and at the end of
-debug.inc, control is returned to the <span style="font-style: italic;">buggy</span>
-script right after the
-failure point and continues.<br>
-<br>
-This little script is such a great tool for debugging, that we found it
-invaluable and put it into all our scripts. Note: be sure to remove the
-reference to debug.inc before putting the now-bug-free script into
-production.<br>
-<br>
+the IDE, there pasting the snippet results in:<br><pre>$ ifconfig<br>eth0      Link encap:Ethernet  HWaddr 00:30:65:98:e5:4a  <br>          inet addr:10.1.1.125  Bcast:10.1.1.255  Mask:255.255.255.0<br>          ...<br> <span style="color: red;">FAILED COMMAND: </span><br style="color: red;"><span style="color: red;">    Expect Failed:eth2</span><br>$<br></pre><br>Instead of the expect-lite exiting, and declaring the script has
+failed, it remains in the IDE (at the *INTERACT, or breakpoint), ready to
+receive another command.<br><br>
 <h2><a name="finding_in"></a>Finding
 In...
 Verbose<br>
@@ -200,7 +159,7 @@ warnings and debug information (including user defined prompt debug
 info)<br>
 <br>
 <h2><a name="variables_values"></a>Showing
-Variables &amp; Values with *SHOW VARS<br>
+Variables, Values &amp; Constants with *SHOW VARS<br>
 </h2>
 Sometimes when troubleshooting a script, it is really useful to display
 the value of an expect-lite variable. The easiest method to display a
@@ -212,18 +171,18 @@ $max will be dereferenced and displayed:<br>
 The above method works well for a few variables, but it may be
 neccessary to view all the expect-lite variables. In previous versions
 of expect-lite, a script (show_vars.inc) was required to view all
-variable values. As of version 3.5.0, the expect-lite directive: *SHOW
-VARS now performs the same function. <br>
+variable values. As of version 4.0.x, the expect-lite directive: *SHOW
+VARS now displays variables, values, and any overriding constants.<br>
 <br>
 All variables can now be displayed by using the line:<br>
 <pre>*SHOW VARS<br></pre>
 The include script is written in embedded expect and will walk the
 array of expect-lite variables, and print their respective values. The
 output will appear like the following:<br>
-<pre> === Show all Vars Defined<br><br>Var:count Value:14<br>Var:first Value:this is a regression test line<br>Var:gen10 Value:test10<br>Var:gen11 Value:test11<br>Var:gen12 Value:test12<br>Var:gen13 Value:test13<br>...<br>Var:mac_da12 Value:38:8B:50:49:AE:0D<br>Var:mac_da13 Value:38:E4:EB:0C:DE:4B<br></pre>
+<pre>expect-lite directive: *SHOW VARS <br>DEBUG Info: Printing all expect-lite variables<br>Var:count                 Value:14<br>Var:mac_da10              Value:00:7F:DE:6A:FF:FA     Const:00:30:65:98:e5:4a<br>Var:mac_da11              Value:88:45:3D:2A:95:63<br>Var:mac_da12 Value:38:8B:50:49:AE:0D<br>Var:mac_da13 Value:38:E4:EB:0C:DE:4B<br></pre>
 <br>
 *SHOW VARS can also be used with *INTERACT and instant-interact to view
-the values all assigned variables.<br>
+the values all assigned variables, however, &lt;esc&gt;v performs the same action and is less typing.<br>
 <br>
 <h2><a name="define_narrowly"></a>Define
 '&lt;' narrowly</h2>
@@ -261,7 +220,9 @@ an automated environment, it is probably not desirable to have ANSI
 color sequences embedded in the logs. Although it is possible to use
 the expect-lite directive *NOCOLOUR in each script to turn off colour,
 there is an easier way. Define the terminal type to a dumb terminal,
-such as tty.<br><pre>export TERM=tty</pre>expect-lite will detect the dumb terminal type and turn off colour output automatically.<br>
+such as tty.<br><pre>export TERM=tty</pre>expect-lite will detect the dumb terminal type and turn off colour output automatically.<br><br>Or
+as of version 4.0.x, *DIRECTIVES can be placed on on the command line,
+therefore it is possible to turn off colour on the command line:<br><pre>expect-lite -r myhost -c myscript *NOCOLOUR</pre><br>
 <h2><a name="tips"></a>General Tips</h2>
 Here are some simple tips when script writing:<br>
 <ul>
@@ -309,12 +270,11 @@ repetitive tasks.<br>
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">31 July 2010<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">2 October 2010<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this
-document for version
-3.7.0 or later</span><br style="font-style: italic;">
+document for version 4.0.x or later</span><br style="font-style: italic;">
 </small>
 <br>
 </body></html>

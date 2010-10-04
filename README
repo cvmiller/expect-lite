@@ -41,11 +41,12 @@ expect-lite, call it test.elt :
 
 The second item you require is a host to run your script against.
 Expect-lite is designed to log into a remote host and run your script,
-as if a person was typing the commands. However that may require setting
-up ssh keys and so forth, and this is the Quick Start section. Type the
-following to run the above script on your localhost:
+as if a person was typing the commands, fortunately, the default host is 
+"none". However that may require setting up ssh keys and so forth, and
+this is the Quick Start section. Type the following to run the above
+script on your localhost:
 
-expect-lite r=none c=test.elt
+expect-lite -c test.elt
 
 There should be output that looks similar to the following:
 
@@ -73,9 +74,9 @@ Congratulations you have just run your first expect-lite script!
     Quick Doc
     ---------
 
-To learn more about expect-lite please look at the documentation. expect-lite
-interprets the script based on the first  character of the line. Here's a
-short list of what is available to get you started:
+To learn more about expect-lite please look at the documentation.
+expect-lite interprets the script based on the first  character of the
+line. Here's a short list of what is available to get you started:
      > send to remote host, implies "wait for prompt"
      < _MUST_ be received, or script will report failure
      # are comment lines, and have no effect
@@ -83,8 +84,9 @@ short list of what is available to get you started:
      @ change the expect timeout value
      ? If statement, use format ?cond?action::else_action
 
-There are many more commands supported in expect-lite, it really is worth
-reading the documentation.
+There are many more commands supported in expect-lite. The man page has a
+good summary of the commands, including controlling log output, setting
+breakpoints, the IDE, and more (see MAN.txt).
 
 
     BSD-Style License
@@ -119,8 +121,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ------------------------------------------------------------------------
-13 June 2010
+3 October 2010
 http://expect-lite.sourceforge.net/
 
-this document for version 3.6.1 or later
+this document for version 4.0.0 or later
 

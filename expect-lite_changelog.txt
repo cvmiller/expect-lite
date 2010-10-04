@@ -736,12 +736,12 @@ x	Fix '<<' and square brackets (requires escaping)
 	Fixed '<<' and square brackets
 	Added RED old expect-lite version warning
 	Added more protection for IDE paste, fixed blank line paste (cygwin)
-	
+	v 4.0.22	
 	Added Env Var support: EL_connect_method, EL_user, EL_pass, EL_delay_wait_for_host
 	
 
 
-o	Dyn Var - triggers new prompt, interfeers with sudo. Why new prompt?
+o	Dyn Var - triggers new prompt, interferes with sudo. Why new prompt?
 
 o	Fix Paste overwrite (add newlines?)
 
@@ -784,13 +784,15 @@ o	Write self test scripts for IDE
 		
 o	Update Man Page
 		x Add *NOFAIL
+		o export to text
+			nroff -man expect-lite.1 | col -b > MAN
 
 o	Update docs with IDE
 		Create an Env Vars section 
-		EL_connect_method, EL_user, EL_pass, EL_delay_wait_for_host
+			EL_connect_method, EL_user, EL_pass, EL_delay_wait_for_host
 
-o	Add directive **CONNECT_METHOD
-
+x	Add directive **CONNECT_METHOD
+	Implemented as Env Var EL_connect_method, instead.
 
 o	Update Docs with new IDE info
 	Add *DIRECTIVES on CLI secion

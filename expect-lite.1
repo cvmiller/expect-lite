@@ -27,12 +27,13 @@ Expect is not required.
 usage: expect\-lite remote_host=<remote_host_IP> cmd_file=<command_file> [user_dir=<user_dir>] [const1=value1] [*DIRECTIVE]
 .PP
 or short form: expect\-lite r=<remote_host_IP> c=<command_file> [d=<user_dir>] [const1=value1] [*DIRECTIVE]
+.IP
 eg. ./expect\-lite r=host\-008  c=pm_alt.elt  d=/local/sw myvar=myvalue *NOCOLOR
 .TP
 additional login options: user_name=<username> user_password=<password>
-.TP
-eg. ./expect\-lite r=host\-008 c=pm_alt.elt u=superuser p=mysecret
 .IP
+eg. ./expect\-lite r=host\-008 c=pm_alt.elt u=superuser p=mysecret
+.PP
 additional debug options: \fB\-v\fR|\fB\-vv\fR|\fB\-\-verbose\fR
 .TP
 \fB\-v\fR
@@ -42,15 +43,6 @@ prints warnings, and infos (i.e. conditionals, dynamic var assignments)
 prints warnings and debug (i.e. expect match info)
 .TP
 eg. ./expect\-lite \-v r=host\-008 c=pm_alt.elt
-.SS "If set, the following environment variables will be used:"
-.br
-EL_REMOTE_HOST
-.br
-EL_CMD_FILE
-.br
-EL_USER_DIR
-.br
-EL_*
 .PP
 
 .SH
@@ -173,6 +165,39 @@ Enable/disable debug messages
 Disables color on stdout
 
 .P
+
+.SS 
+Environment Variables 
+.PP
+It is no longer necessary to hand edit the expect-lite script itself. All parameters such as connect_method, login name and password are controlled via shell environment variables. This permits individual customization in a multi user environment. It is recommended to save these values in the .bashrc or .cshrc. If set, the following environment variables will be used:
+.TP
+EL_connect_method
+The method expect-lite uses to connect to remote host. Valid options are: none|telnet|ssh|ssh_key Default is none
+.TP
+EL_user
+User name to use for login on remote host
+.TP
+EL_pass
+Password to use for login on remote host
+.TP
+EL_delay_wait_for_host
+Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture. 100 ms is a good value for a local LAN, 200 ms if running across high speed internet
+.TP
+EL_REMOTE_HOST
+Name or IP of remote host
+.TP
+EL_CMD_FILE
+Name of expect-lite script to run
+.TP
+EL_USER_DIR
+Change to this directory upon login
+.TP
+EL_*
+Any other shell environment variables starting with EL_ will become constants
+.PP
+
+
+
 .SS
 Debugger (IDE)
 .PP

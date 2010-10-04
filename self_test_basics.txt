@@ -48,8 +48,9 @@
 <<This is an equation:(5+3)/2*2
 
 ; === look for wild carding 'This*equation'
+# wild card in << no longer supported, too greedy
 >echo $TESTSTR
-<<This*equation
+<This.+equation
 
 ; === use Regex and escape special chars ()+*
 >echo $TESTSTR

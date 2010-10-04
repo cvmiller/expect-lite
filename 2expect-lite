@@ -661,7 +661,7 @@ proc read_args {} {
 	set cli_namespace($timeout_multiplier) 1
 	
 	# If needed read parameters from Env Vars
-	if { $remote_host=="" } { catch { set remote_host $env(EL_REMOTE_HOST)} }
+	catch { set remote_host $env(EL_REMOTE_HOST)} 
 	if { $cmd_file=="" } { catch { set cmd_file $env(EL_CMD_FILE)} }
 	if { $user_dir=="" } { catch { set user_dir $env(EL_USER_DIR)} }
 

@@ -80,7 +80,8 @@ $hex=ff
 ; == show #3 items of parray: $port_in_10	$mac_da10
 >
 
-!show_all_vars mac_da
+#!show_all_vars mac_da
+*SHOW VARS
 >
 >sleep 1
 

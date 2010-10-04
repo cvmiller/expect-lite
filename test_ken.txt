@@ -12,6 +12,7 @@ $EL_jtag=
 
 >
 ; === Sudo stuff
+# set user defined prompt line
 */.+: $/
 
 #*NOINFO
@@ -24,4 +25,4 @@ $EL_jtag=
 >
 
 #!expect -re "assword" { send $EL_rootpass } timeout {puts "=====>Lost it"}
-!stty -echo; send  $EL_rootpass ; stty echo
+#!stty -echo; send  $EL_rootpass ; stty echo
