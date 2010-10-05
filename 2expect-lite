@@ -26,7 +26,7 @@
 #	[additional constants, see usage]
 #
 #
-# Requires Expect version supported 5.31.7 and later (although earlier versions may work)
+# Requires Expect version supported 5.42.1 and later (although earlier versions may work)
 #
 #
 #
@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.22 Alpha"
+set version "4.0.23 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -387,6 +387,7 @@ proc instant_interact_sig {} {
 				}
 			-re {(^\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
 				# determine next or skip step
+				set param "s" ; # set default to step
 				catch { set param "$interact_out(2,string)" } error 
 				
 				# increment buffer line pointer 
@@ -523,7 +524,7 @@ proc instant_interact_sig {} {
 							_el_script_exec "\|$item" $_el_buf(stack)
 						}
 					}
-					return
+					protected_send "$_el_eols"
 				}
 			} }  \
 		 error] } {

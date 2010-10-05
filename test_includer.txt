@@ -81,6 +81,9 @@ $junk2=$junk/some/path
 >echo "[test]"
 <<[test]
 
+>echo tfile_$RANDOM
++$temp_file=\n(tfile_[0-9]+)
+
 *INTERACT
 >
 #pau

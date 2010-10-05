@@ -741,15 +741,17 @@ x	Fix '<<' and square brackets (requires escaping)
 	
 
 
-o	Dyn Var - triggers new prompt, interferes with sudo. Why new prompt?
+x	Dyn Var - triggers new prompt, interferes with sudo. Why new prompt? regression doesn't require it
+		Removed new prompt
 
 o	Fix Paste overwrite (add newlines?)
 
 o	Pasting in failed command does not show command (this is a one_line issue)
 
-o	Update script to state oldest expect version supported (still 5.31?, or 5.43?)
+x	Update script to state oldest expect version supported (still 5.31?, or 5.43?)
+		Minimum tested is 5.42.1 (Ubuntu 6.06)
 	
-o	Step function - 
+x	Step function - 
 		Create 'clumping' where a > will also invoke following lines with <,<<, +$
 		x set *NOFAIL during IDE
 		Step back? Repeat? NO
@@ -765,7 +767,7 @@ x	Check expect version - Protect against cygwin version
 o	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
 	
-o	Update README file - delete '-r none'
+x	Update README file - delete '-r none'
 
 x	Explore alternative to rhost=none
 		Can expect run without spawn? No, Interact will not work. 
