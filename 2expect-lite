@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.23 Alpha"
+set version "4.0.24 Alpha"
 
 #set starting expect timeout 
 set timeout 10 
@@ -525,6 +525,7 @@ proc instant_interact_sig {} {
 						}
 					}
 					protected_send "$_el_eols"
+					return
 				}
 			} }  \
 		 error] } {
@@ -540,7 +541,7 @@ proc instant_interact_sig {} {
 	protected_send "$_el_eols"
 	# restore NOFAIL
 	incr NOFAIL -1
-	stty raw
+
 }
 
 
@@ -649,10 +650,10 @@ proc parse_cmd_file_nopath { cmd_file } {
 #		EL_REMOTE_HOST
 #		EL_CMD_FILE
 #		EL_USER_DIR
-#		EL_connect_method
-#		EL_user
-#		EL_pass
-#		EL_delay_wait_for_host
+#		EL_CONNECT_METHOD
+#		EL_USER
+#		EL_PASS
+#		EL_DELAY_WAIT_FOR_HOST
 #
 proc read_args {} {
 	global argc argv remote_host cmd_file user_dir env connect_method user pass delay_wait_for_host
@@ -666,10 +667,10 @@ proc read_args {} {
 	if { $cmd_file=="" } { catch { set cmd_file $env(EL_CMD_FILE)} }
 	if { $user_dir=="" } { catch { set user_dir $env(EL_USER_DIR)} }
 
-	if { $user=="" } { catch { set user $env(EL_user)} }
-	if { $pass=="" } { catch { set pass $env(EL_pass)} }
-	catch { set connect_method $env(EL_connect_method)} 
-	catch { set delay_wait_for_host $env(EL_delay_wait_for_host)} 
+	if { $user=="" } { catch { set user $env(EL_USER)} }
+	if { $pass=="" } { catch { set pass $env(EL_PASS)} }
+	catch { set connect_method $env(EL_CONNECT_METHOD)} 
+	catch { set delay_wait_for_host $env(EL_DELAY_WAIT_FOR_HOST)} 
 
 	if { $argc >= 1 ||  $cmd_file!="" }  {
 		# Walk thru additional args (should be cli constants)

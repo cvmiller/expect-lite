@@ -737,14 +737,14 @@ x	Fix '<<' and square brackets (requires escaping)
 	Added RED old expect-lite version warning
 	Added more protection for IDE paste, fixed blank line paste (cygwin)
 	v 4.0.22	
-	Added Env Var support: EL_connect_method, EL_user, EL_pass, EL_delay_wait_for_host
+	Added Env Var support: EL_CONNECT_METHOD, EL_USER, EL_PASS, EL_DELAY_WAIT_FOR_HOST
 	
 
 
 x	Dyn Var - triggers new prompt, interferes with sudo. Why new prompt? regression doesn't require it
 		Removed new prompt
 
-o	Fix Paste overwrite (add newlines?)
+z	Fix Paste overwrite (add newlines?) - not going to fix
 
 o	Pasting in failed command does not show command (this is a one_line issue)
 
@@ -764,7 +764,7 @@ x	Check expect version - Protect against cygwin version
 		puts "older version of expect\n"
 	}
 		
-o	IDE Cooked mode '-reset' to help with backspace problem
+z	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
 	
 x	Update README file - delete '-r none'
@@ -789,15 +789,16 @@ o	Update Man Page
 		o export to text
 			nroff -man expect-lite.1 | col -b > MAN
 
-o	Update docs with IDE
+x	Update docs with IDE
 		Create an Env Vars section 
-			EL_connect_method, EL_user, EL_pass, EL_delay_wait_for_host
+			EL_CONNECT_METHOD, EL_USER, EL_PASS, EL_DELAY_WAIT_FOR_HOST
 
 x	Add directive **CONNECT_METHOD
-	Implemented as Env Var EL_connect_method, instead.
+	Implemented as Env Var EL_CONNECT_METHOD, instead.
 
-o	Update Docs with new IDE info
-	Add *DIRECTIVES on CLI secion
+x	Update Docs with new IDE info
+	x Add *DIRECTIVES on CLI secion
+	x Add Clumping, or Island shores description
 
 
 ------------ Windows Cygwin Expect --------------------------

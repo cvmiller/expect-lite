@@ -66,6 +66,9 @@ $fork_session2=MY_2nd_HOST
 >hostname
 >sleep 2
 >
+>pwd
+</tmp/session2
+>
 
 
 *FORK $fork_session
@@ -73,6 +76,8 @@ $fork_session2=MY_2nd_HOST
 >
 >pwd
 </tmp/$fork_session
+>sleep 2
+>
 
 
 *FORK $fork_session2
@@ -98,7 +103,7 @@ $fork_session2=MY_2nd_HOST
 ; ======== "SESSION 0a"
 >>pwd
 <$PWD
-
+*INTERACT
 >
 ; === check session
 *FORK

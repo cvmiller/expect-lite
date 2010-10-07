@@ -5,7 +5,8 @@
 <meta name="AUTHOR" content="Craig Miller">
 <link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Doc</title>
 
-<meta content="Craig Miller" name="author"></head>
+<meta content="Craig Miller" name="author">
+</head>
 <body>
 <table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
 <tbody class="page">
@@ -54,7 +55,8 @@ functions and pseudo arrays</span><br>
 </li>
 <li><a href="#constants"><span style="font-weight: bold;">Constants</span></a>,
 passed on the
-command line which override variables in the script</li>
+command line or set as environment variables, which override variables
+in the script</li>
 <li style="font-weight: bold;"><a href="#bash_shell">Leverages
 Bash
 shell</a></li>
@@ -89,21 +91,39 @@ allows interaction with a wider range of hosts (routers, switches, etc)
 Sessions</span></a>
 enabling interaction with a client and a server in one script&nbsp;<span style="background-color: rgb(255, 255, 102);"></span></li>
 <li><a href="#instant_interact"><span style="font-weight: bold;">Instant-Interact</span></a>
-empowers on the spot debugging&nbsp;<span style="background-color: rgb(255, 255, 102);"></span></li><li><span style="background-color: rgb(255, 255, 102);"><span style="background-color: white;"><a style="font-weight: bold;" href="#directive_managing_logging">Color</a> enhances output, differentiates log messages </span>new in version 3.7.0<br></span></li>
+empowers on the spot debugging&nbsp;<span style="background-color: rgb(255, 255, 102);"></span></li>
+<li><span style="background-color: rgb(255, 255, 102);"><span style="background-color: white;"><a style="font-weight: bold;" href="#directive_managing_logging">Color</a>
+enhances output, differentiates log messages </span>new in
+version 3.7.0<br>
+</span></li>
 </ul>
 <br>
 <h2><a name="Automatic_Login_"></a>Automatic
 Login<br>
-</h2>expect-lite was born into a multi-host environment, and therefore
+</h2>
+expect-lite was born into a multi-host environment, and therefore
 there was the early requirement to remote login to a host (usually a
 Linux machine) allocated by a sharing facility such as the commercial
 package, LSF. Therefore, a remote host must be specified on the command
-line where the script will wake up and begin executing. <br><br>Three methods of remote login are supported:<br><ul><li>telnet</li><li>ssh with password</li><li>ssh with keys (no password)</li></ul>ssh with keys is the preferred method, since no password is required, however this requires some environment setup before hand.<br><br>Even
+line where the script will wake up and begin executing. <br>
+<br>
+Three methods of remote login are supported:<br>
+<ul>
+<li>telnet</li>
+<li>ssh with password</li>
+<li>ssh with keys (no password)</li>
+</ul>
+ssh with keys is the preferred method, since no password is required,
+however this requires some environment setup before hand.<br>
+<br>
+Even
 when no remote host is required, it is best to log into the localhost,
 since the underlying Expect has problems with synchronization (between
 send and expect strings) when a remote host is not specified. The
 provided shell script 'setup_local_ssh.sh' will setup the localhost
-with ssh keys. It is only necessary to run it once:<br><pre>./setup_local_ssh.sh</pre>Based on the command line arguments passed, expect-lite will do the
+with ssh keys. It is only necessary to run it once:<br>
+<pre>./setup_local_ssh.sh</pre>
+Based on the command line arguments passed, expect-lite will do the
 following:<br>
 <ul>
 <li>Automatically log into the remote host via telnet or
@@ -118,24 +138,56 @@ In the following example of expect-lite: <br>
 <pre>./expect-lite remote_host=remote-host-018 cmd_file=basic_ping_test.elt user_dir=/etc</pre>
 Or the shorter version<br>
 <pre>./expect-lite r=remote-host-018 c=basic_ping_test.elt d=/etc</pre>
-Or the shorter version which is more linux like<br><pre>./expect-lite -r remote-host-018 -c basic_ping_test.elt -d /etc</pre><br>
+Or the shorter version which is more linux like<br>
+<pre>./expect-lite -r remote-host-018 -c basic_ping_test.elt -d /etc</pre>
+<br>
 expect-lite will log into remote-host-018, change directory to /etc/
 and
 begin to send commands from basic_ping_test.elt to the remote-host. The
 parameters of remote_host and cmd_file are required, as expect-lite
 must know what host to log into, and what script (aka command file) to
-run.<br><br><span style="font-weight: bold;"><a name="env_vars"></a>Environment Variables</span><br><br>The
-following environment variables can be used as alternatives to
-specifiying command line arguments, remote_host, cmd_file, and user_dir
-respectively:<br><ul><li>EL_REMOTE_HOST&nbsp;</li><li>EL_CMD_FILE&nbsp;</li><li>EL_USER_DIR &nbsp;</li></ul>
-In addition, as of version 3.6.2, any environment variable which begins
-with EL_ will automatically become a constant with the same name. This
-enables the use of virtually any environment variable in a script.<br>
+run.<br>
+<br>
+<span style="font-weight: bold;"><a name="env_vars"></a>Environment Variables</span><br>
+<br>
+The
+following environment variables permit the customization of expect-lite
+without having to edit the expect-lite script itself. It is recommended
+that commonly used environment variables be placed in the .bashrc or
+.cshrc file where they will be automatically set upon login.<br>
+<ul></ul>
+<dl>
+<dd>
+<table style="text-align: left; width: 80%;" border="1" cellpadding="2" cellspacing="2">
+<tbody>
+<tr>
+<td style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Env Var<br>
+</td>
+<td style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Description<br>
+</td>
+</tr>
+<tr>
+<td style="vertical-align: top;">EL_REMOTE_HOST<br>
+</td>
+<td style="vertical-align: top;">Name or IP of remote host<br></td>
+</tr><tr><td>EL_CMD_FILE</td><td>Name of expect-lite script to run</td></tr><tr><td>EL_USER_DIR</td><td>Change to this directory upon login before executing script</td></tr><tr><td>EL_CONNECT_METHOD</td><td>The method expect-lite uses to connect to remote host. Valid options are: none|telnet|ssh|ssh_key <br>Default is none</td></tr><tr><td>EL_USER</td><td>User name to use for login on remote host (telnet|ssh)</td></tr><tr><td>EL_PASS</td><td>Password to use for login on remote host (telnet|ssh)</td></tr><tr><td>EL_DELAY_WAIT_FOR_HOST</td><td>Delay
+(in ms) to wait for host in Not Expect, and Dynamic Var Capture. 100 ms
+is a good value for a local LAN, 200 ms if running across high speed
+internet</td></tr><tr><td>EL_*</td><td>Any other shell environment variables starting with EL_ will become constants</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+<br>
 <h2><a name="special_characters"></a>Special
 Character Sequences<br>
-</h2>Although basic expect-lite scripts can be created
+</h2>
+Although basic expect-lite scripts can be created
 by simply cutting and pasting text from a terminal window into a
-script, and adding '&gt;' '&lt;' characters, such as:<br><pre>&gt;pwd<br>&lt;/home/user</pre>Much more functionality is available. expect-lite interprets punctuation characters at the
+script, and adding '&gt;' '&lt;' characters, such as:<br>
+<pre>&gt;pwd<br>&lt;/home/user</pre>
+Much more functionality is available. expect-lite interprets
+punctuation characters at the
 beginning of each line in the script:<br>
 <dl>
 <dd>
@@ -352,7 +404,8 @@ script, which expect-lite runs only if the main script fails (see <a href="#fail
 <td style="vertical-align: top;">*/prompt/<br>
 </td>
 <td style="vertical-align: top;">Set
-a user defined prompt (see <a href="#user_defined_prompt">user defined
+a user defined prompt (see <a href="#user_defined_prompt">user
+defined
 prompt</a>)<br>
 </td>
 </tr>
@@ -370,7 +423,7 @@ terminates script, but returns 0 (pass) (see <a href="#directive_term_fail">stop
 fails script, and returns 1 (fail) (see&nbsp;<a href="#directive_term_fail">stopping execution early</a>)<br>
 </td>
 </tr>
-<tr>
+<tr><td>*NOFAIL</td><td>Script will run to completion, and returns 1, if failure occured during execution, or 0, if pass</td></tr><tr>
 <td style="vertical-align: top;">**SHELL=&lt;shell&gt;<br>
 </td>
 <td style="vertical-align: top;">Configuration
@@ -405,7 +458,13 @@ Directs expect-lite to open a new session and spawns a newshell (see <a href="#d
 information, displays
 all expect-lite variables. Can be used in interact mode.</td>
 </tr>
-<tr><td>*EOLS LF<br>*EOLS CRLF</td><td>Controls end of line sequence sent to remote host, either line feed, or carriage return &amp; line feed.</td></tr><tr>
+<tr>
+<td>*EOLS LF<br>
+*EOLS CRLF</td>
+<td>Controls end of line sequence sent to remote
+host, either line feed, or carriage return &amp; line feed.</td>
+</tr>
+<tr>
 <td style="background-color: rgb(204, 204, 204);" align="undefined" valign="undefined"><br>
 </td>
 <td style="background-color: rgb(204, 204, 204);" align="undefined" valign="undefined"><span style="color: rgb(0, 0, 0); font-weight: bold;">Logging
@@ -433,7 +492,12 @@ warning messages</td>
 <td align="undefined" valign="undefined">Enable/disable
 debug
 messages</td>
-</tr><tr><td>*NOCOLOR</td><td>Disables color output, best when logging output</td></tr>
+</tr>
+<tr>
+<td>*NOCOLOR</td>
+<td>Disables color output, best when logging
+output</td>
+</tr>
 </tbody>
 </table>
 </dd>
@@ -472,9 +536,12 @@ does not require escaping: &lt;&lt;0.005 secs (5 micro secs)
 often. Check for valid
 results
 when possible. A script which expects nothing will never fail! (see <a href="#test_failure">Test Failure</a>)</li>
-<li><a name="printable_comments"></a>Use printable comments ';' &nbsp;and ';;' often. Think of it as
+<li><a name="printable_comments"></a>Use
+printable comments ';' &nbsp;and ';;' often. Think of it as
 writing
-a note to oneself, it will make reading log files much easier. As of version 3.7.0 printable comments will be coloured <span style="color: rgb(51, 51, 255);">blue</span> (this is user configurable).</li>
+a note to oneself, it will make reading log files much easier. As of
+version 3.7.0 printable comments will be coloured <span style="color: rgb(51, 51, 255);">blue</span> (this is
+user configurable).</li>
 </ul>
 <h2><a name="debugging"></a>Debugging
 Expect-lite Scripts</h2>
@@ -484,23 +551,25 @@ required. <br>
 <br>
 <a name="instant_interact"></a>Instant-Interact
 (as
-of version 3.5.0),
+of version 3.5.0) or instant breakpoint,
 provides instant debugging assistance. Pressing
 ^\ (control+backslash) will force expect-lite to drop into interact
 mode, a mode which turns control of the keyboard over to the user, so
 that one may type directly to the process on the remote host. To return
 to the script, type '+++' (three pluses). During interactive mode,
-timeouts do not apply, and the script will wait indefinitely for the
+timeouts do not apply, *NOFAIL us automatically enabled, and the script will wait indefinitely for the
 user to exit this debugging mode. Switching between multiple sessions
 (see <a href="#directive_fork">*FORK</a>) is
 possible via typing the
 *FORK command in interact mode (see <a href="#directive_fork_debugging">*FORK
 debugging</a>).<br>
 <br>
-Additionally, the include scripts, debug.inc and show_vars.inc, have
-been added to the release (as of version 3.1.3) to assist in debugging
-scripts (see also *SHOW VARS)<br>
-<br>
+Additionally, the interact mode (or Integrated Debugger Environment)
+performs three primary functions: 1) connecting the user to the remote
+host or device under test, 2) monitoring special commands prefaced with
+the escape key for stepping, and other functions, and 3) the debugger
+will allow expect-lite script lines to be executed by either typing
+directly or pasting them into the IDE.<br><br>
 See the <a href="expect-lite_tips.html">Tips and
 Techniques Guide</a>
 for additional expect-lite script debugging information.<br>
@@ -590,7 +659,7 @@ sign</td>
 <td>*</td>
 <td>\*</td>
 <td>asterisk (or star)</td>
-</tr>
+</tr><tr><td>|</td><td>\|</td><td>pipe</td></tr>
 </tbody>
 </table>
 <br>
@@ -602,9 +671,7 @@ are times when the use of regex is not desired, or 'escaping'
 characters is burdensome. As of version 3.6.0, expect lines can begin
 with '&lt;&lt;' which will not use regex, but rather literal
 evaluation
-of expected results. That said, wild-carding is still permitted such as
-'&lt;&lt;wild*permitted' would match 'wild-carding is still
-permitted'.<br>
+of expected results.&nbsp;<br>
 <br>
 <span style="font-weight: bold;"><a name="handling_xml_tags"></a>Handling HTML/XML Tags in
 expect lines</span><br>
@@ -764,7 +831,7 @@ no spaces.<br>
 <br>
 <h3><a name="constants"></a>Constants</h3>
 Expect-lite Constants are represented as variables which are passed
-into expect-lite at runtime. Constants will override any script
+into expect-lite at runtime or retrieved from environment variables starting with EL_. Constants will override any script
 variable already defined inside the script, are immutable, and
 cannot be changed. Constants can be used to change the behaviour of the
 script.<br>
@@ -777,7 +844,8 @@ be set to eth2, thus allowing the script actions to be changed based on
 the constant passed at invocation. Constants will override any script
 variable already defined inside the script.<br>
 <br>
-<h3><a name="shell_vars"></a>Shell Variables</h3>
+<h3><a name="shell_vars"></a>Shell
+Variables</h3>
 Expect-lite allows the use of shell variables, which can be more
 powerful than the built-in variable mechanism. However shell variables
 will only be resolved by the shell. For example, assigning current
@@ -793,11 +861,19 @@ expect-lite.<br>
 It is possible to read a shell variable into an expect-lite variable by
 using the dynamic variable method:<br>
 <pre>&gt; echo $PWD<br>+$mypwd=\n(/[a-zA-Z0-9/\-_]+)<br></pre>
-<br><h3><a name="env_vars"></a>Environment Variables starting with EL_</h3>When
+<br>
+<h3><a name="env_vars"></a>Environment
+Variables starting with EL_</h3>
+When
 expect-lite starts up it will automatically search the environment
 variables (aka shell variables), and import any found starting with EL_
 as constants. This enables setting environment variables as passwords,
-or remote hosts.<br><br>For example, the environment variable EL_sudopass might be set to "mysecret". In the script, the variable would be used as:<br><pre>&gt;sudo tcpdump -i eth0<br>&lt;&lt;[sudo] password<br>&gt;&gt;$EL_sudopass</pre><br>
+or remote hosts.<br>
+<br>
+For example, the environment variable EL_sudopass might be set to
+"mysecret". In the script, the variable would be used as:<br>
+<pre>&gt;sudo tcpdump -i eth0<br>&lt;&lt;[sudo] password<br>&gt;&gt;$EL_sudopass</pre>
+<br>
 <h2><a name="conditional"></a>Using
 Conditionals &amp; Labels<br>
 </h2>
@@ -936,9 +1012,9 @@ captured into the expect-lite dynamic variable $loop_counter.<br>
 <span style="font-weight: bold;"><a name="executable_script"></a>Using
 Bash to create executable expect-lite scripts</span><br>
 It is possible to make expect-lite scripts executable, with the help of
-a small embedded bash helper script. Insert the following at the top of
+a small embedded bash helper script. To ensure portability, OS detection is used. Insert the following at the top of
 the expect-lite script:<br>
-<pre>#!/usr/bin/env bash<br># make this auto-runnable! <br># Little bootstrap bash script to run kick start expect-lite script<br># Convert --parms to expect-lite param=value format<br>PARAMS=`echo $* | /bin/sed -r 's;--([a-z]+) ([0-9a-zA-Z]+);\1=\2;g'`<br>echo $PARAMS<br>expect-lite r=none c=$0 $PARAMS<br>exit $?<br></pre>
+<pre>#!/usr/bin/env bash<br># make this auto-runnable! <br># Little bootstrap bash script to run kick start expect-lite script<br># Convert --parms to expect-lite param=value format<br># determine OS (Mac, Linux, cygwin)<br>OS=`uname -s`<br>HOST=localhost<br>case $OS in<br>	"Linux" )       SED_OPT=" -r ";;<br>	"Darwin" )      SED_OPT=" -E ";;<br>	"CYGWIN_NT-5.1" )   HOST=none;   <br>						SED_OPT=" -r ";;<br>	* )				echo "Error: Unknown OS:$OS"<br>					exit 1;;<br>esac<br>PARAMS=`echo $* | /bin/sed -r 's;--([a-z]+) ([0-9a-zA-Z]+);\1=\2;g'`<br>echo $PARAMS<br>expect-lite r=none c=$0 $PARAMS<br>exit $?<br></pre>
 The bash scriptlet does the following:<br>
 <ul>
 <li>Converts command line arguments from --arg value to
@@ -1051,7 +1127,7 @@ expect-lite
 rather than replace it. (see <a href="#whats_missing">What's
 Missing</a>)<br>
 <br>
-<h2>Expect-lite Directives '*'<br>
+<h2><a name="directives"></a>Expect-lite Directives '*'<br>
 </h2>
 Expect-lite directives are indicated by lines which start with the
 asterisk, '*'. The directives change the behaviour of expect-lite in a
@@ -1069,9 +1145,14 @@ hosts
 <li>managing logging - *INFO, *NOINFO, *WARN, *NOWARN,
 *DEBUG, *NODEBUG, *NOCOLOR</li>
 <li>debugging aid - *INTERACT (see <a href="./expect-lite_tips.html">debugging tips</a>)</li>
-<li>print all expect-lite variables - *SHOW VARS</li><li>control end of line character(s) - *EOLS LF, *EOLS CRLF</li>
+<li>print all expect-lite variables - *SHOW VARS</li>
+<li>control end of line character(s) - *EOLS LF, *EOLS
+CRLF</li>
 </ul>
-<br>
+Directives can also be placed on the command line at run time. This is
+useful for controlling logging, such as *NOINFO or *NOCOLOUR.
+Additionally, *NOFAIL can be useful when debugging a script, since the
+script will not stop prematurely.<br>
 <h3><span style="font-weight: bold;"><a name="fail_script"></a></span>Fail
 Script&nbsp;&nbsp;&nbsp; *~include_fail_script</h3>
 The purpose of the fail script is to clean up after the failed script,
@@ -1107,8 +1188,9 @@ quite possible that expect-lite will not be interacting with a shell,
 but another application (such as gdb) or device which does not issue a
 shell-like prompt.<br>
 <br>
-As of version 3.1.5, the user may define a custom prompt using the
-following command:<br>
+As of version 3.1.5, the user may define a custom prompt. User defined
+prompts are defined from the newline (beginning of line) to the end of
+the prompt. For example:<br>
 <pre>*/my_prompt /</pre>
 The succeeding&nbsp; '&gt;' lines will interpret a prompt as
 the
@@ -1126,7 +1208,7 @@ example, creating a gdb prompt and my_prompt:<br>
 <pre>*/\(gdb\) |my_prompt /</pre>
 Another application of the user defined prompt is to make telnet logins
 easier:<br>
-<pre>*/login: |ssword: /<br>&gt;telnet remote-host-018<br>&lt;Connected to<br>&gt;$username<br>&gt;$password<br>&gt;<br></pre>
+<pre>*/login: |.+ssword: /<br>&gt;telnet remote-host-018<br>&lt;Connected to<br>&gt;$username<br>&gt;$password<br>&gt;<br></pre>
 Clearing a user defined prompt. There may be times where a previously
 user defined prompt is causing problems by output which falsely
 triggers the user defined prompt. It is possible to clear the user
@@ -1156,7 +1238,7 @@ script, and is not limited to the first line.<br>
 <br>
 <h3><span style="font-weight: bold;"><a name="directive_term_fail"></a></span>Stopping
 the script
-early with *TERM &amp; *FAIL</h3>
+early with *TERM, *PASS &amp; *FAIL</h3>
 There
 are times when it is desirable to terminate the execution of a script
 early (earlier than the end of the script). For example, while
@@ -1164,18 +1246,24 @@ debugging a script, it is convenient to stop execution mid way in the
 script while focusing a troublesome section. Or to perform a test, such
 as this is Monday, and terminate the script.<br>
 <br>
-*TERM will stop
+*TERM (and *PASS) will stop
 execution and return 0, or Pass. This is useful for debugging. *FAIL
 will stop execution and return 1, or Fail. If a fail script has been
 declared earlier, it will be executed before terminating execution.<br>
-<br>
+<br><h3><a name="directive_nofail"></a>No stopping the script with *NOFAIL</h3>There
+are times, especially when debugging a script, where it is desirable to
+not stop the script due to a failure, but instead allow the script to
+run until completion. Setting the directive *NOFAIL will prevent the
+script from terminating prematurely. Once invoked, there is no
+disabling *NOFAIL. <br><br>Upon completion, if there are failures during the script, expect-lite will return a 1, and indicate that there was a failure.<br><br>
 <h3><span style="font-weight: bold;"><a name="directive_term_fail"></a></span>Debugging
 by examining expect-lite variables with *SHOW VARS</h3>
 It
 can be useful when debugging a script to see what the value of
-variables are at some point in the script. This can be especially
-useful when used with *INTERACT, or pausing the script, and looking at
-the value of the variables.<br>
+variables are at some point in the script. Additionally, overriding
+constants will also be printed. This can be used with *INTERACT, or
+pausing the script, however using the debugger command &lt;esc&gt;v is
+less typing.<br>
 <br>
 <h3><a name="directive_fork"></a>Multiple
 Sessions
@@ -1237,25 +1325,29 @@ executed the order as they appear in the script.<br>
 <br>
 <h3><a name="directive_managing_logging"></a>Managing
 Logging *INFO,
-*NOINFO, *WARN, *NOWARN,
+*NOINFO, *EXP_INFO, *NOEXP_INFO, *WARN, *NOWARN,
 *DEBUG, *NODEBUG, *NOCOLOR</h3>
 Expect-lite provides additional information (logging) which makes it
-easier to debug failures. As of version 3.7.0, the output is coloured based on three levels of logging: <span style="color: rgb(0, 153, 0);">info</span>,
-<span style="color: rgb(204, 153, 51);">warnings</span>, and debug. By default, <span style="color: rgb(0, 153, 0);">info</span> and <span style="color: rgb(204, 153, 51);">warnings</span> are turned on.
+easier to debug failures. As of version 3.7.0, the output is coloured
+based on three levels of logging: <span style="color: rgb(0, 153, 0);">info</span>,
+<span style="color: rgb(204, 153, 51);">warnings</span>,
+and debug. By default, <span style="color: rgb(0, 153, 0);">info </span>and <span style="color: rgb(204, 153, 51);">warnings</span> are turned on and <span style="color: rgb(0, 153, 0);">exp_info </span>is turned off.&nbsp;
 However, using the logging directives: *INFO, *NOINFO, *WARN, *NOWARN,
-*DEBUG, *NODEBUG, these messages can be managed. Additionally, *NOCOLOR, will turn off color output.<br>
+*DEBUG, *NODEBUG, these messages can be managed. Additionally,
+*NOCOLOR, will turn off color output.<br>
 <br>
 Example of the different logging levels are:<br>
 <ul>
 <li>INFO: Entering FORK sessions, Constant substitution,
 Conditional
 Statement Results, Jumping to labels, Including files, Dynamic Variable
-Assignments, User Defined Prompt assignments</li>
+Assignments, User Defined Prompt assignments</li><li>EXP_INFO: prints "expected" text (lines with &lt; or &lt;&lt;). Also enabled with -V flag on the command line.</li>
 <li>WARN: Instant-Interact feature disabled,
 Wait-for-prompt
 timeouts, Using localhost (r=none), Unable to parse Conditional,
 Dynamic Variable Capture timeouts, Unable to parse math variable
-statement, Unable to parse FORK session name, Unable to parse Conditional Statement</li>
+statement, Unable to parse FORK session name, Unable to parse
+Conditional Statement</li>
 <li>DEBUG: Additional debugging information for: User
 Defined
 Prompt,
@@ -1270,8 +1362,10 @@ desired by using a combination of&nbsp;the command line arguments
 or -vv) and the Logging Directives.<br>
 <br>
 In addition to the three logging levels above, there is another more
-serious level of <span style="color: rgb(204, 0, 0);">ERROR</span>, which can not be suppressed, and will terminate
-expect-lite with a non-zero return code. Examples of <span style="color: rgb(204, 0, 0);">ERROR</span>s are: unable
+serious level of <span style="color: rgb(204, 0, 0);">ERROR</span>,
+which can not be suppressed, and will terminate
+expect-lite with a non-zero return code. Examples of <span style="color: rgb(204, 0, 0);">ERROR</span>s are:
+unable
 to connect or lost connection with remote host, include file not found,
 bad timeout value (non-numeric) or infinite loop detection.<br>
 <br>
@@ -1279,19 +1373,28 @@ It may be tempting to turn off logging once a script is debugged.
 However, if the script is being run in an automated environment (like
 crontab), it is recommended that INFO and WARN be turned on, as the
 additional information will make debugging failures much easier.<br>
-<br><h3><a name="eols"></a>Controlling End of Line Sequence with *EOLS</h3>There
+<br>
+<h3><a name="eols"></a>Controlling End
+of Line Sequence with *EOLS</h3>
+There
 are some remote devices which require carriage return + line feed at
 the end of each line sent. In past versions of expect-lite, only line
-feed was appended to each '&gt;' or '&gt;&gt;' line. This limitation
-made it difficult to automate tasks with this class of remote devices.<br><br>With
+feed was appended to each '&gt;' or '&gt;&gt;' line. This
+limitation
+made it difficult to automate tasks with this class of remote devices.<br>
+<br>
+With
 version 3.7.0, the end of line sequence can be controlled with the
 following expect-lite directives: *EOLS LF &amp; *EOLS CRLF. The
-default is *EOLS LF.<br><br>These directives can be placed anywhere in
+default is *EOLS LF.<br>
+<br>
+These directives can be placed anywhere in
 the script and the setting remains in effect until another *EOLS
 directive is encountered. For example, enabling a script to control a
 linux machine (using *EOLS LF), and later in the script controlling a
-remote power-switch device (using *EOLS CRLF).<br><br>
-<h2>Examples of Expect-lite</h2>
+remote power-switch device (using *EOLS CRLF).<br>
+<br>
+<h2><a name="examples"></a>Examples of Expect-lite</h2>
 Below are some examples to better illustrate what can be accomplished
 with expect-lite:<br>
 <br>
@@ -1514,13 +1617,14 @@ shown in the following:<br>
 More than just
 a pretty prompt</span></h3>
 When the user presses ^\ (control+backslash) during the running of a
-script, expect-lite will drop into interactive mode. In version 3.5.0,
-this is more than the underlying expect's standard interact mode, as
-Integrated Debugger (IDE) commands can be entered as well. This feature
-requires an
-additional tcl package Tclx, which is automatically detected at script
-runtime. If the Tclx package is not available, the instant-interact
-feature will be disabled, and a warning will be printed.<br>
+script, expect-lite will drop into interactive mode aka the integrated
+debugger. In version 4.0.x, the debugger has been greatly enhanced and
+performs three primary functions: 1) connecting the user to the remote
+host or device under test, 2) monitoring special commands prefaced with
+the escape key for stepping, and other functions, and 3) the debugger
+will allow expect-lite script lines to be executed by either typing
+directly or pasting them into the debugger. The TCL package TclX is no
+longer required.<br><br>
 <br>
 Control will be returned to the script when '+++' is typed. In addition
 to returning to the script, the current command in the script will be
@@ -1532,15 +1636,25 @@ the response not being as expected) will be "Passed" and the script
 will continue. This Passing action is line oriented, and other
 '&lt;'
 lines in the script can still fail the script.<br>
-<br><a name="ide"></a>
-There is an experimental (read: could be better tested) IDE to
-access
-to expect-lite commands or directives while the script is paused with
-instant-interact.&nbsp;In this IDE, expect-lite
-script commands can be typed, even assigning variables or displaying them inside the
+<br>
+<a name="ide"></a>&nbsp;In this IDE (debugger), expect-lite
+script commands can be typed, even assigning variables or displaying
+them inside the
 paused script, for example:<br>
 <pre>$MYVAR=today<br><br>*SHOW VARS<br>Var:0 Value:0<br>Var:MYVAR Value:today<br>Var:TEST Value:/proc/cpuinfo<br><br>&gt;&gt;pwd<br>pwd<br>/home/user</pre>
-<br>
+Additionally, expect-lite lines (code fragments) can be copied from
+your favourite editor and pasted directly into the debugger. All
+variables will be automatically dereferenced (assuming they were set in
+the first place). This is very useful for testing Dynamic Variable
+capture lines, which can be tricky to define.<br><br><a name="clumping"></a>When
+lines are pasted into the debugger, or the Step or sKip function are
+used, the debugger clumps lines which begin with '&gt;' and any
+following lines with start with '&lt;' or '+$' This enables expected
+results and dynamic variables to be interpretted correctly. For example:<br><pre># clump 1<br>&gt;ls /etc/<br>&lt;group<br>&lt;passwd<br><br>#clump 2<br>&gt;date "+TIME: %H:%M:%S"<br>+$time=\nTIME: ([0-9:]+)</pre>If
+the above lines are copied and pasted into the debugger, in fact they
+will be executed as 2 clumps. Usually this is of no concern, however
+when stepping/skipping through an expect-lite script, one will notice
+that clumps are executed rather than indivdual lines.<br><br>
 <h3><a name="fork_explained">*FORK: what
 happens
 behind the scenes<br>

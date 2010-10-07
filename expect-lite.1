@@ -3,7 +3,7 @@
 .\" Updated Man Page for expect-lite - version 3.7.0	7/31/2010
 .\" Updated Man Page for expect-lite - version 4.0.x	9/28/2010
 .\"
-.TH EXPECT-LITE "1" "September 2010" "expect-lite " "User Commands"
+.TH EXPECT-LITE "1" "October 2010" "expect-lite " "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -76,6 +76,9 @@ used to indicate comment lines, and have no effect
 ;
 are also used to indicate comment lines, but are printed to stdout (for logging)
 .TP
+;<colour> comment
+add custom colour comment lines, colour may be blue, ltblue, gray, ltgray, cyan, black, pink, purple, red, green, yellow
+.TP
 ;;
 similar to above, but no extra newlines are printed (useful for printing script help)
 .TP
@@ -121,7 +124,7 @@ Include a fail script, which expect-lite runs only if the main script fails
 */prompt/
 Set a user defined prompt (defined in regex)
 .TP
-*TERM
+*TERM or *PASS
 Immediately terminates script, but returns 0 (pass) 
 .TP
 *FAIL
@@ -153,7 +156,10 @@ Controls end of line sequence sent to remote host, either line feed, or carriage
 Logging
 .TP
 *INFO|*NOINFO
-Enable/disable informational messages 
+Enable/disable informational messages
+.TP
+*EXP_INFO|*NOEXP_INFO
+Enable/disable "expected" messages (addtionally use -V flag to enable) 
 .TP
 *WARN|*NOWARN
 Enable/disable warning messages
@@ -171,16 +177,16 @@ Environment Variables
 .PP
 It is no longer necessary to hand edit the expect-lite script itself. All parameters such as connect_method, login name and password are controlled via shell environment variables. This permits individual customization in a multi user environment. It is recommended to save these values in the .bashrc or .cshrc. If set, the following environment variables will be used:
 .TP
-EL_connect_method
+EL_CONNECT_METHOD
 The method expect-lite uses to connect to remote host. Valid options are: none|telnet|ssh|ssh_key Default is none
 .TP
-EL_user
-User name to use for login on remote host
+EL_USER
+User name to use for login on remote host (telnet|ssh)
 .TP
-EL_pass
-Password to use for login on remote host
+EL_PASS
+Password to use for login on remote host (telnet|ssh)
 .TP
-EL_delay_wait_for_host
+EL_DELAY_WAIT_FOR_HOST
 Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture. 100 ms is a good value for a local LAN, 200 ms if running across high speed internet
 .TP
 EL_REMOTE_HOST
@@ -190,7 +196,7 @@ EL_CMD_FILE
 Name of expect-lite script to run
 .TP
 EL_USER_DIR
-Change to this directory upon login
+Change to this directory upon login before executing script
 .TP
 EL_*
 Any other shell environment variables starting with EL_ will become constants
@@ -203,7 +209,7 @@ Debugger (IDE)
 .PP
 The debugger performs three primary functions: 1) connecting the user to the remote host or device under test, 2) monitoring special commands prefaced with the escape key for stepping, and other functions, and 3) the debugger will allow expect-lite script lines to be executed by either typing directly or pasting them into the IDE.
 .PP
-The debugger is invoked at a breakpoint by placing the *INTERACT command in the script, or using by instant-interact, at anytime during the script execution by pressing ctrl+backslash ^\\
+The debugger is invoked at a breakpoint by placing the *INTERACT command in the script, or using by instant-interact at anytime during the script execution by pressing ctrl+backslash ^\\
 .TP
 <esc>s
 Step, execute next step in script
