@@ -669,6 +669,50 @@ x	Add Constants to *SHOW VARS view
 
 x	Fix '<<' and square brackets (requires escaping)
 
+x	Step function - 
+		Create 'clumping' where a > will also invoke following lines with <,<<, +$
+		x set *NOFAIL during IDE
+		Step back? Repeat? NO
+		x Add Skip function
+	x Added "kick the prompt" on expect-lite failed lines
+
+x	Add directive **CONNECT_METHOD
+	Implemented as Env Var EL_CONNECT_METHOD, instead.
+
+x	Update Docs with new IDE info
+	x Add *DIRECTIVES on CLI secion
+	x Add Clumping, or Island shores description
+
+x	Update docs with IDE
+		Create an Env Vars section 
+			EL_CONNECT_METHOD, EL_USER, EL_PASS, EL_DELAY_WAIT_FOR_HOST
+
+x	Update README file - delete '-r none'
+
+x	Explore alternative to rhost=none
+		Can expect run without spawn? No, Interact will not work. 
+
+x 	Fix paste '<' line, why is expect_out buffer empty? Where is the expect_out buffer cleared?
+	Fixed: Used expect to capture rest of paste from Cygwin
+		# OS identification - .dll or "" = Cygwin, .so=Linux, .dylib=MacOS X
+			Removes 1 second delay on Linux
+			set os_id [info sharedlibextension]
+
+x	Dyn Var - triggers new prompt, interferes with sudo. Why new prompt? regression doesn't require it
+		Removed new prompt
+
+x	Update script to state oldest expect version supported (still 5.31?, or 5.43?)
+		Minimum tested is 5.42.1 (Ubuntu 6.06)
+	
+x	Check expect version - Protect against cygwin version
+	# check version
+	if { [exp_version] < "5.42.0" } {
+		puts "older version of expect\n"
+	}
+		
+x	Update expect-lite help screen with additional ENV VARs (the common ones)
+
+
 
 
 22 Aug 2010 - Created 2expect-lite as 4.0.0d1 
@@ -739,48 +783,20 @@ x	Fix '<<' and square brackets (requires escaping)
 	v 4.0.22	
 	Added Env Var support: EL_CONNECT_METHOD, EL_USER, EL_PASS, EL_DELAY_WAIT_FOR_HOST
 	
-
-
-x	Dyn Var - triggers new prompt, interferes with sudo. Why new prompt? regression doesn't require it
-		Removed new prompt
+12 Oct 2010 - 4.0.1 beta
+	Was v 4.0.25 alpha
+	Update expect-lite help screen with additional ENV VARs (the common ones)
+	
 
 z	Fix Paste overwrite (add newlines?) - not going to fix
 
-o	Pasting in failed command does not show command (this is a one_line issue)
+o	Pasting in failed command does not show command (this is a one_line issue) - may not fix
 
-x	Update script to state oldest expect version supported (still 5.31?, or 5.43?)
-		Minimum tested is 5.42.1 (Ubuntu 6.06)
-	
-x	Step function - 
-		Create 'clumping' where a > will also invoke following lines with <,<<, +$
-		x set *NOFAIL during IDE
-		Step back? Repeat? NO
-		x Add Skip function
-	x Added "kick the prompt" on expect-lite failed lines
-
-x	Check expect version - Protect against cygwin version
-	# check version
-	if { [exp_version] < "5.42.0" } {
-		puts "older version of expect\n"
-	}
-		
 z	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
 	
-x	Update README file - delete '-r none'
-
-x	Explore alternative to rhost=none
-		Can expect run without spawn? No, Interact will not work. 
-
-x 	Fix paste '<' line, why is expect_out buffer empty? Where is the expect_out buffer cleared?
-	Fixed: Used expect to capture rest of paste from Cygwin
-		# OS identification - .dll or "" = Cygwin, .so=Linux, .dylib=MacOS X
-			Removes 1 second delay on Linux
-			set os_id [info sharedlibextension]
-
-
 x	Compile cygwin version of expect - v5.45 works!
-		Pack up expect.exe, libtcl8.5.dll, expect5.45.dll put in /usr/bin
+		o	Pack up expect.exe, libtcl8.5.dll, expect5.45.dll put in /usr/bin
 
 o	Write self test scripts for IDE
 		
@@ -789,16 +805,9 @@ o	Update Man Page
 		o export to text
 			nroff -man expect-lite.1 | col -b > MAN
 
-x	Update docs with IDE
-		Create an Env Vars section 
-			EL_CONNECT_METHOD, EL_USER, EL_PASS, EL_DELAY_WAIT_FOR_HOST
+o	Update docs with final version and number
 
-x	Add directive **CONNECT_METHOD
-	Implemented as Env Var EL_CONNECT_METHOD, instead.
-
-x	Update Docs with new IDE info
-	x Add *DIRECTIVES on CLI secion
-	x Add Clumping, or Island shores description
+o	^D in IDE does not close session cleanly, this will be a problem with iTest (on cygwin)
 
 
 ------------ Windows Cygwin Expect --------------------------

@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.24 Alpha"
+set version "4.0.1 beta"
 
 #set starting expect timeout 
 set timeout 10 
@@ -620,6 +620,10 @@ proc usage {} {
 	puts "   EL_REMOTE_HOST"
 	puts "   EL_CMD_FILE"
 	puts "   EL_USER_DIR"
+	puts "   EL_USER                      username for telnet|ssh"
+	puts "   EL_PASS                      password for telnet|ssh"
+	puts "   EL_CONNECT_METHOD            telnet|ssh|ssh_key|none"
+	puts "   EL_DELAY_WAIT_FOR_HOST       default=200"
 	puts "   EL_*"
 	puts " "
 	puts "   Version $version by Craig Miller"
