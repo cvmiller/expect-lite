@@ -787,10 +787,18 @@ x	Update expect-lite help screen with additional ENV VARs (the common ones)
 	Was v 4.0.25 alpha
 	Update expect-lite help screen with additional ENV VARs (the common ones)
 	
+15 Oct 2010 - 4.0.2 beta
+	Cleaned up Pasted lines overwriting eachother
+                fixed by overwriting line with 70 spaces (to "clear" line)
+       Add $arg0 to <esc>v *SHOW VARs command
 
-z	Fix Paste overwrite (add newlines?) - not going to fix
+
+
+
+x	Fix Paste overwrite (add newlines?) - not going to fix
 
 o	Pasting in failed command does not show command (this is a one_line issue) - may not fix
+		Try overwriting line with 80 spaces (to "clear" line)
 
 z	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
@@ -799,6 +807,8 @@ x	Compile cygwin version of expect - v5.45 works!
 		o	Pack up expect.exe, libtcl8.5.dll, expect5.45.dll put in /usr/bin
 
 o	Write self test scripts for IDE
+
+o	Add New directives to regression scripts *EOLS, *NOFAIL
 		
 o	Update Man Page
 		x Add *NOFAIL
@@ -808,6 +818,8 @@ o	Update Man Page
 o	Update docs with final version and number
 
 o	^D in IDE does not close session cleanly, this will be a problem with iTest (on cygwin)
+
+x	Add $arg0 to <esc>v *SHOW VARs command
 
 
 ------------ Windows Cygwin Expect --------------------------

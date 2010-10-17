@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.1 beta"
+set version "4.0.2 beta"
 
 #set starting expect timeout 
 set timeout 10 
@@ -76,7 +76,7 @@ set remote_shell ""
 
 # Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture
 # 100 ms is a good value for a local LAN, 200 ms if running across high speed internet
-set delay_wait_for_host 200
+set delay_wait_for_host 100
 
 # connects to login host, and logs in as $USER
 #
@@ -508,6 +508,8 @@ proc instant_interact_sig {} {
 							# end while
 					}
 					#end if os_id
+					# clear line of pasted text
+					send_user "                                                                      \r"
 					if {$DEBUG} {
 						send_user "\nDEBUG: Evaluating:\n"
 						foreach d_item $cli_list {
@@ -1266,7 +1268,7 @@ proc parray { name } {
 #	Called by *SHOW VARS & IDE <esc>v
 #
 proc show_vars { } {
-	global user_namespace cli_namespace
+	global user_namespace cli_namespace arg0
 	
 	set blank "                    "
 	set blank_len [string length $blank]
@@ -1274,6 +1276,11 @@ proc show_vars { } {
 	set var_list_sorted [lsort $var_list]
 
 	puts "DEBUG Info: Printing all expect-lite variables"
+	# print internal vars
+	set ii_len [string length $arg0]
+	set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
+	puts "Var:arg0 $ii_blank Value:$cli_namespace($arg0)"
+	
 	foreach ii $var_list_sorted {
 		# create aligned columns
 		set ii_len [string length $ii]

@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# make this auto-runnable! 
+# Little bootstrap bash script to run kick start expect-lite script
+# Convert --parms to expect-lite param=value format
+PARAMS=`echo $* | /bin/sed -r 's;--([a-z_]+) ([0-9a-zA-Z]+);\1=\2;g'`
+echo $PARAMS
+expect-lite r=localhost c=$0 el=expect-lite test_host=none $PARAMS d=$PWD
+exit $?
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+# Self Self Test of Expect-lite IDE commands
+#	Runs another expect-lite self test, and drives IDE
+#	
+#	Requires ssh connection, timing issues with remote_host=none
+#
+#	Requires expect-lite version 4.0.x
+#
+
+# default expect-lite app
+
+# force use of Localhost (rather than none)
+$LOCALHOST=localhost
+
+@10
+>$el r=$LOCALHOST c=self_test_ide.txt el=$el 
+<<expect-lite directive: *INTERACT
+<line 4
+
+# script is in IDE
+; === show help
+>`h
+<IDE: Help
+<<esc>h      this Help
+
+; === check last 5 lines
+>`-5
+<<Printing last 5 line(s) of script:
+<<; ==== Testing the IDE =====
+<<>echo line "1"
+<<>echo line "2"
+<<>echo line "3"
+<<>echo line "4"
+
+; === check next 5 lines
+>`5
+<<Printing next 5 line(s) of script:
+<<>echo "do not run this line"
+<<>echo line "6"
+<<>echo line "7"
+<<>echo line "8"
+<<>echo line "9"
+
+; === Skip next line
+>`k
+<Skipping:>echo "do not run this line"
+
+; === Show current line
+
+>`0
+ Printing current line of script:
+>echo "do not run this line"
+
+; === show vars
+>`v
+<DEBUG Info: Printing all expect-lite variables
+<Var:arg0
+
+; === Continue
+>`c
+<line 9
+<##Overall Result: PASS
+
+>echo $?
+<\n0
+; *********** Expect-lite IDE Test Pass! ************
+>
