@@ -712,6 +712,12 @@ x	Check expect version - Protect against cygwin version
 		
 x	Update expect-lite help screen with additional ENV VARs (the common ones)
 
+x	Fix Paste overwrite (add newlines?) - not going to fix
+		Try overwriting line with 80 spaces (to "clear" line)
+
+x	Add $arg0 to <esc>v *SHOW VARs command
+
+x	Write self test scripts for IDE
 
 
 
@@ -792,21 +798,21 @@ x	Update expect-lite help screen with additional ENV VARs (the common ones)
                 fixed by overwriting line with 70 spaces (to "clear" line)
        Add $arg0 to <esc>v *SHOW VARs command
 
+17 Oct 2010 - still 4.0.2 beta
+	Added self test scripts for IDE
+	
+17 Oct 2010 - still 4.0.3 beta
+	Added not-expect '-<' to step/skip clumping
+	
 
 
-
-x	Fix Paste overwrite (add newlines?) - not going to fix
-
-o	Pasting in failed command does not show command (this is a one_line issue) - may not fix
-		Try overwriting line with 80 spaces (to "clear" line)
+z	Pasting in failed command does not show command (this is a one_line issue) - may not fix
 
 z	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
 	
 x	Compile cygwin version of expect - v5.45 works!
 		o	Pack up expect.exe, libtcl8.5.dll, expect5.45.dll put in /usr/bin
-
-o	Write self test scripts for IDE
 
 o	Add New directives to regression scripts *EOLS, *NOFAIL
 		
@@ -819,7 +825,11 @@ o	Update docs with final version and number
 
 o	^D in IDE does not close session cleanly, this will be a problem with iTest (on cygwin)
 
-x	Add $arg0 to <esc>v *SHOW VARs command
+o	Add Link to IDE section in expect-lite_docs 
+
+o	IDE Step/Skip does not work with embedded expect - one_line problem
+		Need to put clumped lines into a global
+		
 
 
 ------------ Windows Cygwin Expect --------------------------

@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.2 beta"
+set version "4.0.3 beta"
 
 #set starting expect timeout 
 set timeout 10 
@@ -411,8 +411,8 @@ proc instant_interact_sig {} {
 								# read line from buffer
 								set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
 								#puts "===L==>$line"
-								# is line part of clump
-								if {[regexp {^\<|^\+\$} $line] == 0} {
+								# is line part of clump: expect, dynvar, not-expect
+								if {[regexp {^\<|^\+\$|^\-\<} $line] == 0} {
 									#No more clump, roll back pointer
 									incr _el_buf($_el_buf(stack),ptr) -1
 									set line -1
