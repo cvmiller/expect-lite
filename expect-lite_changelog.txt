@@ -811,6 +811,9 @@ x	Native method to make scripts executable - instead of masquerade
 	Native method to make scripts executable 
 		Only works for ubuntu 9.04 and newer (bash 4.x and newer)
 	Masquerade still required for older OSs
+
+19 Oct 2010 - 4.05 Beta
+	Fixed but in native executable method - script_name const=val
 	
 
 z	Pasting in failed command does not show command (this is a one_line issue) - may not fix

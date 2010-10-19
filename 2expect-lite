@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.4 beta"
+set version "4.0.5 beta"
 
 #set starting expect timeout 
 set timeout 10 
@@ -686,12 +686,16 @@ proc read_args {} {
 	if { $argc >= 1 ||  $cmd_file!="" }  {
 		# Walk thru additional args (should be cli constants)
 		for { set x  0 } { $x < $argc} { incr x } {
-			set optargval "--"
 			set optarg [ lindex $argv $x ]
 			catch {set optargval [ lindex $argv [expr $x + 1]]}
+			if { $optargval == "" } { 
+				# no optargval, set to a sane value
+				set optargval "--"
+			}
 			#puts "=====>$x|$optarg|$optargval|"
 			# Make script executable: check if script name, no other argument or directive
-			if {  [regexp {^[-*]}  $optarg ] == 0 && [regexp {^[-*]} $optargval] == 1 } {
+			# script name cannot have '=', which would be interpretted as a constant
+			if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
 				set cmd_file $optarg
 				set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] 
 			}
