@@ -1,3 +1,6 @@
+#!/home/cvmiller/bin/expect-lite
+# make this puppy run
+
 @3
 >echo "hello ken"
 <ken
@@ -11,18 +14,20 @@ $EL_jtag=
 +$ip_addr=inet addr:([0-9.]+)
 
 >
-; === Sudo stuff
-# set user defined prompt line
-*/.+: $/
 
-#*NOINFO
->sudo cat /etc/resolv.conf
-+$challenge=[Pp](assword) for
-?if $challenge == assword ? >>$EL_rootpass
 
->
-*INTERACT
->
-
-#!expect -re "assword" { send $EL_rootpass } timeout {puts "=====>Lost it"}
-#!stty -echo; send  $EL_rootpass ; stty echo
+# ; === Sudo stuff
+# # set user defined prompt line
+# */.+: $/
+# 
+# #*NOINFO
+# >sudo cat /etc/resolv.conf
+# +$challenge=[Pp](assword) for
+# ?if $challenge == assword ? >>$EL_rootpass
+# 
+# >
+# *INTERACT
+# >
+# 
+# #!expect -re "assword" { send $EL_rootpass } timeout {puts "=====>Lost it"}
+# #!stty -echo; send  $EL_rootpass ; stty echo

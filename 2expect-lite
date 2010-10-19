@@ -1,4 +1,4 @@
-#!/usr/bin/expect 
+#!/usr/bin/expect
 
 ##################################################################################
 #
@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.3 beta"
+set version "4.0.4 beta"
 
 #set starting expect timeout 
 set timeout 10 
@@ -677,12 +677,24 @@ proc read_args {} {
 	if { $pass=="" } { catch { set pass $env(EL_PASS)} }
 	catch { set connect_method $env(EL_CONNECT_METHOD)} 
 	catch { set delay_wait_for_host $env(EL_DELAY_WAIT_FOR_HOST)} 
-
+	
+	# ensure arg list is separated by spaces
+	set argvstr [ join $argv ]
+	set argv [split $argvstr ]
+	set argc [ llength $argv ]
+	
 	if { $argc >= 1 ||  $cmd_file!="" }  {
 		# Walk thru additional args (should be cli constants)
 		for { set x  0 } { $x < $argc} { incr x } {
+			set optargval "--"
 			set optarg [ lindex $argv $x ]
 			catch {set optargval [ lindex $argv [expr $x + 1]]}
+			#puts "=====>$x|$optarg|$optargval|"
+			# Make script executable: check if script name, no other argument or directive
+			if {  [regexp {^[-*]}  $optarg ] == 0 && [regexp {^[-*]} $optargval] == 1 } {
+				set cmd_file $optarg
+				set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] 
+			}
 			# look for help & debug options which overide script options
 			# added -r and -c for remote_host & cmd_file respectively
 			if { [catch { switch -glob -- $optarg {
@@ -694,11 +706,11 @@ proc read_args {} {
 				-vvv		{set WARN 0; set DEBUG 10}
 				-V		-
 				--verify	{set EXP_INFO 10; set INFO 10}
-				-r		{ set remote_host $optargval }
-				-c		{ set cmd_file $optargval; set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] }
-				-d		{ set user_dir $optargval }
-				-u		{ set user $optargval }
-				-p		{ set pass $optargval }
+				-r		{ set remote_host $optargval; incr x  }
+				-c		{ set cmd_file $optargval; set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] ; incr x }
+				-d		{ set user_dir $optargval; incr x  }
+				-u		{ set user $optargval; incr x  }
+				-p		{ set pass $optargval; incr x }
 			} } \
 			error ] } {
 				puts "Warning: Bad input option: $error"
@@ -738,7 +750,7 @@ proc read_args {} {
 		}
 
 
-		#puts "->$remote_host $cmd_file $user_dir"
+		#puts "->$remote_host|$cmd_file|$user_dir"
 
 		# check that require paremeters are present
 		if { $remote_host=="" } { 

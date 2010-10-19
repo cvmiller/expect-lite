@@ -719,6 +719,9 @@ x	Add $arg0 to <esc>v *SHOW VARs command
 
 x	Write self test scripts for IDE
 
+x	Native method to make scripts executable - instead of masquerade
+	Only works for ubuntu 9.04 and newer (bash 4.x and newer)
+
 
 
 22 Aug 2010 - Created 2expect-lite as 4.0.0d1 
@@ -804,7 +807,11 @@ x	Write self test scripts for IDE
 17 Oct 2010 - still 4.0.3 beta
 	Added not-expect '-<' to step/skip clumping
 	
-
+18 Oct 2010 - 4.04 beta
+	Native method to make scripts executable 
+		Only works for ubuntu 9.04 and newer (bash 4.x and newer)
+	Masquerade still required for older OSs
+	
 
 z	Pasting in failed command does not show command (this is a one_line issue) - may not fix
 
@@ -830,7 +837,9 @@ o	Add Link to IDE section in expect-lite_docs
 o	IDE Step/Skip does not work with embedded expect - one_line problem
 		Need to put clumped lines into a global
 		
-
+o	User script help
+	-h or --help jumps to %HELP section in script?
+	
 
 ------------ Windows Cygwin Expect --------------------------
 Known Issues
