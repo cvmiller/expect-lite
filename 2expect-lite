@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.5 beta"
+set version "4.0.6 beta"
 
 #set starting expect timeout 
 set timeout 10 
@@ -134,6 +134,9 @@ set _el(0) 0
 
 # clear NOFAIL flag 1=test should have failed
 set _el(test_failed) 0 
+
+# clear native expect lines list
+set _el(_el_lines) {}
 
 # debugging aid: turn on to display match string and expect buffer
 set DEBUG 0
@@ -395,11 +398,24 @@ proc instant_interact_sig {} {
 				# read line from buffer
 				set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
 				#puts "==BUF====>$_el_buf($_el_buf(stack),ptr)||$line\n"
+				
 				switch -regexp -- $line { 
 					{^\*INT}	{ 
 							# skip interact lines
 							cputs "$line"  $el_info_color
 							protected_send "$_el_eols"
+						}
+					^\!	{	# Send prompt after native expect lines
+							if { $param == "k" } {
+								cputs "Skipping:$line"  $el_info_color
+								protected_send "$_el_eols"
+							} else {
+								cputs "$line" $el_info_color
+								_el_script_exec "\|$line"  $_el_buf(stack)
+								# kick the prompt
+								protected_send "$_el_eols"
+								
+							}
 						}
 					^\>	{	# send line out and clump any following lines with < or +$
 							# clear clump list
@@ -1781,7 +1797,6 @@ proc _el_script_exec {cmd_file {buf_stack ""}} {
 	set _el_fail_script ""
 	
 	# clear expect lines list
-	set _el_lines {}
 	set _el_cont_lines ""
 	
 	# set default session (aka fork)
@@ -1928,7 +1943,7 @@ proc _el_script_exec {cmd_file {buf_stack ""}} {
 		#Allow embedded Expect access to only the following internal vars
 		#global cli_namespace user_namespace timeout remote_host user_dir 
 		global errorInfo 
-		upvar _el_lines __el_lines _el_cont_lines __el_cont_lines 
+		upvar _el(_el_lines) __el_lines _el_cont_lines __el_cont_lines 
 
 		#puts "=>[llength _el_lines]:$_el_lines:"
 		if {  $__el_lines != {} } {
@@ -2544,9 +2559,9 @@ proc _el_script_exec {cmd_file {buf_stack ""}} {
 			
 					# don't add Expect comment lines (hint they start with '!#'
 					if { [regexp -line {^![ \t]*#} $_el(line) ] == 0  } {
-						# add Expect Lines to _el_lines list
-						lappend _el_lines [_el_strip_char $_el(line) $_exec] 
-						#puts "+>[llength _el_lines]:$_el_lines:"
+						# add Expect Lines to _el(_el_lines) list
+						lappend _el(_el_lines) [_el_strip_char $_el(line) $_exec] 
+						#puts "+>[llength $_el(_el_lines)]:$_el(_el_lines):"
 
 					}
 				}

@@ -722,6 +722,9 @@ x	Write self test scripts for IDE
 x	Native method to make scripts executable - instead of masquerade
 	Only works for ubuntu 9.04 and newer (bash 4.x and newer)
 
+x	IDE Step/Skip does not work with embedded expect - one_line problem
+		Need to put clumped lines into a global
+
 
 
 22 Aug 2010 - Created 2expect-lite as 4.0.0d1 
@@ -814,7 +817,11 @@ x	Native method to make scripts executable - instead of masquerade
 
 19 Oct 2010 - 4.05 Beta
 	Fixed but in native executable method - script_name const=val
+
+20 Oct 2010 - 4.0.6 beta
+	Fixed IDE Step/Skip with embedded expect - added global clump 
 	
+
 
 z	Pasting in failed command does not show command (this is a one_line issue) - may not fix
 
@@ -837,8 +844,6 @@ o	^D in IDE does not close session cleanly, this will be a problem with iTest (o
 
 o	Add Link to IDE section in expect-lite_docs 
 
-o	IDE Step/Skip does not work with embedded expect - one_line problem
-		Need to put clumped lines into a global
 		
 o	User script help
 	-h or --help jumps to %HELP section in script?
