@@ -106,12 +106,13 @@ $age=35
 ?$age>=55?>echo "Freedom at $age"::>echo "Keep on working"
 <Freedom at $age
 
-; === Test conditional jump with label with spaces
+; === Test conditional jump with label with spaces, and space at end of label
 ?$age==55?%move along, nothing to see
 >echo " Skipper"
 >echo "2"
 >echo "3"
-%move along, nothing to see
+*FAIL
+%move along, nothing to see	
 
 
 ; === Test conditional jump with indentation
@@ -213,7 +214,8 @@ $loop2=10
 ; ======== Decrementing ZZ Loop with embedded expect ============
 
 # do a loop!
-%REPEAT_LOOP
+# hint label has tab at end, ensure white space is trimmed at end of labels
+%REPEAT_LOOP	
 
 	! incr user_namespace(age) -1
 	>
@@ -223,6 +225,11 @@ $loop2=10
 	-<ZZ-1
 
 ?if $age > 0 ?%REPEAT_LOOP
+
+# check that above loop worked
+?if $age > 0? *FAIL
+>
+
 
 >echo "Pau"
 >

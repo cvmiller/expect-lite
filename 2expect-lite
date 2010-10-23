@@ -1,4 +1,4 @@
-#!/usr/bin/expect
+#!/usr/bin/env expect
 
 ##################################################################################
 #
@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.6 beta"
+set version "4.0.7 beta"
 
 #set starting expect timeout 
 set timeout 10 
@@ -84,7 +84,8 @@ set delay_wait_for_host 100
 #	
 #set connect_method "telnet" 
 #set connect_method "ssh" 
-set connect_method "ssh_key" 
+#set connect_method "ssh_key" 
+set connect_method "none" 
 
 # Path to telnet (helps in cygwin environments)
 set _el_telnet "/usr/bin/telnet"
@@ -635,14 +636,14 @@ proc usage {} {
 	puts "   eg. ./expect-lite -vv r=host8  c=pm_alt.elt "
 	puts " "
 	puts "If set, the following environment variables will be used: "
-	puts "   EL_REMOTE_HOST"
-	puts "   EL_CMD_FILE"
-	puts "   EL_USER_DIR"
-	puts "   EL_USER                      username for telnet|ssh"
-	puts "   EL_PASS                      password for telnet|ssh"
+	puts "   EL_REMOTE_HOST               remote host to connect, default=none"
+	puts "   EL_CMD_FILE                  name of expect-lite script"
+	puts "   EL_USER_DIR                  change to this dir upon login"
 	puts "   EL_CONNECT_METHOD            telnet|ssh|ssh_key|none"
-	puts "   EL_DELAY_WAIT_FOR_HOST       default=200"
-	puts "   EL_*"
+	puts "   EL_CONNECT_USER              username for telnet|ssh"
+	puts "   EL_CONNECT_PASS              password for telnet|ssh"
+	puts "   EL_DELAY_WAIT_FOR_HOST       default=100"
+	puts "   EL_*                         user defined constants"
 	puts " "
 	puts "   Version $version by Craig Miller"
 	exit 0
@@ -673,8 +674,8 @@ proc parse_cmd_file_nopath { cmd_file } {
 #		EL_CMD_FILE
 #		EL_USER_DIR
 #		EL_CONNECT_METHOD
-#		EL_USER
-#		EL_PASS
+#		EL_CONNECT_USER
+#		EL_CONNECT_PASS
 #		EL_DELAY_WAIT_FOR_HOST
 #
 proc read_args {} {
@@ -685,14 +686,19 @@ proc read_args {} {
 	set cli_namespace($timeout_multiplier) 1
 	
 	# If needed read parameters from Env Vars
-	catch { set remote_host $env(EL_REMOTE_HOST)} 
+	catch { set remote_host $env(EL_REMOTE_HOST)}
+	if { $remote_host == "" } { set remote_host "none" }
+	
 	if { $cmd_file=="" } { catch { set cmd_file $env(EL_CMD_FILE)} }
 	if { $user_dir=="" } { catch { set user_dir $env(EL_USER_DIR)} }
 
-	if { $user=="" } { catch { set user $env(EL_USER)} }
-	if { $pass=="" } { catch { set pass $env(EL_PASS)} }
-	catch { set connect_method $env(EL_CONNECT_METHOD)} 
-	catch { set delay_wait_for_host $env(EL_DELAY_WAIT_FOR_HOST)} 
+	if { $user=="" } { catch { set user $env(EL_CONNECT_USER)} }
+	if { $pass=="" } { catch { set pass $env(EL_CONNECT_PASS)} }
+	if { [info exists env(EL_CONNECT_METHOD)] } { catch { set connect_method $env(EL_CONNECT_METHOD)} }
+	if { [regexp {none|telnet|ssh|ssh_key} $connect_method] == 0 } { set connect_method "none" }
+
+	if { [info exists env(EL_DELAY_WAIT_FOR_HOST)] } { catch { set delay_wait_for_host $env(EL_DELAY_WAIT_FOR_HOST)} }
+	if { $delay_wait_for_host == "" } { set delay_wait_for_host "100" }
 	
 	# ensure arg list is separated by spaces
 	set argvstr [ join $argv ]
@@ -783,7 +789,7 @@ proc read_args {} {
 			set connect_method "none"
 			}
 		if { $cmd_file=="" } { 
-			puts "Error: Missing cmd_file" 
+			cputs "Error: Missing cmd_file"  $el_err_color
 			usage
 			}
 	}
@@ -1527,6 +1533,12 @@ proc _el_buffer {cmd_file} {
 	while { -1 != [gets $infile buf_line ]} {
 		# remove leading white space on line (permitting indentation
 		regsub {^[ \t]+} $buf_line {} buf_line
+
+		#trim white space at end of labels
+		if { [ regexp {^%} $buf_line ] } {
+			# remove leading white space on line (permitting indentation
+			regsub {[ \t]+$} $buf_line {} buf_line
+		}
 		
 		# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
 		if { [regexp {^[$-/:-@!~]} $buf_line ] } {

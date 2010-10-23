@@ -725,6 +725,8 @@ x	Native method to make scripts executable - instead of masquerade
 x	IDE Step/Skip does not work with embedded expect - one_line problem
 		Need to put clumped lines into a global
 
+x	Labels are not trimmed of trailing space/tabs
+	
 
 
 22 Aug 2010 - Created 2expect-lite as 4.0.0d1 
@@ -821,6 +823,10 @@ x	IDE Step/Skip does not work with embedded expect - one_line problem
 20 Oct 2010 - 4.0.6 beta
 	Fixed IDE Step/Skip with embedded expect - added global clump 
 	
+23 Oct 2010 - 4.0.7 beta
+	Fixed problem of Labels are not trimmed of trailing space/tabs, updated self test
+	Created bashrc as example for setting env vars to customize expect-lite
+		Hardended code that reads env vars	
 
 
 z	Pasting in failed command does not show command (this is a one_line issue) - may not fix
@@ -847,7 +853,25 @@ o	Add Link to IDE section in expect-lite_docs
 		
 o	User script help
 	-h or --help jumps to %HELP section in script?
-	
+
+o	Add current help method to documentation
+$sw_build=0000
+; === Check passed parameters
+>
+*NOINFO
+?if $sw_build != 0000 ? %CONTINUE
+	;; ##############################
+	;;	$arg0 Requires parameters: sw_build, IP
+	;;	e.g. $arg0 sw_build=0015 IP=10.3.5.4
+	;; ##############################
+	# quit the script without continuing
+	*FAIL
+%CONTINUE
+*INFO
+
+z	change env vars to something like EL_SYS_PASS
+
+
 
 ------------ Windows Cygwin Expect --------------------------
 Known Issues
