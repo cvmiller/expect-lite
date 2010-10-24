@@ -1,0 +1,140 @@
+
+All changes by Craig Miller cvmiller at gmail dot com
+
+Released 26 Oct 2010 v4.0.1
+	Reworked buffers completely (now global array)
+	Added Integrated Debugger with breakpoint, step/skip, copy/paste
+		IDE: Help
+		  Key          Action
+		  ----        ------
+		  <esc>s      Step
+		  <esc>k      sKip next step
+		  <esc>c      Continue
+		  <esc>v      show Vars
+		  <esc>0to9   Show N next lines of script
+		  <esc>-1to-9 Show N previous lines of script
+		  ctrl+D      Quit & Exit expect-lite
+		  <esc>h      this Help
+	Added directive *INFINITE_LOOP N
+	Added any *DIRECTIVE on the CLI (not **SHELL)
+	Added *NOFAIL directive - script runs to completion
+	Added RED old expect version warning, now requires minimum 5.42
+		Compiled cygwin version of expect 5.45, available on website
+	Added Env Var support: EL_CONNECT_METHOD, EL_CONNECT_USER, EL_CONNECT_ PASS, EL_DELAY_WAIT_FOR_HOST
+	Add $arg0 to <esc>v *SHOW VARs command
+	Added self test scripts for IDE
+	Native method to make scripts executable 
+		#!/usr/bin/env expect-lite
+	Created bashrc as example for setting env vars to customize expect-lite
+	Updated Documentation, including cygwin page
+	
+
+Released 16 Sept 2010 v3.7.1
+	release of 3.7.1d7
+	updated Man page
+
+Updated 10 Sept 2010 v3.7.1d7
+	Fixed ^\ during a pipe to 'tee' - would give call trace
+		Now expect-lite just exits with error
+	Changed -w to -V to show *EXP_INFO
+
+Updated 26 August 2010 v3.7.1d4
+	Fixed errant color issues (when TERM=tty)
+	Added *EXP_INFO, *NOEXP_INFO - shows expected lines in stdout
+		Added CLI argument -w to turn on *EXP_INFO
+	Added custom color to comment lines, if first word is recognized color
+		e.g. ;red This comment is red
+	Added *PASS - synonym for *TERM
+	
+Released 2 August 2010 v3.7.0
+	Release of 3.7.0d5 as 3.7.0
+
+Updated 30 July 2010 v3.7.0d5
+	Added *NOCOLOR directive
+	Added *EOLS LF|CRLF directive
+		Sends \n or \r\n
+		Made fork context to hold eols per session
+	Cleaned up *INTERACT - passes *FORK down with other commands
+	
+Updated 28 July 2010 v3.6.4d2
+	Added path for telnet - fixes cygwin/windows wrong telnet issue
+	Added ANSI color to INFO,WARN,ERR
+		Can assign color=none to all
+		Added TERM detection for xterm, ansi, vt100, vt220
+	
+Released 19 July 2010 v3.6.3
+	Added support for -r <host> -c <script> -d <dir> to be more linux like
+	Updated help to reflect new parameters
+	Added default connect mode "none"
+	Changed default timeout to 10 seconds
+	Added man page
+	
+Released 13 July 2010 v3.6.2
+	Includes example script for 2010 OLS
+	
+Updated 12 July 2010 v3.6.2d7 becomes release 3.6.2
+	Added support for ENV Vars to automatically become constants
+	
+Updated 02 July 2010 v3.6.2.d4
+	Fixed bug in closing cygwin bash session when using r=ssh_host
+		Problem only showed in iTest
+
+Updated 23 June 2010 v3.6.2.d3
+	Added Debug print out for NOT expect feature
+
+Updated 18 June 2010 v3.6.2.d2
+	Fixed bug in closing bash sessions when using r=none
+		problem: cygwin bash would not close at end of script	
+		
+Released 14 June 2010 version 3.6.1
+	Document release only - New Website
+	Released setup_ssh_keys.sh
+
+Released 18 January 2010 version 3.6.0
+	No changes, just published 3.5.2b2
+	expect-lite turns 4!
+
+Updated 28 December 2009 version 3.5.2b2 (3.6.0.RC)
+	Added '<<' for expect with NO regex
+		Still allows wildcarding, e.g. <<this*that
+	Added self_test_basics.txt for regression of feature
+	Added DEBUG statement inside Embedded Expect to make it more visable
+	
+Updated 29 Sept 2009 version 3.5.2b1
+	Made sending Control Charactors more consistant
+		Now use >>^<char> or  >^<char>
+
+Released 21 May 2009 version 3.5.1
+	No changes, just published 3.5.1.d1
+	
+Updated 27 Jan 2009 v3.5.1.d1
+	Fixed bug in labels, trailing spaces would not be trimmed
+	Worded IF INFO statement, now is eval:TRUE|FALSE
+	
+Released 19 Jan 2009 version 3.5.0
+	o	User Defined Prompt & Dynamic Variables - May need to fix
+		Fixed - but UDF's are harder to define than thought
+	o	cli -v -vv overide of script logging directives 
+	o	Added directives: *FAIL, *TERM (no fail) 
+		*INTERACT		a shell which provides interaction - done
+		add directives *NOWARN *WARN *NODEBUG *DEBUG - Done
+	o	add *SHOW VARS (what else can be "shown") - done d14
+			*SHOW LAST - shows current line in script
+	o	*FORK <name>
+		Permits access to multiple spawn_ids (spawn to a shell)
+			Includes additional debugging info with --v - done
+	o	Add better prompt initialization (for other shells, like tcsh with bold in prompt)
+			Set $prompt or $PS1 to sane values - done
+			**SHELL=<shell> directive - sets shell	
+				Allow to blank			
+			Should this be a configure vs runtime directive? configure only
+			Not supported in include scripts
+	o	Differenciate between WARN and INFO
+			If, Dyn-Var should be INFOs 
+			Test FAIL/PASS should be INFO
+
+--------------------
+
+Previous changes in git repository - expect-lite_changelog.txt (in chronilogical order)
+
+
