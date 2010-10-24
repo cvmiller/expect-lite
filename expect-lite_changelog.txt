@@ -829,7 +829,7 @@ x	Labels are not trimmed of trailing space/tabs
 		Hardended code that reads env vars	
 
 
-o	Update changelog
+x	Update changelog
 
 z	Pasting in failed command does not show command (this is a one_line issue) - may not fix
 
@@ -841,7 +841,7 @@ x	Compile cygwin version of expect - v5.45 works!
 
 o	Add New directives to regression scripts *EOLS, *NOFAIL
 		
-o	Update Man Page
+x	Update Man Page
 		x Add *NOFAIL
 		o export to text
 			nroff -man expect-lite.1 | col -b > MAN
