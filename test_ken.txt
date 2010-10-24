@@ -1,4 +1,4 @@
-#!/home/cvmiller/bin/expect-lite
+#!/usr/bin/env expect-lite
 # make this puppy run
 
 @3

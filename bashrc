@@ -37,4 +37,4 @@ export EL_CONNECT_METHOD=none
 #export EL_DELAY_WAIT_FOR_HOST=
 
 # User defined constants
-#EL_*                         
+#export EL_*                         

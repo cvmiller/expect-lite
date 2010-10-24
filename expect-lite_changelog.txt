@@ -829,13 +829,15 @@ x	Labels are not trimmed of trailing space/tabs
 		Hardended code that reads env vars	
 
 
+o	Update changelog
+
 z	Pasting in failed command does not show command (this is a one_line issue) - may not fix
 
 z	IDE Cooked mode '-reset' to help with backspace problem
 		Probably won't be fixed in 4.0.x
 	
 x	Compile cygwin version of expect - v5.45 works!
-		o	Pack up expect.exe, libtcl8.5.dll, expect5.45.dll put in /usr/bin
+		x	Pack up expect.exe, libtcl8.5.dll, expect5.45.dll put in /usr/bin
 
 o	Add New directives to regression scripts *EOLS, *NOFAIL
 		
@@ -844,17 +846,20 @@ o	Update Man Page
 		o export to text
 			nroff -man expect-lite.1 | col -b > MAN
 
-o	Update docs with final version and number
+x	Update docs with final version and number - 4.0.1
 
-o	^D in IDE does not close session cleanly, this will be a problem with iTest (on cygwin)
+x	Put *NOFAIL in tips doc
 
-o	Add Link to IDE section in expect-lite_docs 
+z	^D in IDE does not close session cleanly, this will be a problem with iTest (on cygwin)
 
+x	Add Link to IDE section in expect-lite_docs 
+
+x	Add Env Var customization in Install Docv
 		
-o	User script help
+z	User script help - next release
 	-h or --help jumps to %HELP section in script?
 
-o	Add current help method to documentation
+x	Add current help method to documentation
 $sw_build=0000
 ; === Check passed parameters
 >
@@ -869,7 +874,7 @@ $sw_build=0000
 %CONTINUE
 *INFO
 
-z	change env vars to something like EL_SYS_PASS
+x	change env vars to something like EL_SYS_PASS
 
 
 

@@ -1,9 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
+
 <meta content="text/html; charset=ISO-8859-1">
 <meta name="AUTHOR" content="Craig Miller">
-<link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Tips</title></head>
-<body>
+<link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Tips</title></head><body>
 <table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
 <tbody class="page">
 <tr>
@@ -18,7 +18,7 @@ of expect-lite scripts
 </h2>
 </div>
 <script type="text/javascript" src="js-side-menu.js"></script>
-<noscript><br/>Please Enable Javascript
+<noscript><br>Please Enable Javascript
 to see Features, Downloads, and Docs </noscript>
 </td>
 <td style="vertical-align: middle; width: 1px;" vertical-align="" top="" 5=""><img src="vbar.gif" style="width: 1px; height: 4400px;">
@@ -40,7 +40,7 @@ documentation</a>.<br>
 Some Tips and Techniques for expect-lite:<br>
 <ul>
 <li><a href="#interact"><span style="font-weight: bold;">Interact</span></a>
-Setting a breakpoint, the easiest debugging aid to use</li><li><a style="font-weight: bold;" href="#ide">IDE</a> Integrated Debugger Environment</li>
+Setting a breakpoint, the easiest debugging aid to use</li><li><a style="font-weight: bold;" href="#ide">IDE</a> Integrated Debugger Environment <span style="background-color: rgb(255, 255, 102);">new in 4.0.1</span>&nbsp;</li>
 
 <li><a style="font-weight: bold;" href="#finding_in">Finding
 In...</a>
@@ -49,8 +49,7 @@ statements are finding <br>
 </li>
 <li><a style="font-weight: bold;" href="#variables_values">Showing
 Variable Values</a> Displaying expect-lite variables &amp;
-values<br>
-</li>
+values</li><li><a href="#nofail"><span style="font-weight: bold;">Running the script to completion</span></a> Good for debugging <span style="background-color: rgb(255, 255, 102);">new in 4.0.1</span> </li>
 <li style="font-weight: bold;"><a href="#define_narrowly">Define
 '&lt;' narrowly</a> <span style="font-weight: normal;">Avoid
 mis-matches by being specific on what is expected</span></li><li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#decreasing_log_chatter"><span style="font-weight: bold;">Decreasing</span></a> log chatter<br></span></li><li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#removing_color"><span style="font-weight: bold;">Removing colour</span></a> from output<br></span></li>
@@ -125,7 +124,15 @@ there is no eth2 interface on this machine the script snippet will
 fail. However, the *NOFAIL directive is automatically enabled inside
 the IDE, there pasting the snippet results in:<br><pre>$ ifconfig<br>eth0      Link encap:Ethernet  HWaddr 00:30:65:98:e5:4a  <br>          inet addr:10.1.1.125  Bcast:10.1.1.255  Mask:255.255.255.0<br>          ...<br> <span style="color: red;">FAILED COMMAND: </span><br style="color: red;"><span style="color: red;">    Expect Failed:eth2</span><br>$<br></pre><br>Instead of the expect-lite exiting, and declaring the script has
 failed, it remains in the IDE (at the *INTERACT, or breakpoint), ready to
-receive another command.<br><br>
+receive another command.<br><br><h2><a name="nofail"></a>Running to Completion</h2>The
+normal operation of expect-lite is to stop with any failure. However,
+this may not always be the desired behaviour. Using the *NOFAIL
+directive, will prevent the expect-lite script from stopping prior to
+completion. The directive *NOFAIL can be placed in the script, or on
+the command line (as well as any other directive).<br><br>expect-lite will still detect failures and report them at the end with the message:<br><pre style="color: red;">##Overall Result: FAILED (*NOFAIL on)</pre>Once
+*NOFAIL has been directed, it remains on for the rest of the script.
+Conceptually it is the opposite of *FAIL, which fails the script
+immediately.<br><br>
 <h2><a name="finding_in"></a>Finding
 In...
 Verbose<br>
@@ -270,11 +277,11 @@ repetitive tasks.<br>
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">2 October 2010<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">26 October 2010<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this
-document for version 4.0.x or later</span><br style="font-style: italic;">
+document for version 4.0.1 or later</span><br style="font-style: italic;">
 </small>
 <br>
 </body></html>

@@ -1,12 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
 
+
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <meta name="AUTHOR" content="Craig Miller">
-<link rel="stylesheet" type="text/css" href="el.css">
-<title>expect-lite Installation and Quick Start Guide</title></head>
-<body>
+<link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Installation and Quick Start Guide</title></head><body>
 
 <table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
 <tbody class="page">
@@ -20,7 +19,7 @@
 Quick Start Guide</h2>
 </div>
 <script type="text/javascript" src="js-side-menu.js"></script>
-<noscript><br/>Please Enable Javascript
+<noscript><br>Please Enable Javascript
 to see Features, Downloads, and Docs </noscript>
 </td>
 <td style="vertical-align: middle; width: 1px;" vertical-align="" top="" 5="">
@@ -31,7 +30,11 @@ to see Features, Downloads, and Docs </noscript>
 <!--- Begin of Right Column Content --->
 
 
-<h2>Download<br></h2>expect-lite can be downloaded from&nbsp;the expect-lite Project Page: <a href="http://sourceforge.net/projects/expect-lite">http://sourceforge.net/projects/expect-lite</a><br>The tar.gz package includes expect-lite, as well as over 25 examples.<br><br><h2>Quick Install</h2>Untar the expect-lite package, and copy the expect-lite file in your path (typically ~/bin/). <br><pre>cp expect-lite ~/bin/</pre>Test by typing at the prompt:<br>
+<h2>Download<br></h2>expect-lite can be downloaded from&nbsp;the expect-lite Project Page: <a href="http://sourceforge.net/projects/expect-lite">http://sourceforge.net/projects/expect-lite</a><br>The tar.gz package includes the latest expect-lite, as well as over 25 examples.<br>
+      <br>
+Or, if you are running a modern version of Ubuntu: apt-get install expect-lite<br><br>
+Or, if you are running a modern version of gentoo: emerge -u expect-lite<br>
+<br><h2>Quick Install</h2>Untar the expect-lite package, and copy the expect-lite file in your path (typically ~/bin/). <br><pre>cp expect-lite ~/bin/</pre>Test by typing at the prompt:<br>
 <pre>expect-lite</pre>
 If you see the help, then it is ready to go, installation is complete!<br>
 <br>
@@ -53,181 +56,89 @@ setting up ssh keys and so forth, and this is the Quick Start section.
 Type the following to run the above script on your localhost:<br>
 <pre>expect-lite -c test.elt -r none</pre>
 There should be output that looks similar to the following:<br>
-<pre>cvmiller@maile:~/Freescale$ <br>cvmiller@maile:~/Freescale$ ping -c 2 localhost<br>PING localhost (127.0.0.1) 56(84) bytes of data.<br>64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.053 ms<br>64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.056 ms<br><br>--- localhost ping statistics ---<br>2 packets transmitted, 2 received, 0% packet loss, time 999ms<br>rtt min/avg/max/mdev = 0.053/0.054/0.056/0.007 ms<br>cvmiller@maile:~/Freescale$ <br>Assigned Var:packet_rx=2<br><br><br>cvmiller@maile:~/Freescale$ echo "Packets received:2"<br>Packets received:2<br><br>##Overall Result: PASS <br></pre>
-Congratulations you have just run your first expect-lite script! To
-find out more details on tuning see <a href="#more_details">More
-Details</a>.<br>
+<pre>cvmiller@maile:~/Freescale$ <br>cvmiller@maile:~/Freescale$ ping -c 2 localhost<br>PING localhost (127.0.0.1) 56(84) bytes of data.<br>64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.053 ms<br>64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.056 ms<br><br>--- localhost ping statistics ---<br>2 packets transmitted, 2 received, 0% packet loss, time 999ms<br>rtt min/avg/max/mdev = 0.053/0.054/0.056/0.007 ms<br>cvmiller@maile:~/Freescale$ <br>Assigned Var:packet_rx=2<br><br><br>cvmiller@maile:~/Freescale$ echo "Packets received:2"<br>Packets received:2<br><br>##Overall Result: PASS <br></pre>Congratulations
+you have just run your first expect-lite script! expect-lite is
+designed to run in a multi-user environment, utilizing shell variables
+to set one's preferences. <br>
 <br>
-<h2>BSD-Style License</h2>
-Copyright (C) Freescale Semiconductor, Inc. 2005-2007<br>
-<br>
-See the&nbsp; <a href="#license_terms">COPYING</a>
-for information on
-usage and redistribution<br>
-of this file, and for a DISCLAIMER OF ALL WARRANTIES.<br><br>
-<h2>More Details<br>
+<h2>Customizing expect-lite<br>
 </h2>
-<a name="more_details"></a>Expect-lite was
-created
-to prevent the
-scriptor, you, from having to write Expect scripts in TCL. However with
-that in mind, there are a few TCL details one should know that will <span style="font-style: italic;">tune</span> expect-lite to
-perform best
-in your environment.<br>
-<br>
-Since expect-lite is written in Expect/TCL, an interpretive language, making
-changes to the global variables controlling the behaviour does not
-require recompilation.<br>
-<br>
-There are several global variables inside expect-lite which will help
-tune it to your environment. Open your favourite editor, and load
-expect-lite. The following sections will cover the tuneable variables:<br>
-<ul>
-<li><a href="#default_timeout">Default
-Timeout</a></li>
-<li>I<a href="#infinite_looop">nfinite loop
-protection</a></li>
-<li><a href="#user_name_password">User name
-and
-password</a> (for
-connect methods)</li>
-<li><a href="#connect_method">connect methods</a>
-(telnet, ssh,
-ssh_key)</li>
-<li><a href="#print_warnings">print warnings</a>&nbsp;</li>
-<li><a href="#remote_shell">remote shell</a></li>
-<li><a href="#delay_wait_for_host">delay
-wait for
-remote host</a></li>
-<li><a href="#wait_for_prompt">prompt
-detection</a></li><li><a href="#comment_color">User comment colour</a></li>
-</ul>
-Note: &nbsp;As the above tunable items are migrated to expect-lite
-directives, this section will be deprecated. <br>
-<h2><a name="default_timeout"></a>Default
-Timeout<br>
-</h2>
-The nature of expect, is that something is sent, and something else is
-expected to return, expect-lite will wait until the timeout value for
-that something to return. If the required string is not returned in the
-defined time, expect-lite will declare the test failed, and return non
-zero.<br>
-<pre>set timeout 10</pre>
-<br>
-The default timeout is used to set a reasonable value for a timeout
-when the user script has not set a timeout. Once the user script has
-set a timeout (eg. @60), the default timeout will no longer be used.<br>
-<h2><a name="infinite_looop"></a>Infinite
-loop
-protection</h2>
-With the addition of looping support in expect-lite (version 3.0.0+),
-infinite loop protection has been implemented to prevent user scripts
-from looping forever.<br>
-<pre>set _el_infinite_loop 5000</pre>
-Expect-lite detects an infinite loop by decrementing this value each
-time the script loops. Once this value is zero, expect-lite will print
-and Error, and fail the test. It is important to know that expect-lite
-does not detect multiple sequencial loops in the user script, and
-therefore the value of _el_infinite_loop should be able to accommodate
-all desired looping in the user script. Typically this will be between
-5000 and 10000 depending on how much looping is performed in the user
-scripts.<br>
-<h2><a name="user_name_password"></a>User
-Name
-and Password</h2>
+<a name="more_details"></a>There are aspects of expect-lite which you
+may want to tune to your environment. As of version 4.0.1,
+customization is controlled through shell environment variables. It is
+recommended that the variables be set in the shell init script, such as
+.bashrc file. A sample bashrc file is supplied in the expect-lite
+package. The contents of which are as follows:<br>
+      <pre># bashrc<br><br># append this sample bashrc to your .bashrc to set customize expect-lite<br><br># remote host to connect, default=none<br># 	expect-lite was designed to automate server farm environments<br>#	However, it can also be run from the local machine or PC by setting<br>#	this value to 'none'. The CLI option -r &lt;rhost&gt; will overide this value<br>#export EL_REMOTE_HOST=localhost<br><br># name of expect-lite script<br>#	Good for testing one script over and over<br>#export EL_CMD_FILE=<br><br># change to this dir upon login<br>#export EL_USER_DIR=<br><br># Login method to remote host<br>#	expect-lite includes a utilty (setup_local_ssh.sh) to automatically setup ssh <br>#	keys for the user to use with the localhost. This is the fastest method <br>#	of script execution, much faster than 'none'.<br>#	Choose one login method: telnet|ssh|ssh_key|none<br>#export EL_CONNECT_METHOD=ssh_key<br>export EL_CONNECT_METHOD=none<br><br># username for telnet|ssh|ssh_key access methods<br># User is also used by ssh_key method as well. If user is blank then the default<br>#	user will be used (the user running the script). However if $user is defined<br>#	then ssh_key will use the following command: ssh $user@$host<br>#export EL_CONNECT_USER=<br><br># password for telnet|ssh access methods<br>#export EL_CONNECT_PASS=<br><br># Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture<br># 100 ms is a good value for a local LAN, 200 ms if running across high speed internet<br>#export EL_DELAY_WAIT_FOR_HOST=<br><br># User defined constants<br>#EL_*                         <br><br></pre>
+      <br>
+      <br>
+      <h2><a name="connect_method"></a>EL_CONNECT_METHOD<br>
+      </h2>
+expect-lite was designed for a server farm environment, and as such can
+automatically connect and log into a remote host. expect-lite supports
+three methods to connect to
+remote hosts. <br>
+      <br>
+
 Expect-lite supports three connection methods:<br>
-<ol>
-<li>telnet</li>
-<li>ssh</li>
-<li>ssh_key</li>
-</ol>
-The user name and password will be used for connection methods 1
-&amp;
-2. Clearly method 3 is more secure since the user name and passwords
-are not placed in expect-lite. However this may not be practical for
-your environment.<br>
-<pre>set user "root"<br>set pass "123456"</pre>
-If the user name is not blank (eg. set user "") access method 3 will
-use that user name rather than the one of the current login when
-exchanging ssh_keys.<br>
-<h2><a name="connect_method"></a>Connect
-Method<br>
-</h2>
-As mentioned above, expect-lite supports three methods to connect to
-remote hosts. The ssh_key method is the most secure, as no passwords
+
+      <ol>
+<li>telnet</li><li>ssh</li><li>ssh_key</li>
+      </ol>
+The ssh_key method is the most secure, as no passwords
 are utilized. However this requires setting up ssh keys prior to using
 this method. <br>
-<pre># connects to login host, and logs in as $USER<br>#<br># Choose one login method here<br># <br>#set connect_method "telnet" <br>#set connect_method "ssh" <br>set connect_method "ssh_key" </pre>
+
+      <pre># Login method to remote host<br>#	expect-lite includes a utilty (setup_local_ssh.sh) to automatically setup ssh <br>#	keys for the user to use with the localhost. This is the fastest method <br>#	of script execution, much faster than 'none'.<br>#	Choose one login method: telnet|ssh|ssh_key|none<br>export EL_CONNECT_METHOD=ssh_key<br><br></pre>
+
 There is a forth method, as shown in the Quick Start, where no remote
 login is performed. This method was designed primarily for the Quick Start
-section, however, it can be used for most scripts (such as in the Cygwin environment). To invoke this method the
+section, however, it can be used for most scripts (including in the Cygwin environment). To invoke this method the
 value of "none" is given for the remote host on the command line.<br>
-<pre>expect-lite remote_host=none cmd_file=test.elt<br></pre>Even when
+
+      <pre>expect-lite -r none -c test.elt<br></pre>
+Even when
 no remote host is required, it is best to log into the localhost, since
 the underlying Expect has problems with synchronization (between send
-and expect strings) when a remote host is not specified. The provided
+and expect strings) when a remote host is 'none'. The provided
 shell script 'setup_local_ssh.sh' (in the Tools directory) will setup
-the localhost with ssh keys. It is only necessary to run it once:<br><pre>./Tools/setup_local_ssh.sh</pre>
-<h2><a name="print_warnings"></a>Print
-Warnings<br>
-</h2><span style="text-decoration: line-through;">
-Expect-lite will always print Errors, and should fail the test
-imediately, should it encounter and error (eg. loss of connection to
-remote host). However additional information has been made available
-under warnings. Examples of what is printed under warnings are:</span><br style="text-decoration: line-through;">
-<ul style="text-decoration: line-through;">
-<li>prompt timeouts</li>
-<li>if statement evaluations</li>
-<li>dynamic variable assignments</li>
-<li>running in localhost mode&nbsp;</li>
-</ul>
-<span style="font-family: monospace;"></span>This
-section has been deprecated. See expect-lite directives *WARN/*NOWARN<br>
-<h2><a name="remote_shell"></a>Remote
-Shell</h2><span style="text-decoration: line-through;">
-Expect-lite has been tested, and designed to get along with bash.
-However others may want to use another shell.</span><br>
+the localhost with ssh keys. It is only necessary to run it once:<br>
+      <pre>./Tools/setup_local_ssh.sh</pre>
 <br>
-This section has been deprecated. See expect-lite directive **SHELL<br>
-<h2><a name="delay_wait_for_host"></a>Delay
-to
-wait for remote host</h2>
+<h2><a name="user_name_password"></a>EL_CONNECT_USER &amp; EL_CONNECT_PASS<br>
+</h2>The connection methods telnet &amp; ssh require user name and
+password. A different user can be used for the ssh_key method as well,
+by setting EL_CONNECT_USER. The ssh_key is most secure since the user
+name and passwords are not used. However this may not be practical for
+your environment.<br>
+<pre># username for telnet|ssh|ssh_key access methods<br># User is also used by ssh_key method as well. If user is blank then the default<br>#	user will be used (the user running the script). However if $user is defined<br>#	then ssh_key will use the following command: ssh $user@$host<br>#export EL_CONNECT_USER=<br><br># password for telnet|ssh access methods<br>#export EL_CONNECT_PASS=<br><br></pre>
+The default username and passwords are blank, and are not used for the 'none' connection method.<br><br>
+
+<h2><a name="delay_wait_for_host"></a>EL_DELAY_WAIT_FOR_HOST</h2>
 Because of the nature of accessing a remote host, expect-lite may have
 to wait for a response if the access is slow (eg. over a VPN via the
 internet).<br>
-<pre># Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture<br>set delay_wait_for_host 100</pre>
+<pre>## Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture<br># 100 ms is a good value for a local LAN, 200 ms if running across high speed internet<br>#export EL_DELAY_WAIT_FOR_HOST=<br><br></pre>
 The value of 100 ms is a good value for a local LAN, while 200 ms may
 be desired if running across high speed internet. As this value is
 increased the script will run slower. It is recommended that a minimum
 value be used to prevent scripts from taking too long to run.<br>
-<h2><a name="wait_for_prompt"></a>Wait
-for
-Prompt</h2><span style="text-decoration: line-through;">
-What is a prompt? Does it include colour? Does it end in &gt;, $, #
-? </span><br style="text-decoration: line-through;">
-<br style="text-decoration: line-through;"><span style="text-decoration: line-through;">
-There is an implied "wait for prompt" everytime the script writer uses
-the send command (eg. &gt;ls ) It helps by not issuing the next
-command
-before the previous command has completed.</span><br>
-<br>This section has been deprecated. With the support of <a href="./expect-lite.html#user_defined_prompt">user defined
-prompts</a>
-(in version 3.1.5), it should no longer be necessary to edit this
-procedure.<br>
-<br><h2><a name="comment_color"></a>User Comment Colour</h2>By default
-printable comments using the ';' or ';;' are printed in light blue.
-However there are a range of colour choices which can be set.<br><pre># set global color for comment ; or ;; lines<br># select one of the following: none, blue, ltblue, gray, ltgray, cyan, <br>#   black, pink, purple<br>set _el_comment_color ltblue</pre>
+      <br>
+<h2><a name="comment_color"></a>EL_*</h2>The last section of the sample
+bashrc file is reserved for the user. expect-lite will read in any
+shell environment variable which begins with EL_<br>
+      <br>
+The shell variables are treated as constants in the expect-lite script, overriding any internal variables.<br><pre># User defined constants<br>#export EL_*                         <br>export EL_root_pass=mysecret<br></pre>
 <br>
 <br>
 </td>
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">31 July 2010<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">26 October 2010<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this
-document for version
-3.7.0 or later</span><br style="font-style: italic;">
+document for version 4.0.1 or later</span><br style="font-style: italic;">
 </small>
 </body></html>
