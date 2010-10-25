@@ -610,6 +610,9 @@ Updated 10 Sept 2010 v3.7.1d7
 
 Updated 10 Sept 2010 v4.0.8 Alpha
 	
+
+Released 26 October 2010 v4.0.1
+
 	
 ------------ Future Versions --------------------------
 		
@@ -828,6 +831,13 @@ x	Labels are not trimmed of trailing space/tabs
 	Created bashrc as example for setting env vars to customize expect-lite
 		Hardended code that reads env vars	
 
+26 Oct 2010 - 4.0.1
+	was v4.0.7 beta
+	
+
+x	Update Pkg (debian) and build package
+
+x	Update Tar ball
 
 x	Update changelog
 
