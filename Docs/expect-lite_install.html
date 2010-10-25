@@ -48,15 +48,36 @@ those. But to start using expect-lite quickly, you require two items:<br>
 </ol>
 Here is a quick script which you can paste into a file to test
 expect-lite,&nbsp;call it test.elt :<br>
-<pre>; ==== Ping localhost and report result ====<br>@5<br>&gt;ping -c 2 localhost<br>+$packet_rx=([0-9]+) received<br>&gt;<br>&gt;echo "Packets received are:$packet_rx"<br></pre>
+<pre>; ==== Ping localhost and check result ====
+@5
+&gt;ping  localhost
+&lt;&lt;127.0.0.1
+&lt;&lt;127.0.0.1
+&lt;&lt;127.0.0.1
+&gt;&gt;^C
+&gt;
+</pre>
 The second item you require is a host to run your script against.
 Expect-lite is designed to log into a remote host and run your script,
 as if a person was typing the commands. However that may require
 setting up ssh keys and so forth, and this is the Quick Start section.
 Type the following to run the above script on your localhost:<br>
-<pre>expect-lite -c test.elt -r none</pre>
+<pre>expect-lite -c test.elt </pre>
 There should be output that looks similar to the following:<br>
-<pre>cvmiller@maile:~/Freescale$ <br>cvmiller@maile:~/Freescale$ ping -c 2 localhost<br>PING localhost (127.0.0.1) 56(84) bytes of data.<br>64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.053 ms<br>64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.056 ms<br><br>--- localhost ping statistics ---<br>2 packets transmitted, 2 received, 0% packet loss, time 999ms<br>rtt min/avg/max/mdev = 0.053/0.054/0.056/0.007 ms<br>cvmiller@maile:~/Freescale$ <br>Assigned Var:packet_rx=2<br><br><br>cvmiller@maile:~/Freescale$ echo "Packets received:2"<br>Packets received:2<br><br>##Overall Result: PASS <br></pre>Congratulations
+<pre>cvmiller@maile:~/Freescale$ 
+cvmiller@maile:~/Freescale$ ping localhost
+PING localhost (127.0.0.1) 56(84) bytes of data.
+64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.020 ms
+64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.023 ms
+sending ^C
+
+^C
+--- localhost ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1007ms
+rtt min/avg/max/mdev = 0.020/0.021/0.023/0.004 ms
+
+##Overall Result: PASS 
+</pre>Congratulations
 you have just run your first expect-lite script! expect-lite is
 designed to run in a multi-user environment, utilizing shell variables
 to set one's preferences. <br>
