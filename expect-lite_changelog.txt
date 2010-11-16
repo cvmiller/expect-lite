@@ -889,7 +889,8 @@ x	change env vars to something like EL_SYS_PASS
 o	cygwin issues:
 		Unable to detect shell start - add longer timeout for that expect line only
 			Perhaps do a OS detect and lengthen the timeout for that function - remote host init
-o	update man page with new env Var names EL_CONNECT_USER/PASS
+
+x	update man page with new env Var names EL_CONNECT_USER/PASS
 
 
 ------------ Windows Cygwin Expect --------------------------
