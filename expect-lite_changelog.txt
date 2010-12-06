@@ -607,131 +607,7 @@ Updated 10 Sept 2010 v3.7.1d7
 	Fixed ^\ during a pipe to 'tee' - would give call trace
 		Now expect-lite just exits with error
 	Changed -w to -V to show *EXP_INFO
-
-Updated 10 Sept 2010 v4.0.8 Alpha
 	
-
-Released 26 October 2010 v4.0.1
-
-	
------------- Future Versions --------------------------
-		
-Future
-x	Self checking code - increments WARNs and checks count at end
-		May not need with self_self_tests
-		
-x	*PASS (sets $_el(success) to 1) - not in 3.2.0
-		implemented at *TERM
-	
-x	Directive: *INTERACT		a shell which provides interaction
-		Allows expect-lite commands (to switch sessions) - add later
-		Create interact function
-			simulates expect interact
-			Uses send & expect (wait for prompt) - reads from stdin
-			interprets commands via _el_script_exec "|command"
-		write separately from expect-lite to test
-
-o	Other Directives: delay_wait_for_host, connect_method
-
-x	Add End of Line Sequence (EoL) as a Directive *EOL-CR *EOL-CRLF *EOL-LF
-
-x	Add *NOCOLOR
-
------------- Future Version 4.0 --------------------------
-
-x	Add *STEP - advances and executes interact 1 line in the script
-		Also add *NEXT and ^N
-		Implemented at ALT-n
-
-x	Add *LAST - prints out last 5 lines of expect-lite script - shows where user is
-		implemented as *SHOW N, where N can be + or -
-		Implemented as ALT-1-9 (shows next 1-9 lines)
-			*LAST shows most recent 5 lines executed
-
-x	Add IDE help - ALT-h
-
-x	Add IDE paste '>' to avoid wait_for_prompt, on first line
-
-x	Get Dyn Var working in IDE mode
-		Works via paste only! 
-
-x	Write SIGPIPE handler to exit el gracefully
-		SIGPIPE - raised when pipe child is killed
-
-x	Fix IDE '?' issue
-		Require '?if'
-
-x	Update for more config directives (x put in own proc)
-		Added *INFINITE_LOOP N
-
-x	Add directive *NOFAIL
-
-x	Update help to 80 columns wide
-
-x	Add Constants to *SHOW VARS view
-
-x	Fix '<<' and square brackets (requires escaping)
-
-x	Step function - 
-		Create 'clumping' where a > will also invoke following lines with <,<<, +$
-		x set *NOFAIL during IDE
-		Step back? Repeat? NO
-		x Add Skip function
-	x Added "kick the prompt" on expect-lite failed lines
-
-x	Add directive **CONNECT_METHOD
-	Implemented as Env Var EL_CONNECT_METHOD, instead.
-
-x	Update Docs with new IDE info
-	x Add *DIRECTIVES on CLI secion
-	x Add Clumping, or Island shores description
-
-x	Update docs with IDE
-		Create an Env Vars section 
-			EL_CONNECT_METHOD, EL_USER, EL_PASS, EL_DELAY_WAIT_FOR_HOST
-
-x	Update README file - delete '-r none'
-
-x	Explore alternative to rhost=none
-		Can expect run without spawn? No, Interact will not work. 
-
-x 	Fix paste '<' line, why is expect_out buffer empty? Where is the expect_out buffer cleared?
-	Fixed: Used expect to capture rest of paste from Cygwin
-		# OS identification - .dll or "" = Cygwin, .so=Linux, .dylib=MacOS X
-			Removes 1 second delay on Linux
-			set os_id [info sharedlibextension]
-
-x	Dyn Var - triggers new prompt, interferes with sudo. Why new prompt? regression doesn't require it
-		Removed new prompt
-
-x	Update script to state oldest expect version supported (still 5.31?, or 5.43?)
-		Minimum tested is 5.42.1 (Ubuntu 6.06)
-	
-x	Check expect version - Protect against cygwin version
-	# check version
-	if { [exp_version] < "5.42.0" } {
-		puts "older version of expect\n"
-	}
-		
-x	Update expect-lite help screen with additional ENV VARs (the common ones)
-
-x	Fix Paste overwrite (add newlines?) - not going to fix
-		Try overwriting line with 80 spaces (to "clear" line)
-
-x	Add $arg0 to <esc>v *SHOW VARs command
-
-x	Write self test scripts for IDE
-
-x	Native method to make scripts executable - instead of masquerade
-	Only works for ubuntu 9.04 and newer (bash 4.x and newer)
-
-x	IDE Step/Skip does not work with embedded expect - one_line problem
-		Need to put clumped lines into a global
-
-x	Labels are not trimmed of trailing space/tabs
-	
-
-
 22 Aug 2010 - Created 2expect-lite as 4.0.0d1 
 	Reworked buffers completely (now global array)
 	Updated buffer read to only read in script lines
@@ -833,6 +709,132 @@ x	Labels are not trimmed of trailing space/tabs
 
 26 Oct 2010 - 4.0.1
 	was v4.0.7 beta
+	
+Released 26 October 2010 v4.0.1
+
+15 Nov 2010 - 4.0.1 merged 4.0.x branch into git master, it was easy
+
+5 Dec 2010 - 4.0.2a
+	Added chars >./$ to copy/paste in IDE
+	Created installer from the tar ball
+		Auto configures to use ssh_keys (if unix)
+		Auto calls setup_local_ssh_keys script (if unix)
+		Remove file with -R option
+
+	
+------------ Future Versions --------------------------
+		
+Future
+
+x	Fix IDE '>' paste (added chars ./$)
+
+o	Fix MAN and man directory in tarball - MacOS X sees them as the same name
+
+o	User script help - next release
+
+o	cygwin issues:
+		Unable to detect shell start - add longer timeout for that expect line only
+			Perhaps do a OS detect and lengthen the timeout for that function - remote host init
+
+o	Add deb and rpm to download files
+
+o	Add Conditional if, used right after > command. Eliminates need to capture var, and use the var in if statement
+	If [text] then - possible format ?if [text]? or ?if text?
+	
+
+
+------------ Future Version 4.0 --------------------------
+
+x	Add *STEP - advances and executes interact 1 line in the script
+		Also add *NEXT and ^N
+		Implemented at ALT-n
+
+x	Add *LAST - prints out last 5 lines of expect-lite script - shows where user is
+		implemented as *SHOW N, where N can be + or -
+		Implemented as ALT-1-9 (shows next 1-9 lines)
+			*LAST shows most recent 5 lines executed
+
+x	Add IDE help - ALT-h
+
+x	Add IDE paste '>' to avoid wait_for_prompt, on first line
+
+x	Get Dyn Var working in IDE mode
+		Works via paste only! 
+
+x	Write SIGPIPE handler to exit el gracefully
+		SIGPIPE - raised when pipe child is killed
+
+x	Fix IDE '?' issue
+		Require '?if'
+
+x	Update for more config directives (x put in own proc)
+		Added *INFINITE_LOOP N
+
+x	Add directive *NOFAIL
+
+x	Update help to 80 columns wide
+
+x	Add Constants to *SHOW VARS view
+
+x	Fix '<<' and square brackets (requires escaping)
+
+x	Step function - 
+		Create 'clumping' where a > will also invoke following lines with <,<<, +$
+		x set *NOFAIL during IDE
+		Step back? Repeat? NO
+		x Add Skip function
+	x Added "kick the prompt" on expect-lite failed lines
+
+x	Add directive **CONNECT_METHOD
+	Implemented as Env Var EL_CONNECT_METHOD, instead.
+
+x	Update Docs with new IDE info
+	x Add *DIRECTIVES on CLI secion
+	x Add Clumping, or Island shores description
+
+x	Update docs with IDE
+		Create an Env Vars section 
+			EL_CONNECT_METHOD, EL_USER, EL_PASS, EL_DELAY_WAIT_FOR_HOST
+
+x	Update README file - delete '-r none'
+
+x	Explore alternative to rhost=none
+		Can expect run without spawn? No, Interact will not work. 
+
+x 	Fix paste '<' line, why is expect_out buffer empty? Where is the expect_out buffer cleared?
+	Fixed: Used expect to capture rest of paste from Cygwin
+		# OS identification - .dll or "" = Cygwin, .so=Linux, .dylib=MacOS X
+			Removes 1 second delay on Linux
+			set os_id [info sharedlibextension]
+
+x	Dyn Var - triggers new prompt, interferes with sudo. Why new prompt? regression doesn't require it
+		Removed new prompt
+
+x	Update script to state oldest expect version supported (still 5.31?, or 5.43?)
+		Minimum tested is 5.42.1 (Ubuntu 6.06)
+	
+x	Check expect version - Protect against cygwin version
+	# check version
+	if { [exp_version] < "5.42.0" } {
+		puts "older version of expect\n"
+	}
+		
+x	Update expect-lite help screen with additional ENV VARs (the common ones)
+
+x	Fix Paste overwrite (add newlines?) - not going to fix
+		Try overwriting line with 80 spaces (to "clear" line)
+
+x	Add $arg0 to <esc>v *SHOW VARs command
+
+x	Write self test scripts for IDE
+
+x	Native method to make scripts executable - instead of masquerade
+	Only works for ubuntu 9.04 and newer (bash 4.x and newer)
+
+x	IDE Step/Skip does not work with embedded expect - one_line problem
+		Need to put clumped lines into a global
+
+x	Labels are not trimmed of trailing space/tabs
 	
 
 x	Update Pkg (debian) and build package
