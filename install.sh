@@ -18,7 +18,7 @@ function usage {
 
 # Script Defaults	   
 numopts=0
-VERSION=0.90
+VERSION=0.92
 SSH_HOME=$HOME/.ssh
 
 BIN_DIR=/usr/bin
@@ -76,7 +76,7 @@ fi
 
 
 function installit {
-	# pass in file to be installed, and location
+	# pass in file to be installed, location and step number
 	echo "$3)	==================="
 	echo "	Installing $1 in $2"
 	mkdir -p $2
@@ -89,8 +89,16 @@ function removeall {
 	echo "==================="
 	echo "Removing Expect-lite"
 	rm -rf $BIN_DIR/expect-lite
-	rm -rf $DOC_DIR/expect-lite
+	rm -rf $DOC_DIR
 	rm -rf $MAN_DIR/expect-lite.1.gz
+	# restore old version of expect-lite (if present)
+	if [ -e $BIN_DIR/expect-lite.old ]; then
+		mv -f $BIN_DIR/expect-lite.old $BIN_DIR/expect-lite
+	fi
+	# restore bashrc
+	if [ -e ${BASHRC}.org ]; then
+		mv -f ${BASHRC}.org $BASHRC
+	fi
 	echo "Done."
 	echo "==================="
 }
@@ -111,6 +119,19 @@ echo "======================================="
 echo "Installing expect-lite version $new_ver"
 
 
+
+#check if expect is installed
+if [ ! -e /usr/bin/expect ]; then
+	echo "0)	==================="
+	echo "	ACK! expect is NOT installed"
+	echo "	Please install expect first:"
+	echo "	  sudo yum install expect"
+	echo "	  sudo apt-get install expect"
+	echo "	  or use cygwin setup to install expect"
+	echo "Exiting...."
+	exit 1
+fi
+
 #check if expect-lite is installed
 if [ -e /usr/bin/expect-lite ]; then
 	existing_ver=$(grep "set version" /usr/bin/expect-lite | cut -d " " -f 3)
@@ -122,7 +143,7 @@ if [ -e /usr/bin/expect-lite ]; then
 fi
 
 
-# start actual install
+# start actual install - Steps 1,2,3
 installit expect-lite $BIN_DIR "1"
 installit Examples $DOC_DIR "2"
 cd man
@@ -134,9 +155,13 @@ mod_bash=$(grep EL_CMD $BASHRC)
 if [ "$mod_bash" == "" ]; then
 	echo "4)	==================="
 	echo "	Updating $HOME/.bashrc file with expect-lite defaults"
+	# back up bashrc
+	cp $BASHRC ${BASHRC}.org
+	# append to bashrc
 	cat bashrc >> $BASHRC	
-	#check if ssh is installed - if so, then configure expect-lite to use ssh keys
-	if [ -x /usr/bin/ssh-keygen ]; then
+	#check if sshd is running - if so, then configure expect-lite to use ssh keys
+	sshd_running=$(ps -e | grep sshd | wc -l)
+	if [ $sshd_running -gt 0 ]; then
 		echo "5)	==================="
 		echo "	Configuring .bashrc for SSH keys"
 		# enable remote_host and connect_method
