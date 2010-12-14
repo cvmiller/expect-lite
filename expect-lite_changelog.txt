@@ -721,6 +721,11 @@ Released 26 October 2010 v4.0.1
 		Auto calls setup_local_ssh_keys script (if unix)
 		Remove file with -R option
 
+
+6 Dec 2010 - 4.0.2a 
+	Installer 0.92 - tested on cygwin & mac
+	Remove: Restores old .bashrc, and old expect-lite (if present)
+	
 	
 ------------ Future Versions --------------------------
 		
