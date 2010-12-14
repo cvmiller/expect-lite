@@ -22,7 +22,7 @@ function usage {
 
 # Script Defaults	   
 numopts=0
-VERSION=0.96
+VERSION=0.97
 SSH_HOME=$HOME/.ssh
 
 PREFIX=""
@@ -102,12 +102,12 @@ function removeall {
 	# blindly removes installation
 	echo "==================="
 	echo "Removing Expect-lite"
-	rm -rf $PREFIX/$BIN_DIR/expect-lite
-	rm -rf $PREFIX/$DOC_DIR
-	rm -rf $PREFIX/$MAN_DIR/expect-lite.1.gz
+	rm -rf $PREFIX$BIN_DIR/expect-lite
+	rm -rf $PREFIX$DOC_DIR
+	rm -rf $PREFIX$MAN_DIR/expect-lite.1.gz
 	# restore old version of expect-lite (if present)
 	if [ -e $PREFIX/$BIN_DIR/expect-lite.old ]; then
-		mv -f $PREFIX/$BIN_DIR/expect-lite.old $PREFIX/$BIN_DIR/expect-lite
+		mv -f $PREFIX$BIN_DIR/expect-lite.old $PREFIX$BIN_DIR/expect-lite
 	fi
 	# restore bashrc
 	mod_bash=$(grep expect-literc $BASHRC)
@@ -123,6 +123,14 @@ function removeall {
 
 #======== Actual work performed by script ============
 
+# fix up prefixes if no prefix defined
+if [ "$PREFIX" == "" ]; then
+	# set up "standard" paths
+	BIN_DIR=/usr$BIN_DIR
+	DOC_DIR=/usr/share$DOC_DIR
+	MAN_DIR=/usr/share$MAN_DIR
+fi
+
 # un-install if '-R' is used
 if [ $remove ]; then
 	removeall
@@ -134,13 +142,6 @@ new_ver=$(grep "set version" ./expect-lite | cut -d " " -f 3)
 echo "=======================================" 
 echo "Installing expect-lite version $new_ver"
 
-# fix up prefixes if no prefix defined
-if [ "$PREFIX" == "" ]; then
-	# set up "standard" paths
-	BIN_DIR=/usr$BIN_DIR
-	DOC_DIR=/usr/share$DOC_DIR
-	MAN_DIR=/usr/share$MAN_DIR
-fi
 
 #check if expect is installed in standard location
 if [ ! -e /usr/bin/expect ]; then
@@ -165,11 +166,12 @@ if [ -e $PREFIX/usr/bin/expect-lite ]; then
 fi
 
 
+
 # start actual install - Steps 1,2,3
-installit expect-lite $PREFIX/$BIN_DIR "1"
-installit Examples $PREFIX/$DOC_DIR "2"
+installit expect-lite $PREFIX$BIN_DIR "1"
+installit Examples $PREFIX$DOC_DIR "2"
 cd man
-installit expect-lite.1.gz $PREFIX/$MAN_DIR "3"
+installit expect-lite.1.gz $PREFIX$MAN_DIR "3"
 cd - > /dev/null
 
 # test if bashrc needs mod: Step 4
