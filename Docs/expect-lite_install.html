@@ -5,7 +5,8 @@
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <meta name="AUTHOR" content="Craig Miller">
-<link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Installation and Quick Start Guide</title></head><body>
+<link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Installation and Quick Start Guide</title></head>
+<body>
 
 <table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
 <tbody class="page">
@@ -34,7 +35,9 @@ to see Features, Downloads, and Docs </noscript>
       <br>
 Or, if you are running a modern version of Ubuntu: apt-get install expect-lite<br><br>
 Or, if you are running a modern version of gentoo: emerge -auv expect-lite<br>
-<br><h2>Quick Install</h2>Untar the expect-lite package, and copy the expect-lite file in your path (typically ~/bin/). <br><pre>cp expect-lite ~/bin/</pre>Test by typing at the prompt:<br>
+<br><h2>Quick Install</h2>Untar the expect-lite package, and use the
+included install.sh script (as of version 4.0.2). If on
+Linux/Unix/MacOS X, sudo permissions will be required to install:<br><pre>sudo ./install.sh</pre>Since cygwin does not require sudo previlages, just type:<br><pre>./install.sh</pre>Test by typing at the prompt:<br>
 <pre>expect-lite</pre>
 If you see the help, then it is ready to go, installation is complete!<br>
 <br>
@@ -48,15 +51,7 @@ those. But to start using expect-lite quickly, you require two items:<br>
 </ol>
 Here is a quick script which you can paste into a file to test
 expect-lite,&nbsp;call it test.elt :<br>
-<pre>; ==== Ping localhost and check result ====
-@5
-&gt;ping  localhost
-&lt;&lt;127.0.0.1
-&lt;&lt;127.0.0.1
-&lt;&lt;127.0.0.1
-&gt;&gt;^C
-&gt;
-</pre>
+<pre>; ==== Ping localhost and check result ====<br>@5<br>&gt;ping  localhost<br>&lt;&lt;127.0.0.1<br>&lt;&lt;127.0.0.1<br>&lt;&lt;127.0.0.1<br>&gt;&gt;^C<br>&gt;<br></pre>
 The second item you require is a host to run your script against.
 Expect-lite is designed to log into a remote host and run your script,
 as if a person was typing the commands. However that may require
@@ -64,20 +59,7 @@ setting up ssh keys and so forth, and this is the Quick Start section.
 Type the following to run the above script on your localhost:<br>
 <pre>expect-lite -c test.elt </pre>
 There should be output that looks similar to the following:<br>
-<pre>cvmiller@maile:~/Freescale$ 
-cvmiller@maile:~/Freescale$ ping localhost
-PING localhost (127.0.0.1) 56(84) bytes of data.
-64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.020 ms
-64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.023 ms
-sending ^C
-
-^C
---- localhost ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1007ms
-rtt min/avg/max/mdev = 0.020/0.021/0.023/0.004 ms
-
-##Overall Result: PASS 
-</pre>Congratulations
+<pre>cvmiller@maile:~/Freescale$ <br>cvmiller@maile:~/Freescale$ ping localhost<br>PING localhost (127.0.0.1) 56(84) bytes of data.<br>64 bytes from localhost (127.0.0.1): icmp_seq=1 ttl=64 time=0.020 ms<br>64 bytes from localhost (127.0.0.1): icmp_seq=2 ttl=64 time=0.023 ms<br>sending ^C<br><br>^C<br>--- localhost ping statistics ---<br>2 packets transmitted, 2 received, 0% packet loss, time 1007ms<br>rtt min/avg/max/mdev = 0.020/0.021/0.023/0.004 ms<br><br>##Overall Result: PASS <br></pre>Congratulations
 you have just run your first expect-lite script! expect-lite is
 designed to run in a multi-user environment, utilizing shell variables
 to set one's preferences. <br>
@@ -85,10 +67,11 @@ to set one's preferences. <br>
 <h2>Customizing expect-lite<br>
 </h2>
 <a name="more_details"></a>There are aspects of expect-lite which you
-may want to tune to your environment. As of version 4.0.1,
-customization is controlled through shell environment variables. It is
-recommended that the variables be set in the shell init script, such as
-.bashrc file. A sample bashrc file is supplied in the expect-lite
+may want to tune to your environment. The Installer will set up your
+.bashrc file to source the expect-lite configuration from
+.expect-literc.&nbsp;Customization is controlled through shell
+environment variables. A sample bashrc file is supplied in the
+expect-lite
 package. The contents of which are as follows:<br>
       <pre># bashrc<br><br># append this sample bashrc to your .bashrc to set customize expect-lite<br><br># remote host to connect, default=none<br># 	expect-lite was designed to automate server farm environments<br>#	However, it can also be run from the local machine or PC by setting<br>#	this value to 'none'. The CLI option -r &lt;rhost&gt; will overide this value<br>#export EL_REMOTE_HOST=localhost<br><br># name of expect-lite script<br>#	Good for testing one script over and over<br>#export EL_CMD_FILE=<br><br># change to this dir upon login<br>#export EL_USER_DIR=<br><br># Login method to remote host<br>#	expect-lite includes a utilty (setup_local_ssh.sh) to automatically setup ssh <br>#	keys for the user to use with the localhost. This is the fastest method <br>#	of script execution, much faster than 'none'.<br>#	Choose one login method: telnet|ssh|ssh_key|none<br>#export EL_CONNECT_METHOD=ssh_key<br>export EL_CONNECT_METHOD=none<br><br># username for telnet|ssh|ssh_key access methods<br># User is also used by ssh_key method as well. If user is blank then the default<br>#	user will be used (the user running the script). However if $user is defined<br>#	then ssh_key will use the following command: ssh $user@$host<br>#export EL_CONNECT_USER=<br><br># password for telnet|ssh access methods<br>#export EL_CONNECT_PASS=<br><br># Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture<br># 100 ms is a good value for a local LAN, 200 ms if running across high speed internet<br>#export EL_DELAY_WAIT_FOR_HOST=<br><br># User defined constants<br>#EL_*                         <br><br></pre>
       <br>
@@ -121,9 +104,13 @@ value of "none" is given for the remote host on the command line.<br>
 Even when
 no remote host is required, it is best to log into the localhost, since
 the underlying Expect has problems with synchronization (between send
-and expect strings) when a remote host is 'none'. The provided
-shell script 'setup_local_ssh.sh' (in the Tools directory) will setup
-the localhost with ssh keys. It is only necessary to run it once:<br>
+and expect strings) when a remote host is 'none'. The installer will
+detect if the install machine is running sshd, if so it will configure
+.expect-literc to use 'ssh_keys" and run the provided
+shell script 'setup_local_ssh.sh' (in the Tools directory) which will
+setup
+the localhost with ssh keys. This can also be one manually at a later
+time, it is only necessary to run it once:<br>
       <pre>./Tools/setup_local_ssh.sh</pre>
 <br>
 <h2><a name="user_name_password"></a>EL_CONNECT_USER &amp; EL_CONNECT_PASS<br>
@@ -156,10 +143,10 @@ The shell variables are treated as constants in the expect-lite script, overridi
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">26 October 2010<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">21 December 2010<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this
-document for version 4.0.1 or later</span><br style="font-style: italic;">
+document for version 4.0.2 or later</span><br style="font-style: italic;">
 </small>
 </body></html>

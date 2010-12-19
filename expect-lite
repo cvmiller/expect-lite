@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.1"
+set version "4.0.2"
 
 #set starting expect timeout 
 set timeout 10 
@@ -501,7 +501,7 @@ proc instant_interact_sig {} {
 					interact_help
 					protected_send "$_el_eols"
 				}
-			-echo -re  {(^>[>a-zA-Z0-9]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z])(.+)\r} {
+			-echo -re  {(^>[a-zA-Z0-9/$.]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z])(.+)\r} {
 					#### Support for EL commands in Interact
 					#### Permits pasting of multiple commands into Interact session
 					# create list of multiple pasted commands

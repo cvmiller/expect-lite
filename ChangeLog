@@ -1,6 +1,10 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 21 Dec 2010 - v4.0.2
+	Minor change to debugger copy/paste to permit absolute paths
+	First release of tarball installer		
+
 Released 26 Oct 2010 v4.0.1
 	Reworked buffers completely (now global array)
 	Added Integrated Debugger with breakpoint, step/skip, copy/paste
@@ -15,13 +19,13 @@ Released 26 Oct 2010 v4.0.1
 		  <esc>-1to-9 Show N previous lines of script
 		  ctrl+D      Quit & Exit expect-lite
 		  <esc>h      this Help
-	Added directive *INFINITE_LOOP N
+	Added directive *INFINITE_LOOP N - changes infinite loop protection value
 	Added any *DIRECTIVE on the CLI (not **SHELL)
 	Added *NOFAIL directive - script runs to completion
 	Added RED old expect version warning, now requires minimum 5.42
 		Compiled cygwin version of expect 5.45, available on website
 	Added Env Var support: EL_CONNECT_METHOD, EL_CONNECT_USER, EL_CONNECT_ PASS, EL_DELAY_WAIT_FOR_HOST
-	Add $arg0 to <esc>v *SHOW VARs command
+	Add $arg0 to <esc>v *SHOW VARs commands
 	Added self test scripts for IDE
 	Native method to make scripts executable 
 		#!/usr/bin/env expect-lite
