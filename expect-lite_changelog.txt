@@ -733,6 +733,17 @@ Released 26 October 2010 v4.0.1
 Released 21 Dec 2010 - 4.0.2
 	Minor change to debugger copy/paste to permit absolute paths
 	First release of tarball installer		
+
+22 Dec 2010 - 4.0.3.a
+	Fixed *NOFAIL inside IDE, command didn't persist after continuing script
+
+
+7 Jan 2011 - 4.0.3.d2
+	Fixed *FORK inside IDE, was not returning to correct session upon Continuing script (+++)
+	
+	
+
+
 	
 ------------ Future Versions --------------------------
 		
@@ -748,11 +759,13 @@ o	cygwin issues:
 		Unable to detect shell start - add longer timeout for that expect line only
 			Perhaps do a OS detect and lengthen the timeout for that function - remote host init
 
-o	Add deb and rpm to download files
+x	Add deb and rpm to download files
 
 o	Add Conditional if, used right after > command. Eliminates need to capture var, and use the var in if statement
 	If [text] then - possible format ?if [text]? or ?if text?
 	
+o	Add if Var exists to conditional
+	If $VAR then...
 
 
 ------------ Future Version 4.0 --------------------------
@@ -863,7 +876,7 @@ z	IDE Cooked mode '-reset' to help with backspace problem
 x	Compile cygwin version of expect - v5.45 works!
 		x	Pack up expect.exe, libtcl8.5.dll, expect5.45.dll put in /usr/bin
 
-o	Add New directives to regression scripts *EOLS, *NOFAIL
+x	Add New directives to regression scripts *EOLS, *NOFAIL
 		
 x	Update Man Page
 		x Add *NOFAIL

@@ -4,7 +4,7 @@
 # Convert --parms to expect-lite param=value format
 PARAMS=`echo $* | /bin/sed -r 's;--([a-z]+) ([0-9a-zA-Z]+);\1=\2;g'`
 echo $PARAMS
-expect-lite r=none c=$0 $PARAMS
+expect-lite  c=$0 $PARAMS
 exit $?
 # How to use this expect-lite file, Lines that begin with:
 #	'>' send to remote host, implies "wait for prompt"

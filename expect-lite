@@ -40,7 +40,7 @@
 #
 
 # echo version in usage
-set version "4.0.2"
+set version "4.0.3.d2"
 
 #set starting expect timeout 
 set timeout 10 
@@ -377,7 +377,7 @@ proc instant_interact_sig {} {
 		#			send, if, var assignment, include file, comment, directives respectively
 		if { [catch { interact {
 			-re {\+\+\+|^\x1b\x63|^`c} { #DEBUGGER '+++' or .c to exit interact session, continue script
-				pop_session_id; set restart_interact 0 
+				set restart_interact 0 
 				return 
 				}
 			\004	{ # ^D exit interact and expect-lite
@@ -1197,10 +1197,8 @@ proc push_session_id { fork_id } {
 	# remove any \n or \r's
 	regsub -all {[ \n\r]+} $fork_id "" fork_id
 	if { [string length $fork_id ] > 0 } {
-		if { $fork_id != $_el_fork(current) } {
-			# push new session_id on stack
-			lappend _el_fork_stack $_el_fork(current)
-		}
+		# push new session_id on stack
+		lappend _el_fork_stack $_el_fork(current)
 	}
 	set len [llength $_el_fork_stack]
 }
@@ -1777,7 +1775,8 @@ proc _el_global_directive { g_dir_str } {
 		}
 		"\\*NOFAIL"	{	# Never fail the test
 			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
-			if {$NOFAIL != 10 } { set NOFAIL 1 }
+			#if {$NOFAIL != 10 } { set NOFAIL 1 }
+			incr NOFAIL
 		}
 	}
 	# end switch glob
