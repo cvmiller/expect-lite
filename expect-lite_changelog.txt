@@ -742,8 +742,11 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed *FORK inside IDE, was not returning to correct session upon Continuing script (+++)
 	
 	
-
-
+13 Jan 2011 - 4.0.3.d3-lib
+	Fixed terminal-type to include xterm-color
+	Librarized expect-lite
+		Set EL_LIBRARY to run as library, rather than stand-alone
+	
 	
 ------------ Future Versions --------------------------
 		

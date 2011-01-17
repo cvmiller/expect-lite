@@ -1,0 +1,2817 @@
+#!/usr/bin/env expect
+
+##################################################################################
+#
+#  Copyright (C) 2008-2010 Craig Miller
+#
+#  Copyright (C) 2005-2007 Freescale Semiconductor, Inc. 
+#
+#  See the file "COPYING" for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#  Distributed under BSD-Style License
+#
+##################################################################################
+#
+#
+# Expect-lite 
+# Script logs into Remote-host, sends command file, while validating commands
+#	fails if validation fails, returns code 1 (0=passed)
+#
+# by Craig Miller cvmiller@gmail.com	19 Jan 2005
+#
+# Command Arguments:
+#	<Remote-Host|IP>
+#	<command_file>
+#	<user_directory>
+#	[additional constants, see usage]
+#
+#
+# Requires Expect version supported 5.42.1 and later (although earlier versions may work)
+#
+#
+#
+#
+
+
+##################################################################################
+#	
+#	The user may want to customize the following variables & procs to suite one's needs
+#
+#
+
+# echo version in usage
+set version "4.0.3.d4-lib"
+
+#set starting expect timeout 
+set timeout 10 
+
+# EL_LIBRARY when set, places expect-lite in library mode,
+# used for TCL programming calling expect-lite functions directly
+# see documentation for more info
+# Normally, this would be UNSET (or commented out)
+#set EL_LIBRARY 1
+
+# infinite_loop protection - Max number of looping permitted
+#	Protects against infinite loops by decrementing this number
+#	when value is Zero, _el_buffer_search will return 'not found' (-1)
+# typically this should be set in the range of 5000-10000
+set _el_infinite_loop 5000
+
+
+# hardcoded login values - only used for telnet, and ssh logins
+set user "root"
+set pass ""
+# User is now used by ssh_key method as well. If user is blank then the default
+#	user will be used (the user running the script). However if $user is defined
+#	then ssh_key will use the following command: ssh $user@$host
+set user ""
+
+
+# Print Warnings to stdout (when set to 1 = TRUE, 0 = FALSE)
+set WARN 1
+
+# Print Info messages to stdout (when set to 1 = TRUE, 0 = FALSE)
+set INFO 1
+
+# Print Expect Info messages to stdout (when set to 1 = TRUE, 0 = FALSE)
+set EXP_INFO 0
+
+# Select remote shell to spawn after logging into remote host 
+set remote_shell "bash"
+set remote_shell ""
+
+# Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture
+# 100 ms is a good value for a local LAN, 200 ms if running across high speed internet
+set delay_wait_for_host 100
+
+# connects to login host, and logs in as $USER
+#
+#	Choose one login method here
+#	
+#set connect_method "telnet" 
+#set connect_method "ssh" 
+#set connect_method "ssh_key" 
+set connect_method "none" 
+
+# Path to telnet (helps in cygwin environments)
+set _el_telnet "/usr/bin/telnet"
+
+# set the user configurable prompt to something sane
+set _el(prompt) ".*\$ $"
+
+# set global color for comment ; or ;; lines
+# select one of the following: none, blue, ltblue, gray, ltgray, cyan, black, pink, purple
+set _el_comment_color ltblue
+
+# End of Line Sequence (eols) - typically \n or \r\n
+# some devices must have a CRLF at the end of line in order to respond
+# This is also controlled by directive *EOLS LF|CRLF
+set _el_eols "\n"
+
+
+####################################################################################
+#	
+#	Vars & Procs below here should not require customization
+#
+#
+
+
+
+#
+#	Initialization of Global Variables
+#
+
+#set _el_timeout to hold value of timeout (used to preserve value of timeout)
+set _el_timeout $timeout
+
+#Set the expect Match Buffer really large
+match_max -d 10000
+
+#Create Debug Log output == 1, no log ==0
+set DEBUG_LOG 0
+
+# declare array user_namespace (for user vars)
+set user_namespace(0) 0
+
+# declare array cli_namespace (for cli passed constants)
+set cli_namespace(#) " "
+
+# declare global array _el (for internal expect-lite vars)
+set _el(0) 0
+
+# clear NOFAIL flag 1=test should have failed
+set _el(test_failed) 0 
+
+# clear native expect lines list
+set _el(_el_lines) {}
+
+# debugging aid: turn on to display match string and expect buffer
+set DEBUG 0
+
+# keep script running to end: turn on to never fail test
+set NOFAIL 0
+
+# global constant for timeout_multiplier mode
+set timeout_multiplier "timeout_multiplier"
+
+# global constant for script name aka arg0
+set arg0 "arg0"
+
+# set global fork count (for multiple sessions) to 0
+set _el_fork(count) 0
+
+# set global fork stack to blank
+set _el_fork_stack {}
+
+# set global fork id list to blank
+set _el_fork_id_list { default }
+
+# set default FORK session
+set _el_fork(current) "default"
+
+# set global fork_context array to blank
+set _el_fork_context(default,eols) $_el_eols
+
+#
+# Scripts (aka Command files) are kept in buffers for random access, and looping
+# Buffers are global, and are referenced by a "stack" number, the stack number allows multiple buffers to exist
+#
+# stack which contains list of valid buffers
+set _el_buf(stack) "0"
+# buf pointer - contains line number of buffer
+set _el_buf(0,ptr) "0"
+
+# expect-lite key characters (first char in expect-lite script)
+set _out ">"
+set _out_nowait ">>"
+set _in "<"
+set _in_noregex "<<"
+set _not_in "-<"
+set _timeout "@"
+set _exec "!"
+set _stdout_comment ";"
+set _stdout_comment_nobuf ";;"
+set _include "~"
+set _include_fail "\\\*~"
+set _setvar "+"
+set _var "\$"
+set _cond_regex "\\\?"
+set _cond "?"
+set _cond_else "::"
+set _label "%"
+set _incr_var "\\\+\\\$"
+set _decr_var "\\-\\\$"
+
+# cli Parameter Initialization
+set remote_host "none"
+set cmd_file ""
+set user_dir ""
+
+# set the default user configurable prompt to something sane
+set _el(default_prompt) ".*\$ $"
+
+# set ANSI colors for colored output
+set el_color(red) "\033\[1;31m"
+set el_color(blue) "\033\[0;34m"
+set el_color(ltblue) "\033\[1;34m"
+set el_color(black) "\033\[0;30m"
+set el_color(cyan) "\033\[0;36m"
+set el_color(gray) "\033\[1;30m"
+set el_color(ltgray) "\033\[0;37m"
+set el_color(green) "\033\[0;32m"
+set el_color(yellow) "\033\[0;33m"
+set el_color(purple) "\033\[0;35m"
+set el_color(pink) "\033\[1;35m"
+set el_color(nocolor) "\033\[0m"
+set el_color(none) ""
+
+# set INFO color
+set el_info_color green
+# set WARN color
+set el_warn_color yellow
+# set ERROR color
+set el_err_color red
+
+
+#
+#	Removes colour if terminal type is not xterm, vt100, cygwin
+#	
+#
+proc check_term_type { } {
+	global _el_comment_color el_color env el_info_color el_warn_color el_err_color
+	
+	#disable global comment color if unknown
+	if { [lsearch [array names el_color] $_el_comment_color] == -1 } {
+		set _el_comment_color none
+	}
+	
+	if { [catch { switch -glob -- $env(TERM) {
+		"xterm"		-
+		"xterm-color"		-
+		"vt100"		-
+		"vt220"		-
+		"ansi"		-
+		"cygwin"	{ 
+			# keep colors as set globally
+		 }
+		 default {
+			# set INFO color
+			set el_info_color none
+			# set WARN color
+			set el_warn_color none
+			# set ERROR color
+			set el_err_color none
+			# set global color
+			set _el_comment_color none		 	
+		 }
+	} } \
+	error ] } {
+		puts "Warning: No Terminal Type defined: $error"
+		# set INFO color
+		set el_info_color none
+		# set WARN color
+		set el_warn_color none
+		# set ERROR color
+		set el_err_color none
+		# set global color
+		set _el_comment_color none		 	
+		
+	}
+}
+
+#
+#	Wraps puts in selected global colour 
+#	
+#
+proc cputs { str  {l_color ""} } {
+	global _el_comment_color el_color 
+
+	proc protect_puts { str } {
+		# catch stdout errors and quit
+		if { [catch { puts $str } error] } {
+			puts stderr "ERROR:$error"
+			exit 1
+		}
+	}
+
+	if {$_el_comment_color == "none"} {
+		# use no color
+		protect_puts $str	
+	} elseif { $l_color != "" } {	
+		# use supplied color
+		protect_puts "$el_color($l_color)$str$el_color(nocolor)"
+	} elseif {$_el_comment_color != "none"} {
+		# use global color
+		protect_puts "$el_color($_el_comment_color)$str$el_color(nocolor)"
+	} 
+	
+}
+
+# 
+#	Expect Signal Handler, which checks for broken stdout pipe
+#	Default signal is SIGPIPE
+#
+#
+trap {
+	catch { puts stderr "\nERROR:Broken Pipe\n" }
+	exit 2
+} SIGPIPE
+
+
+# 
+#	Interact help
+#	
+#
+#
+proc interact_help { } {
+	send_user "\n"
+	send_user "IDE: Help\n"
+	send_user "  Key          Action\n"
+	send_user "  ----        ------\n"
+	send_user "  <esc>s      Step\n"
+	send_user "  <esc>k      sKip next step\n"
+	send_user "  <esc>c      Continue\n"
+	send_user "  <esc>v      show Vars\n"
+	send_user "  <esc>0to9   Show N next lines of script\n"
+	send_user "  <esc>-1to-9 Show N previous lines of script\n"
+	send_user "  ctrl+D      Quit & Exit expect-lite\n"
+	send_user "  <esc>h      this Help\n"
+	#send_user "\n"
+	return
+}
+
+# 
+#	Expect Signal Handler, which places user into instant-interactive(tm) session
+#	Default signal is SIGQUIT or ^\
+#
+#
+trap {
+	instant_interact_sig
+} SIGQUIT
+
+
+# 
+# 
+#	Actual Signal Handler, which places user into instant-interactive(tm) session
+#	Default signal is SIGQUIT or ^\
+#	This function is also called by *INTERACT, providing similar functionality
+#
+proc instant_interact_sig {} {
+	global remote_host _el _el_fork_id_list _el_fork DEBUG NOFAIL el_info_color _el_eols _el_buf expect_out el_warn_color
+
+	# change user message depending on how the function is called
+	if { $_el(line) != "*INTERACT" } {
+		# called by user 
+		cputs  "\n\n Press '+++' to end instant-interact & return to script \n\n" $el_info_color
+	} else {
+		# called by script *INTERACT
+		cputs  "\n\n Press '+++' to end interact session & return to script \n\n" $el_info_color
+	}
+	# do not allow script to fail during IDE
+	incr NOFAIL
+	protected_send "$_el_eols"
+	# preserve script fork session
+	push_session_id $_el_fork(current)
+	set restart_interact 1
+	# restart interact if *FORK is called to set to new spawn_id
+	while {$restart_interact} {
+		# Interact session connects user to remote session, and also:
+		#	interprets *FORK, *SHOW commands
+		#	Experimental: also interprets subset of expect-lite script commands
+		#		Lines starting with >,?,$,~,;,* 
+		#			send, if, var assignment, include file, comment, directives respectively
+		if { [catch { interact {
+			-re {\+\+\+|^\x1b\x63|^`c} { #DEBUGGER '+++' or .c to exit interact session, continue script
+				set restart_interact 0 
+				return 
+				}
+			\004	{ # ^D exit interact and expect-lite
+				puts "\nExiting interact & expect-lite.\n"
+				exit 
+				}
+			-reset \005	{ # test
+				_el_script_exec "\|>> pwd"
+				_el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
+				#exit 
+				}
+			-re {(^\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
+				# determine next or skip step
+				set param "s" ; # set default to step
+				catch { set param "$interact_out(2,string)" } error 
+				
+				# increment buffer line pointer 
+				incr _el_buf($_el_buf(stack),ptr)
+				# read line from buffer
+				set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
+				#puts "==BUF====>$_el_buf($_el_buf(stack),ptr)||$line\n"
+				
+				switch -regexp -- $line { 
+					{^\*INT}	{ 
+							# skip interact lines
+							cputs "$line"  $el_info_color
+							protected_send "$_el_eols"
+						}
+					^\!	{	# Send prompt after native expect lines
+							if { $param == "k" } {
+								cputs "Skipping:$line"  $el_info_color
+								protected_send "$_el_eols"
+							} else {
+								cputs "$line" $el_info_color
+								_el_script_exec "\|$line"  $_el_buf(stack)
+								# kick the prompt
+								protected_send "$_el_eols"
+								
+							}
+						}
+					^\>	{	# send line out and clump any following lines with < or +$
+							# clear clump list
+							set cli_list ""
+							# add lines to clump
+							while {$line!=-1} {
+								lappend cli_list $line 
+								incr _el_buf($_el_buf(stack),ptr)
+								# read line from buffer
+								set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
+								#puts "===L==>$line"
+								# is line part of clump: expect, dynvar, not-expect
+								if {[regexp {^\<|^\+\$|^\-\<} $line] == 0} {
+									#No more clump, roll back pointer
+									incr _el_buf($_el_buf(stack),ptr) -1
+									set line -1
+								}
+							}					
+							# send clump to _el_script_exec
+							#send_user "=====>$cli_list||$_el_buf(stack)"
+							foreach item $cli_list {
+								if { $item != "" } {
+									if { $param == "k" } {
+										cputs "Skipping:$item"  $el_info_color
+										protected_send "$_el_eols"
+									} else {
+										# execute next step
+										cputs "$item"  $el_info_color
+										_el_script_exec "\|$item" $_el_buf(stack)
+										#_el_script_exec "\|$item"
+									}
+								}
+							}
+							
+							# end clump send
+						}
+					^\~	{	# include a file
+							if { $param == "k" } {
+								cputs "Skipping:$line"  $el_info_color
+								protected_send "$_el_eols"
+							} else {
+								cputs "$line"  $el_info_color
+								# kick the prompt
+								protected_send "$_el_eols"
+								_el_script_exec "\|$line"
+							}
+						}
+					"-1" {
+							cputs "End of File" $el_warn_color
+						}
+					default {
+							if { $param == "k" } {
+								cputs "Skipping:$line"  $el_info_color
+								protected_send "$_el_eols"
+							} else {
+								cputs "$line" $el_info_color
+								_el_script_exec "\|$line"  $_el_buf(stack)
+								if {$_el(test_failed) == 1 } {
+									# step failed? kick the prompt
+									protected_send "$_el_eols"
+								}
+							}
+							
+							
+						}
+					}
+				}
+			-re {^(\x1b|`)([-]?[0-9])} {	#DEBUGGER .-1to9 Show next or last 1-9 lines
+					# .1to9 or .-1to9
+					#send_user "=====>[scan $interact_out(0,string) %c]|$interact_out(0,string)"
+					#catch { set param "$interact_out(1,string)" } error 
+					catch { set param "$interact_out(2,string)" } error 
+					
+					_el_buffer_show $param $_el_buf(stack)
+					protected_send "$_el_eols"
+				}
+			-re {^\x1bv|`v} {	#DEBUGGER .v Show Vars
+					show_vars
+					protected_send "$_el_eols"
+				}
+			-re {\x1bh|`h} {	#DEBUGGER .h Show help
+					interact_help
+					protected_send "$_el_eols"
+				}
+			-echo -re  {(^>[a-zA-Z0-9/$.]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z])(.+)\r} {
+					#### Support for EL commands in Interact
+					#### Permits pasting of multiple commands into Interact session
+					# create list of multiple pasted commands
+					set cli_list [split $interact_out(0,string) "\r"]
+					
+					# OS identification - .dll or "" = Cygwin, .so=Linux, .dylib=MacOS X
+					set os_id [info sharedlibextension]
+					if { $os_id == ".dll" || $os_id == "" } {
+						# Special expect to pick up Cygwin Pasted lines, which come one at a time
+						while 1 {
+							expect_user {
+								-re {(.+)\r} {
+									# strip newlines and add to cli_list
+									regsub {\n|\r|\r\n} $expect_out(1,string) "" cli_item
+									lappend cli_list $cli_item
+									} 
+								-timeout 1 timeout { break }
+								-re \003 {puts "\nAck!\n"; exit 1}
+								}
+							}
+							# end while
+					}
+					#end if os_id
+					# clear line of pasted text
+					send_user "                                                                      \r"
+					if {$DEBUG} {
+						send_user "\nDEBUG: Evaluating:\n"
+						foreach d_item $cli_list {
+							send_user "\t$d_item\n"
+						}
+					}
+					
+					#send_user "\n=====>$cli_list\n"
+					foreach item $cli_list {
+						#send_user "===I==>$item\n"
+						if { $item != "" } {
+							# call _el_script_exe in 'one-line' mode 
+							# add buf_stack context to allow jumping to labels
+							_el_script_exec "\|$item" $_el_buf(stack)
+						}
+					}
+					protected_send "$_el_eols"
+					return
+				}
+			} }  \
+		 error] } {
+			puts stderr "CONNECT ERROR: lost connection to $remote_host \n   $error"
+			# Fail script?
+			exit 1
+		}
+		protected_send "$_el_eols"
+	}
+	# restore script session
+	session_id_manager [ pop_session_id ]
+	set _el(success) 1
+	protected_send "$_el_eols"
+	# restore NOFAIL
+	incr NOFAIL -1
+
+}
+
+
+#
+#	Prompts are always a problem, this should _not_ require customization with the
+#	addition of User Defined Prompts '*/some_regex/' as of version 3.1.5
+#	These prompt regexs are setup to take just about any non-color prompt: >#%$
+#
+#
+proc wait_for_prompt { } {
+	global timeout WARN _el DEBUG expect_out el_warn_color
+	#Accept '>' '#' '%' or '$' prompt
+	if { $timeout == 0 } {
+		# delay in ms
+		after 50
+	}
+	set TIMEOUT_RETURN 0
+	# User Defined prompt is $_el(prompt)
+	if {[catch { expect { 
+		-re "$_el(prompt)" { } 
+		-re ".*> $" { } 
+		-re ".*# $" { } 
+		-re ".*% $" { } 
+		-re {.*\$ $} { } 
+		timeout { 
+			if {$WARN} { cputs "Warning:Prompt Timed Out!" $el_warn_color} 
+			set TIMEOUT_RETURN 1
+			# is user defined prompt being used?
+			if { $_el(default_prompt) != $_el(prompt)} {
+				if {$DEBUG} {
+					# gobble as much return text as possible
+					expect -notransfer -re ".*\n+" { }
+					# print out debug info to help user 
+					puts "DEBUG: User Defined Prompt:<<$_el(prompt)>>"
+					puts "  Not Found in<<$expect_out(buffer)>>"
+				}
+			}
+
+			} } } \
+		error ] } {
+			puts "\nERROR: $error: Bad User Defined Prompt: $_el(prompt)"
+			# Quit expect-lite
+			exit 1
+	}
+	if {$TIMEOUT_RETURN} { return 1 } else { return 0 }
+
+}
+
+
+
+
+#
+#	Print Usage
+#	
+#
+proc usage {} {
+	global version
+#	puts "usage: expect-lite remote_host=<remote_host_IP> cmd_file=<command_file> \[user_dir=<user_dir>\] \[const1=value1\]"
+	puts "usage: expect-lite -c <command_file> \[ -r <remote_host_IP>\] \[-d <user_dir>\] \\ "
+	puts "              \[const1=value1\] \[*DIRECTIVE\]"
+	puts "   or: expect-lite c=<command_file> r=<remote_host_IP>  \[d=<user_dir>\]      \\ "
+	puts "              \[const1=value1\] \[*DIRECTIVE\]"
+	puts "   eg. ./expect-lite -c pm_alt.elt -r host8 -d /home/sw myvar=myvalue *NOFAIL"
+	puts " "
+	puts "   additional login options: user_name=<username>  user_password=<password>"
+	puts "   eg. ./expect-lite c=pm_alternation.elt r=host-008 u=superuser p=mysecret"
+	puts " "
+	puts "   additional logging options: -V|-v|-vv|--verbose"
+	puts "        -V        prints \'expected\' lines (i.e lines beginning with < & << )"
+	puts "        -v        prints warnings, and infos (i.e. conditionals,  "
+	puts "                                   dynamic var assignments)"
+	puts "        -vv|--verbose   prints warnings and debug (i.e. expect match info) "
+	puts "   eg. ./expect-lite -vv r=host8  c=pm_alt.elt "
+	puts " "
+	puts "If set, the following environment variables will be used: "
+	puts "   EL_REMOTE_HOST               remote host to connect, default=none"
+	puts "   EL_CMD_FILE                  name of expect-lite script"
+	puts "   EL_USER_DIR                  change to this dir upon login"
+	puts "   EL_CONNECT_METHOD            telnet|ssh|ssh_key|none"
+	puts "   EL_CONNECT_USER              username for telnet|ssh"
+	puts "   EL_CONNECT_PASS              password for telnet|ssh"
+	puts "   EL_DELAY_WAIT_FOR_HOST       default=100"
+	puts "   EL_*                         user defined constants"
+	puts " "
+	puts "   Version $version by Craig Miller"
+	exit 0
+}
+
+
+
+#
+#	Takes full command path+file, and returns just the file name minus path
+#	
+#
+proc parse_cmd_file_nopath { cmd_file } {
+	# Is there a path component?
+	if {[regexp {/} $cmd_file] == 1 } {
+		set temp_list [split $cmd_file '/']
+		set len [expr [llength $temp_list] - 1 ]
+		return [lindex $temp_list $len]
+	} else {
+		return $cmd_file
+	}
+}
+
+#
+#	Assign cli arguments to the variable names
+#	Requires that $remote_host and $cmd_file are passed in via cli or
+#	that shell enviroment vars be set prior to running
+#		EL_REMOTE_HOST
+#		EL_CMD_FILE
+#		EL_USER_DIR
+#		EL_CONNECT_METHOD
+#		EL_CONNECT_USER
+#		EL_CONNECT_PASS
+#		EL_DELAY_WAIT_FOR_HOST
+#
+proc _el_read_args { argc argv } {
+	global  remote_host cmd_file user_dir env connect_method user pass delay_wait_for_host
+	global cli_namespace timeout_multiplier arg0 WARN DEBUG EXP_INFO el_warn_color el_err_color
+
+	# default timeout_multiplier multiplier to 1
+	set cli_namespace($timeout_multiplier) 1
+	
+	# If needed read parameters from Env Vars
+	catch { set remote_host $env(EL_REMOTE_HOST)}
+	if { $remote_host == "" } { set remote_host "none" }
+	
+	if { $cmd_file=="" } { catch { set cmd_file $env(EL_CMD_FILE)} }
+	if { $user_dir=="" } { catch { set user_dir $env(EL_USER_DIR)} }
+
+	if { $user=="" } { catch { set user $env(EL_CONNECT_USER)} }
+	if { $pass=="" } { catch { set pass $env(EL_CONNECT_PASS)} }
+	if { [info exists env(EL_CONNECT_METHOD)] } { catch { set connect_method $env(EL_CONNECT_METHOD)} }
+	if { [regexp {none|telnet|ssh|ssh_key} $connect_method] == 0 } { set connect_method "none" }
+
+	if { [info exists env(EL_DELAY_WAIT_FOR_HOST)] } { catch { set delay_wait_for_host $env(EL_DELAY_WAIT_FOR_HOST)} }
+	if { $delay_wait_for_host == "" } { set delay_wait_for_host "100" }
+	
+	# ensure arg list is separated by spaces
+	set argvstr [ join $argv ]
+	set argv [split $argvstr ]
+	set argc [ llength $argv ]
+	
+	if { $argc >= 1 ||  $cmd_file!="" }  {
+		# Walk thru additional args (should be cli constants)
+		for { set x  0 } { $x < $argc} { incr x } {
+			set optarg [ lindex $argv $x ]
+			catch {set optargval [ lindex $argv [expr $x + 1]]}
+			if { $optargval == "" } { 
+				# no optargval, set to a sane value
+				set optargval "--"
+			}
+			#puts "=====>$x|$optarg|$optargval|"
+			# Make script executable: check if script name, no other argument or directive
+			# script name cannot have '=', which would be interpretted as a constant
+			if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
+				set cmd_file $optarg
+				set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] 
+			}
+			# look for help & debug options which overide script options
+			# added -r and -c for remote_host & cmd_file respectively
+			if { [catch { switch -glob -- $optarg {
+				-h		-
+				--help	{ usage }
+				-v		{set WARN 10; set INFO 10}
+				-vv		-
+				--verbose	{set WARN 10; set DEBUG 10}
+				-vvv		{set WARN 0; set DEBUG 10}
+				-V		-
+				--verify	{set EXP_INFO 10; set INFO 10}
+				-r		{ set remote_host $optargval; incr x  }
+				-c		{ set cmd_file $optargval; set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] ; incr x }
+				-d		{ set user_dir $optargval; incr x  }
+				-u		{ set user $optargval; incr x  }
+				-p		{ set pass $optargval; incr x }
+			} } \
+			error ] } {
+				puts "Warning: Bad input option: $error"
+			}
+			#general vars
+			if [ regexp {.+=.*} $optarg ] {
+				# detect and parse args in format "var=value"
+				set user_var [string range $optarg 0 [expr [string first "=" $optarg] -1 ]]
+				set user_value [string range $optarg [expr [string first "=" $optarg] +1 ] [string length $optarg]]
+				#puts "->$user_var $user_value"
+				# populate required cli parameters and cli_constants
+				switch -glob -- $user_var {
+					remote_host -
+					r 		{ set remote_host $user_value }
+					cmd_file	-
+					c	 	{ set cmd_file $user_value 
+							# set script constant arg0 with script name
+							set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file]
+						}
+					user_dir	-
+					d		{set user_dir $user_value }
+					user_name	-
+					u		{set user $user_value }
+					user_password	-
+					p		{set pass $user_value }
+					default {
+						set cli_namespace($user_var) $user_value
+						puts "Const: $user_var = $cli_namespace($user_var)"
+						}
+				} 
+				
+			}
+			#cli-based directives (in form *DIRECTIVE)
+			if [ regexp {\*[A-Z_]+} $optarg] {
+				_el_global_directive $optarg
+			}
+		}
+
+
+		#puts "->$remote_host|$cmd_file|$user_dir"
+
+		# check that require paremeters are present
+		if { $remote_host=="" } { 
+			cputs "Error: Missing remote_host" $el_err_color
+			usage
+			}
+		if { $remote_host=="none" || $remote_host=="NONE" } { 
+			if {$WARN} { cputs "Warning: Remote Host=none, using Localhost" $el_warn_color }
+			# don't use remote login method but use localhost	
+			set connect_method "none"
+			}
+		if { $cmd_file=="" && [info exists ::EL_LIBRARY] != 1} { 
+			cputs "Error: Missing cmd_file"  $el_err_color
+			usage
+			}
+	}
+
+	# Assign any Environment Variables starting with 'EL_' to Constants
+	if { $DEBUG } {
+		puts "Env Vars -> Constants:"
+	}
+	foreach key [array names env] {
+		if {[regexp {^EL_} $key] == 1 } {
+			if { $DEBUG } {
+				puts "$key=$env($key)"
+			}
+			set cli_namespace($key) $env($key)
+		}
+	}
+
+	# show help if command file (script) is not given on command line			
+	if { $argc < 1 && $cmd_file=="" }  {
+		usage
+	}
+}
+
+
+#
+#	Takes full command path+file, and returns just the path to command file minus the filename
+#	This is used in including files
+#
+proc parse_cmd_file_path { cmd_file } {
+	# Is there a path component?
+	if {[regexp {/} $cmd_file] == 1 } {
+		set temp_list [split $cmd_file '/']
+		set len [expr [llength $temp_list] - 1 ]
+		regsub [lindex $temp_list $len] $cmd_file "" temp_path
+		
+		return $temp_path
+	} else {
+		return ""
+	}
+}
+
+#
+#	Login Method which uses user and password via Telnet to log into hosts
+#	If this is not your access method use one of the other login methods
+#
+proc connect_telnet_host {remote_host {optional_suppress_stdout "no"}} {
+	global spawn_id user pass _el_timeout _el_telnet DEBUG
+	#This spawns the telnet program - auto generates spawn_id var
+	set timeout 5
+	if { ($optional_suppress_stdout == "suppress_stdout") && ($DEBUG != 1)} {
+		# turn off stdout - suppress login banners - show with -vv
+		log_user 0
+	}
+	if { [catch { spawn $_el_telnet $remote_host  } error] } {
+		puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
+		# Fail script?
+		exit 1
+	}
+	#The script expects login
+	expect "ogin:"
+
+	#The script sends the user variable
+	if { [catch { send "$user\r"   } error] } {
+		puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
+		# Fail script?
+		exit 1
+	}
+	#The script expects Password
+	expect "assword:" 
+
+	#The script sends the password variable
+	# do not log password
+	set log_user 0
+	send "$pass\r" 
+	set log_user 1
+	#wait_for_prompt
+	set timeout $_el_timeout
+	# turn on stdout
+	log_user 1
+}
+
+#
+#	Subroutine used by ssh user/password method
+#	If this is not your access method use one of the other login methods
+#
+proc zlogin { pass login_attempts } {
+	global remote_host _el_eols
+	set timeout 2
+	set MAXLOGINATTEMPT 10
+	#set login_attempts 0
+	while { $login_attempts < $MAXLOGINATTEMPT} {
+		#puts "loop: $login_attempts"
+		expect {
+			-re "assword:"	{
+				# do not log password
+				set log_user 0
+				send "$pass$_el_eols" 
+				set log_user 1
+				#puts "send pass"
+				}
+			-re "Are you sure you want to continue connecting" {
+				send "yes$_el_eols"
+				#zlogin $pass $login_attempts
+				}
+			-re "Last login" { return }
+			-re "Tomato" { return }
+			-re {.+\n} { #expect connected  }
+
+		 }
+		 incr login_attempts
+		 #puts "here"
+	 }
+	 if { $login_attempts >= $MAXLOGINATTEMPT} {
+		puts stderr "\nCONNECT ERROR:Unable to login to $remote_host \n "
+		exit 1
+	 }
+}
+
+#
+#	Login Method which uses user and password via ssh to log into hosts
+#	If this is not your access method use one of the other login methods
+#
+proc connect_ssh_host {remote_host {optional_suppress_stdout "no"}} {
+	global spawn_id user pass _el_timeout DEBUG env
+	# work around for older versions of expect
+	#This spawns the ssh program - auto generates spawn_id var
+	#spawn ssh -l $user $remote_host
+	set timeout 15
+	if { $user == "" } {
+		# user username from environment
+		set user $env(USER)
+	}
+	# suppress stdout during login
+	if { ($optional_suppress_stdout == "suppress_stdout") && ($DEBUG != 1)} {
+		# turn off stdout - suppress login banners - show with -vv
+		log_user 0
+	}
+	if { [catch { spawn ssh -l $user $remote_host  } error] } {
+		puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
+		# Fail script?
+		exit 1
+	}
+	# debug help
+	#exp_internal 1
+	
+	set login_attempt 0
+	#better way of logging in (and catch any errors)
+	if { [ catch {zlogin $pass $login_attempt} error] } {
+		puts stderr "CONNECTION ERROR to $remote_host \n   $error"
+		exit 1
+	}
+	# turn off the debugging
+	#exp_internal 0
+	set timeout $_el_timeout
+	# turn on stdout
+	log_user 1
+	
+}
+
+#
+#	Login Method which assumes ssh keys are configured for login hosts
+#	If this is not your access method use one of the other login methods
+#
+proc connect_ssh_key_host {remote_host {optional_suppress_stdout "no"}} {
+	global spawn_id user pass _el_timeout DEBUG delay_wait_for_host _el_eols
+	# work around for older versions of expect
+	# Enable use of an alternet user for ssh_key method
+	# if $user is not blank, then use the alternet user
+	set timeout 30
+	if { $user != "" } { 
+		set login_user "$user@"
+	} else {
+		set login_user ""
+	}
+	# suppress stdout during login
+	if { ($optional_suppress_stdout == "suppress_stdout") && ($DEBUG != 1)} {
+		# turn off stdout - suppress login banners - show with -vv
+		log_user 0
+	}
+	#This spawns the ssh program - auto generates spawn_id var
+	if { [catch { spawn ssh $login_user$remote_host  } error] } {
+		puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
+		# Fail script?
+		exit 1
+	}
+	# TODO:Auto update ~/.ssh/known_hosts if needed
+	
+	# Test the connection by sending a return
+	if { [catch { send "$_el_eols"   } error] } {
+		puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
+		# Fail script?
+		exit 1
+	}
+	# allow time for remote banner (if present) to echo
+	#after [expr $delay_wait_for_host * 2]
+	
+	# answer quetion if given, else take any response as "connected"
+	set timeout 5
+	expect {
+		-re "Are you sure you want to continue connecting" {
+		send "yes$_el_eols"
+		}
+		-re {.+} { #puts "expect-lite: Connected" }
+		timeout { }
+	}
+	# debug help
+	#exp_internal 1
+	
+	# turn off the debugging
+	#exp_internal 0
+	set timeout $_el_timeout
+	# turn on stdout
+	log_user 1
+
+}
+
+#
+#	Login Method connects to localhost (no telnet or ssh)
+#	If this is not your access method use one of the other login methods
+#
+proc _el_connect_localhost {remote_host} {
+	# this proc just spawns a connection to a shell
+	# all other functions are handled by remote_host_init
+	
+	global remote_shell spawn_id _el_eols
+	# protect against empty remote_shell
+	if { $remote_shell == "" } { set remote_shell "bash" }
+	# spawn a local shell for localhost
+	if { [catch { spawn $remote_shell  } error] } {
+		puts stderr "CONNECT ERROR: Unable to connect to localhost \n   $error"
+		# Fail script?
+		exit 1
+	}
+	send " $_el_eols"
+	
+}
+
+#
+#	Reads configuration directives, prior to command file execution
+#	Sets global variables
+#	This function will eventually replace all user defined globals at top of script
+#
+proc read_set_config_directives { buf_stack } {
+	global remote_shell _el_buf
+	
+	# search for shell configuration directive (**SHELL=...)
+	set _search "^\\\*\*SHELL=.*"
+
+	# search buffer _el_buf($buf_stack) with $_search  
+	set _buf_ptr [lsearch -regexp $_el_buf($buf_stack) $_search ]
+		
+	set _line [_el_buffer_read $_buf_ptr $buf_stack]	
+	#puts "shell_line-------->$_line|$_buf_ptr"
+	if { $_buf_ptr != -1 } {
+		set _line_list [split $_line "="]
+		if { [llength $_line_list ] == 2 } {
+			set remote_shell [lindex $_line_list 1]
+		}
+		puts "expect-lite directive: Shell is: $remote_shell"
+	}
+}
+
+#
+#	Wraps expect send command in catch, reports error if connection is lost
+#	Error condition terminates script
+#
+proc protected_send { str } {
+	global remote_host
+	
+	if { [catch { send "$str"   } error] } {
+		puts stderr "CONNECT ERROR: Unable to connect to remote_host: $remote_host \n   $error"
+		# Fail script?
+		exit 1
+	}
+}
+
+#
+#	After logged into remote host, does house keeping activities before starting expect-lite script
+#		starts shell on remote host, sets sane prompt, and cd's to user directory (aka user_dir) if needed
+#	
+proc remote_host_init { user_dir  } {
+	global PROMPT _el_timeout timeout remote_host remote_shell DEBUG connect_method spawn_id delay_wait_for_host _el_eols
+	set timeout 2
+
+	# suppress stdout during login for *FORK
+	if { $DEBUG != 1} {
+		# turn off stdout - suppress login banners - show with -vv
+		log_user 0
+	}
+
+	# ensure we are using user's desired shell, and check connection
+	if {$connect_method != "none" } {
+		# handle real remote host invocation of shell
+		protected_send "$remote_shell$_el_eols"
+		
+	}
+	# wait for echo to appear when starting a shell
+	if { $remote_shell != "" } {
+		expect {
+			-re ".+\[%>#$\] $remote_shell.+" { if {$DEBUG} { puts "DEBUG: Starting Shell: $remote_shell\n" } }
+			timeout { if {$DEBUG} { puts "DEBUG: Unable to detect Shell Start\n" } }
+		}
+	}
+	# set sane prompt
+	switch -glob -- $remote_shell {
+		csh -
+		tcsh 	{ set _prompt "%c02 %# %L"
+					protected_send "set prompt = \"$_prompt\"$_el_eols" 
+					expect -re {.+prompt.+} { }
+				}
+		sh -
+		ksh -
+		bash		{ set _prompt "\"\[\\u@\\h:\\w\]\\$ \"" 
+					protected_send "export PS1=$_prompt$_el_eols" 
+					expect -re {.+PS1.+} { }
+				}
+		default 	{ set _prompt "\$ " 
+					protected_send "export PS1=\'$_prompt\'$_el_eols" 
+					protected_send "set prompt = \"$_prompt\"$_el_eols" }
+	}
+	# clear expect_out(buffer)
+	#expect -re {.+} {}
+	
+	# turn on stdout
+	log_user 1
+	
+	#only change directory if user_dir was passed as an arg, otherwise, user will set it in expect-lite script
+	if { $user_dir != "" } {
+		protected_send "cd $user_dir$_el_eols"
+		wait_for_prompt
+	}
+	set timeout $_el_timeout
+}
+
+#
+#	Control spawn_id sessions on host
+#
+#
+proc session_id_manager { fork_id } {
+	global spawn_id _el_fork _el_fork_id_list INFO connect_method remote_host _el timeout 
+	global DEBUG user_dir el_info_color _el_eols _el_fork_context
+
+	if { $fork_id == "default" } {
+		# set fork session back to default if count > 0
+		if { $_el_fork(count) > 0 } {
+			set spawn_id  $_el_fork(default)
+		}
+	} elseif { $fork_id != "" } {
+		# request for new fork session
+		
+		if {[info exists _el_fork($fork_id) ]} {
+			# connect to existing session
+			set spawn_id $_el_fork($fork_id)
+		} else {
+			# save current timeout
+			set current_timeout $timeout
+			# start new session on remote_host
+			# Use selected (at top of this file) connect_method
+			switch $connect_method {
+				telnet	{connect_telnet_host $remote_host "suppress_stdout" }
+				ssh		{connect_ssh_host 	$remote_host "suppress_stdout" }
+				ssh_key	{connect_ssh_key_host $remote_host "suppress_stdout"}
+				none		{_el_connect_localhost $remote_host }
+			}
+			# set a sane prompt for additional sessions
+			remote_host_init $user_dir
+			# restore current timeout
+			set timeout $current_timeout 
+			set _el_fork($fork_id) $spawn_id
+			incr _el_fork(count)
+			# update list of fork_id's
+			lappend _el_fork_id_list $fork_id
+			# set default eols for this session
+			set _el_fork_context($fork_id,eols) $_el_eols
+		}
+		if { $_el_fork($fork_id) == "default" } {
+			set spawn_id  $_el_fork(default)
+		}
+		# end if		
+	} elseif {$fork_id == "" } {
+		# Show current session name
+		if { [info exists _el_fork(current)] } {
+			set fork_id $_el_fork(current)
+		} else {
+			set fork_id "default"
+		}
+	}
+	if {$INFO && !$DEBUG} {
+		cputs "\n\nINFO: FORK session is: $fork_id,	Active sessions are: $_el_fork_id_list\n" $el_info_color
+	} elseif { $DEBUG } {
+		puts "\n\nDEBUG: FORK session is: $fork_id, Spawn_id=$spawn_id, fork_count:$_el_fork(count), active sessions:$_el_fork_id_list\n"
+	}
+	set _el_fork(current) $fork_id
+	return $fork_id
+}
+
+
+#
+#	push spawn_id sessions on fork_id stack
+#	used by interact
+#
+proc push_session_id { fork_id } {
+	global spawn_id _el_fork _el_fork_stack INFO  DEBUG
+
+	# remove any \n or \r's
+	regsub -all {[ \n\r]+} $fork_id "" fork_id
+	if { [string length $fork_id ] > 0 } {
+		# push new session_id on stack
+		lappend _el_fork_stack $_el_fork(current)
+	}
+	set len [llength $_el_fork_stack]
+}
+
+#
+#	pop spawn_id sessions from fork_id stack
+#	used by interact, to set proper *FORK session when continuing the expect-lite script
+#
+proc pop_session_id { } {
+	global spawn_id _el_fork _el_fork_stack INFO  DEBUG
+
+	if {[info exists _el_fork_stack ]} {
+		set len [llength $_el_fork_stack]
+		if { $len > 0 } {
+			# get last value on stack
+			set fork_id [lindex $_el_fork_stack [expr $len -1 ]]
+			# delete last item in stack
+			set _el_fork_stack [lreplace $_el_fork_stack end end]
+			# return last value of fork_id from stack
+			return $fork_id
+		}	
+	}
+	return ""
+}
+
+#
+#	Subroutine to remove first char from string and return substring
+#
+#
+proc _el_strip_char { string char } {
+	#puts "s->$string||$char||"
+
+	regsub -- $char $string "" stringb
+	#puts "s->$stringb||$char||"
+	return $stringb
+}
+
+
+
+#
+#	Find a color in a comment line
+#	
+#
+proc find_color { str } {
+	global el_color
+	
+	set fcolor ""
+	# detect first word of comment, if it is a color, then so use it
+	set l_str [split $str]
+	set first_word [lindex $l_str 0 ]
+	#puts "------------------>$l_str|$first_word|[lsearch [array names el_color] $first_word ]|"
+	if {[lsearch [array names el_color] $first_word ] != -1} {
+		set fcolor $first_word
+	}
+	return $fcolor
+}
+
+#
+#	Prints a comment line (begins with a ';')
+#	
+#
+proc print_comment_line { } {
+	global comment_line timeout_line el_info_color el_color
+
+	
+	# initialize font color
+	if { $comment_line != "" } {
+		set fcolor [find_color $comment_line]
+		if { $fcolor != "" } {
+			# remove first word
+			regsub "$fcolor" $comment_line "" comment_line
+		}
+	}
+	
+	# print ';' printable comment
+	if { $comment_line != "" } {
+		#puts "\n$comment_line\n"
+		cputs "\n$comment_line\n" $fcolor
+		set comment_line ""
+		} 
+	# print new expect timeout value (if needed)
+	if { $timeout_line != "" } {
+		cputs "\n$timeout_line\n" $el_info_color
+		set timeout_line ""
+		} 
+
+}
+
+
+#
+#	Used for debugging only, Prints array
+#	
+#
+proc parray { name } {
+	upvar $name a
+	foreach e1 [lsort [array names a]]  {
+		puts "$e1 = $a($e1)"
+	}
+}
+
+#
+#	Prints all user vars and constants
+#	Called by *SHOW VARS & IDE <esc>v
+#
+proc show_vars { } {
+	global user_namespace cli_namespace arg0
+	
+	set blank "                    "
+	set blank_len [string length $blank]
+	set var_list [array names user_namespace]
+	set var_list_sorted [lsort $var_list]
+
+	puts "DEBUG Info: Printing all expect-lite variables"
+	# print internal vars
+	set ii_len [string length $arg0]
+	set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
+	puts "Var:arg0 $ii_blank Value:$cli_namespace($arg0)"
+	
+	foreach ii $var_list_sorted {
+		# create aligned columns
+		set ii_len [string length $ii]
+		set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
+		# is a constant overiding the var?
+		if { [info exists cli_namespace($ii) ] } {
+			set iii_len [string length $cli_namespace($ii)]
+			set iii_blank [string range $blank 1 [expr $blank_len - $iii_len]]
+		}
+		# don't print array initialization var (zero)
+		if { $ii != 0 } {
+			if { [info exists cli_namespace($ii) ] } { 
+				# print var, value, Const
+				puts "Var:$ii $ii_blank Value:$user_namespace($ii) $iii_blank Const:$cli_namespace($ii)"
+			} else {
+				# print var, value
+				puts "Var:$ii $ii_blank Value:$user_namespace($ii)"
+
+			}
+		}
+	}
+}
+
+#
+#	Resolves user vars to values, only if there isn't a Constant with the same name
+#	Constants are always given preference over user vars (defined in the script)
+#	returns value of var if known, or replaces $var format (for shell vars)
+#
+proc resolve_var_sub var {
+	global user_namespace cli_namespace WARN INFO DEBUG el_info_color
+
+	if { $var != "" } {
+		set append_value 1
+		# we have the var
+		set user_var $var
+		
+		#puts "var>$user_var"
+
+		# Give priority over Constants, only assign Vars if Constant not present
+		if { [catch {set user_value $cli_namespace($user_var)}]  } {
+			if { [catch {set user_value $user_namespace($user_var)}] } {
+				# go quietly into the night
+				#puts stderr "VAR NOT FOUND: |$user_var|"
+				# unknown var
+				set append_value 0
+			}
+
+		} else {
+			# Show all constant substitutions if in DEBUG
+			if {$DEBUG} {
+				cputs  "INFO: CONST FOUND: $user_var = $cli_namespace($user_var)" $el_info_color
+			}
+			# Show non ENV constant substitutions in INFO
+			if { $INFO==1 && [regexp {^EL_} $user_var]!=1 } {
+				
+				cputs  "INFO: CONST FOUND: $user_var = $cli_namespace($user_var)" $el_info_color
+			}
+		}
+		if { $append_value } {
+			#puts "u_v>$var=$user_value"
+			# only append valid vars
+			return $user_value
+		} else {
+			# if unknown var, be sure to put it back on line with a '$' in front for shell vars
+			return "\$$var"
+		}
+	} else {
+		return ""
+	}
+
+}
+
+#
+#	A rather complicated subroutine (sorry) which parses out user vars in the script
+#	The sep_list defines what chars are _not_ in vars
+#	returns value of var, or $var if shell var
+#
+#	This function uses a two stage TCL command "split" to parse the expect-lite variables
+#		For example, the following line requires parsing: "mount$this$that#other"
+#			1) The first stage split will split on '$' resulting in "mount this that#other"
+#			2) "mount" will be discarded, since it is the first part, and not preceeded with a '$'
+#			3) The remaining line segments (in a TCL list) will go to the second split stage which
+#				cycles thru a known list of characters signaling the end of a variable name (sep_list)
+#			4) "this" passes the second stage, and is passed to proc resolve_var_sub for resolution
+#			5) "that#other" will be split again into "that other" in the second split stage
+#			6) Only the first line segment after the second stage split is sent to proc resolve_var_sub 
+#				for resolution (of key value pairs)
+#				In this example it would be "that" which is sent for resolution
+#			7) The entire line is reassembled after var resolution, and returned
+#
+proc parse_var { var sep } {
+	# parses the string passed, separating out the Vars and passing them to resolve_var_sub to be resolved
+	# List of Chars which define the end of a Var
+	set sep_list { ! @ # % * / { } \\ ( ) . [ ] = ? \" : - , }
+	#puts "v>$var|s>$sep"
+	set resolved_line ""
+	
+	set var_list [ split $var $sep]
+	#puts "vl>$var_list|sep>$sep"
+	# If only 1 var on the line
+	if { [llength $var_list] == 1 } {
+		if { $sep == "$" } {
+			#puts "one only"
+			# return first chunk which is NOT a var in var_list
+			append resolved_line $var
+		} else {
+
+			append resolved_line [resolve_var_sub $var]
+		}
+	} else {
+		# First time in (no recursion) 
+		if { $sep == "$" } {
+			append resolved_line [lindex $var_list 0]
+		} else {
+			# Dereferences Vars on First time through the var_list
+			#puts "look here"
+			append resolved_line [resolve_var_sub [lindex $var_list 0]]
+		}
+		#puts "vl>$var_list"
+		for {set j 1} {$j<[llength $var_list]} {incr j} {
+			set var_only 1
+			# are there other strange chars in the var?
+			# use low_water_marker to find closest one
+			# FIXME: limits var length to less that 255
+			set low_water_marker 255
+			foreach k $sep_list {
+				set odd_char_pos [string first $k [lindex $var_list $j]]
+				if { $odd_char_pos > -1 } { 
+					if { $odd_char_pos < $low_water_marker } { 
+						set low_water_marker $odd_char_pos
+						set s $k
+					}
+					set var_only 0
+				}
+				#puts "k>[string first $k [lindex $var_list $j]]]"
+			}
+			if { $var_only } {
+				# "var only" no other strange chars found
+				if { $sep == "$" } {
+					#puts "vo>[lindex $var_list $j]|j>$j"
+					append resolved_line [resolve_var_sub [lindex $var_list $j]]
+				} else {
+					#puts "j>$j|sep>$sep"
+					# add literals back to the line (in a recursed call)
+					append resolved_line $sep[lindex $var_list $j]
+				}
+			} else {
+				#puts "j>$j|recurse!"
+				# Recursion Call with smaller chunck - splits known var with "extra" chars
+				# and make sure the var length isn't zero
+				if { ($sep == "$") && ($low_water_marker != 0) } {
+					append resolved_line [parse_var [lindex $var_list $j] $s]
+				} else {
+					append resolved_line $sep[lindex $var_list $j]
+				}
+			}
+			#puts "j>$j|val>$resolved_line"
+		}
+	}
+	#puts "r>$resolved_line"
+	return $resolved_line
+} 
+# end of parse_var
+
+
+#
+#	Proc available to Expect Commands (expect-lite commands which start with '!') to fail test
+#	Called by *TERM & *FAIL
+#	
+proc _el_fail_test { {optional_exit ""}} {
+	global delay_wait_for_host spawn_id timeout INFO el_info_color el_err_color
+	
+	# delay to let terminal catch up before terminating script
+	after [expr $delay_wait_for_host *10]
+	
+	# wait for additional text in session
+	set timeout 1
+	wait_for_prompt
+	
+	if {($optional_exit == "")  || ($optional_exit == "FAIL") } {
+		after [expr $delay_wait_for_host *10]
+		if {$INFO} {cputs "\n\n##Overall Result: FAILED \n\n" $el_err_color }
+		exit 1
+	} elseif { $optional_exit == "PASS" } {
+		if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $el_info_color }
+		exit 0
+	}
+}
+
+
+#
+#	Buffer management functions
+#	A buffer is used to permit random access to the command script
+#		This enables looping, but setting the buffer pointer to a 
+#		previous line in the script
+#	The conditional/jump mechanism will use this method for looping
+#
+
+#
+#	Opens command script and reads into buffer (tcl list)
+#	Returns buffer
+#
+proc _el_buffer {cmd_file} {
+	global _el_buf
+
+	set line_buffer {}
+	# Protect against no file to read
+	if { [ catch { set infile [open $cmd_file r ] } error] } {
+		puts stderr "Unable to open cmd/include_file \n   $error"
+		exit 1
+	}
+	while { -1 != [gets $infile buf_line ]} {
+		# remove leading white space on line (permitting indentation
+		regsub {^[ \t]+} $buf_line {} buf_line
+
+		#trim white space at end of labels
+		if { [ regexp {^%} $buf_line ] } {
+			# remove leading white space on line (permitting indentation
+			regsub {[ \t]+$} $buf_line {} buf_line
+		}
+		
+		# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
+		if { [regexp {^[$-/:-@!~]} $buf_line ] } {
+			lappend line_buffer $buf_line
+		}
+		
+	}
+	close $infile
+	#puts "-> $line_buffer|[llength $line_buffer] "
+	
+	# push new buffer stack
+	incr _el_buf(stack)
+	# save the buffer
+	set _el_buf($_el_buf(stack)) $line_buffer
+	# initialize the buffer pointer - points to the line no in the buffer
+	set _el_buf($_el_buf(stack),ptr) 0
+	
+	# return the stack ID of this buffer
+	return $_el_buf(stack)
+}
+
+#
+#	Reads buffer as if it were a file, returning a line from the buffer
+#	
+#
+proc _el_buffer_read { line_no buf_stack} {
+	global _el_buf
+
+	#puts " $line_no | $buf_stack | $_el_buf($buf_stack,ptr) "
+	
+	# Do not read past end of buffer
+	if { $line_no < [llength $_el_buf($buf_stack)] } {
+		return [lindex $_el_buf($buf_stack) $line_no]
+	} else {
+		return -1
+	}
+}
+
+#
+#	Reads buffer, prints n lines
+#	
+#
+proc _el_buffer_show { num_of_lines buf_stack} {
+	global _el_buf el_info_color
+	#puts " $num_of_lines | $buf_stack | $_el_buf($buf_stack,ptr) | [expr  $_el_buf($buf_stack,ptr) + $num_of_lines] "
+	
+	# don't print lines which are not in the buffer (have -1)
+	proc print_line { line } {
+		global el_info_color
+		if { $line != -1 } {
+			cputs "$line" $el_info_color
+		}
+	} 
+	# end print_line
+	
+	if {$num_of_lines > 0} {
+		cputs "Printing next $num_of_lines line(s) of script:" $el_info_color
+		set num_of_lines [expr $num_of_lines + 1 ]
+		for {set n [expr $_el_buf($buf_stack,ptr) +1]} {$n<[expr $num_of_lines + $_el_buf($buf_stack,ptr)]} {incr n} {
+			print_line [ _el_buffer_read $n $buf_stack ]
+		}
+	} elseif {$num_of_lines < 0} {
+		cputs "Printing last [expr {abs($num_of_lines)}] line(s) of script:" $el_info_color
+		for {set n [expr  $_el_buf($buf_stack,ptr) + $num_of_lines]  } {$n <  $_el_buf($buf_stack,ptr)} {incr n } {
+			print_line [ _el_buffer_read $n $buf_stack ]
+		}
+	} else {
+		# print current line
+		cputs "Printing current line of script:" $el_info_color
+			print_line [ _el_buffer_read $_el_buf($buf_stack,ptr) $buf_stack ]
+	
+	}
+}
+
+#
+#	Buffer Search
+#	Searches buffer from line_ptr down to end of buffer
+#	If search fails, search will 'wrap' and continue from beginning of buffer
+#	This allows duplicate search items in the buffer, finding the first succeding one
+#		However search items used as looping labels should be unique!
+#
+proc _el_buffer_search {line_ptr line_search buf_stack} {
+	global _el_infinite_loop WARN INFO el_color el_info_color el_err_color _el_comment_color _el_buf
+	# search down first
+	if {$INFO} {
+		# start INFO color
+		if {$_el_comment_color == "none"} {
+			puts  -nonewline $el_color($el_info_color)
+		}
+		puts -nonewline "\nJumping to label"
+		
+	}
+	set _ptr [lsearch -start $line_ptr $_el_buf($buf_stack) $line_search]
+	if { $_ptr == -1 } {
+		# wrap search starting at beginning of buffer
+		if {$INFO} {
+			puts -nonewline ", Wrapping search"
+		}
+		set _ptr [lsearch  $_el_buf($buf_stack) $line_search]
+		if {$WARN && $_ptr < 0} {
+			puts -nonewline "\n\nWARNING: Label not found"
+		}
+		
+		# decrement infinite loop detector 
+		incr _el_infinite_loop -1
+		if { $_el_infinite_loop < 1 } {
+			# return search not found
+			cputs ":$line_search\n\n\nERROR: Infinite Loop Detected!\n\n" $el_err_color
+			return -2
+		}
+	}
+	# put final field on info line
+	if {$INFO} {
+		cputs ":$line_search\n" $el_info_color
+	}
+	#puts "|$line_search|$line_ptr|$_ptr|[lindex $_el_buf($buf_stack) 209]|"
+	return $_ptr
+}
+#
+#	End of Buffer management functions
+#
+
+#
+#	Set Global expect-lite Directives
+#	
+#
+proc _el_global_directive { g_dir_str } {
+	global INFO EXP_INFO WARN DEBUG el_info_color el_warn_color el_err_color _el_comment_color
+	global _el_eols _el_fork_context _el_current_session _el_infinite_loop NOFAIL
+	
+	switch -glob $g_dir_str {	
+		"\\*INFO"	{	# Turn on INFO logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set INFO 1
+		}
+		"\\*EXP_INFO"	{	# Turn on Expect INFO logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set EXP_INFO 1
+		}
+		"\\*WARN"	{	# Turn on WARN logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set WARN 1
+		}
+		"\\*DEBUG"	{	# Turn on DEBUG logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set DEBUG 1
+		}
+		"\\*NOINFO"	{	# Turn off INFO logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# do not disable if CLI has enabled
+			if {$INFO != 10 } { set INFO 0 }
+
+		}
+		"\\*NOEXP_INFO"	{	# Turn off Expect INFO logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			if {$EXP_INFO != 10 } { set EXP_INFO 0 }
+		}
+		"\\*NOWARN"	{	# Turn off WARN logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# do not disable if CLI has enabled
+			if {$WARN != 10 } { set WARN 0 }
+
+		}
+		"\\*NODEBUG"	{	# Turn off DEBUG logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# do not disable if CLI has enabled
+			if {$DEBUG != 10 } { set DEBUG 0 }
+
+		}
+		"\\*NOCOLOR"	-
+		"\\*NOCOLOUR"	{	# Turn off Color logging
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# set INFO color
+			set el_info_color none
+			# set WARN color
+			set el_warn_color none
+			# set ERROR color
+			set el_err_color none
+			# set global color
+			set _el_comment_color none		 	
+		}
+		"\\*TERM"	{	# Terminate but Pass Test
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			_el_fail_test PASS
+		}
+		"\\*FAIL"	{	# Terminate and Fail Test
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			# set test to fail
+			set _el(success) 0
+			_el_fail_test
+		}
+		"\\*EOLS LF"	{	# Set End of Line Sequence to LF
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set _el_eols "\n"
+		}
+		"\\*EOLS CRLF"	{	# Set End of Line Sequence to CRLF
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set _el_eols "\r\n"
+		}
+		"\\*SHOW VARS"	{	# Show expect-lite variables
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			show_vars
+		}
+		"\\*INTERACT"	{	# place into expect interact mode
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			#TODO: Allow interact to switch sessions with basic el_shell
+			# using simple expect interact for now
+			# Jump to interact
+			instant_interact_sig
+		}
+		"\\*FORK*"	{	# Spawn/Switch to a new session
+			set fork_list [split $g_dir_str]
+
+			if { [llength $fork_list] > 2 } {
+				if {$WARN} {
+					cputs "\n\nWarning: FORK: Too Many Names: $g_dir_str\n" $el_warn_color
+				}
+				# invalid *FORK command, exit this function
+				return
+			} elseif {[llength $fork_list] == 2 } {
+				# set the fork_id to the passed value
+				set fork_id [lindex $fork_list 1]
+				# store current eols in current session fork_context
+				set _el_fork_context($_el_current_session,eols) $_el_eols
+
+			} elseif {[llength $fork_list] == 1 } {
+				# no arguments to *FORK, then display current session name
+				set fork_id $_el_current_session
+			}
+			# spawn/switch to fork_id session
+			set _el_current_session [session_id_manager $fork_id]
+			# set eols from new fork_id_context
+			set _el_eols $_el_fork_context($_el_current_session,eols)
+
+
+		}
+		"\\*NOFAIL"	{	# Never fail the test
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			incr NOFAIL
+		}
+	}
+	# end switch glob
+	
+	# set values with a parameter (using regex)
+	switch -regexp $g_dir_str {	
+		"\\*INFINITE_LOOP [0-9]+"	{	# expect-lite infinite loop value
+			cputs "\nexpect-lite directive: $g_dir_str " $el_info_color
+			set varlist [split $g_dir_str ]
+			set _el_infinite_loop [lindex $varlist 1]
+		}
+		
+	}
+	# end switch regex
+}
+
+#
+#	Heart of expect-lite, reads through script file, and takes appropriate action (based on switch statement)
+#	
+#
+proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
+	# default parameters: cmd_file is "" in library mode
+	#	buf_stack is used when el_script is called recursively (e.g. include)
+	global remote_host _out _out_nowait _in _in_noregex _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
+	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 _el_comment_color el_info_color el_warn_color el_err_color _el_eols _el_fork_context _el_buf EXP_INFO
+	global _el_current_session NOFAIL
+		
+	set prev_line ""
+	set comment_line ""
+	set timeout_line ""
+	set _el_fail_script ""
+	
+	# clear expect lines list
+	set _el_cont_lines ""
+	
+	# set default session (aka fork)
+	set _el_current_session $_el_fork(current)
+	#fork_id
+
+	#
+	# Dereference Vars if needed in $_el(line) as read from cmd file	
+	#	
+	proc _el_deref_line {} {
+		global _el _var _cond
+		if { [regexp {.*\$[A-Za-z0-9]+.*} $_el(line) ] } {
+			# Detect the use of a user_var
+			#puts "l0>$_el(line)"
+			switch -regexp -- $_el(line) {
+				{^\$.*} -				
+				{^\+\$.*} {
+					# this is a dyn var definition line - remove leading '+'
+					if { [regexp -line {^\+\$.*} $_el(line)] == 1} {
+						set prepend "+"
+						# remove leading '+'
+						regsub {^\+} $_el(line) {} _el(line)
+						
+						} else {set prepend ""}
+					# this is a var definition line - don't dereference first var (it is being set)
+					set parse_list1 [split $_el(line) "="]
+					# check that this is an assignment, and not an increment var command
+					if { [llength $parse_list1] == 2 } {
+						# check if there are other variables on left side of equals assignment
+						set _left_vars [lindex $parse_list1 0]
+						set _el_var_list [split $_left_vars "$"]
+						#puts "========>$_el_var_list"
+						# is there more than one var on the left-side of the assignment?
+						if { [llength $_el_var_list] > 2 } {
+							set _left_vars [join [lrange $_el_var_list 1 end ] "$"]
+							# dereference left-side vars except first one
+							set _left_vars [parse_var $_left_vars $_var]
+							set _left_vars "\$[lindex $_el_var_list 0]$_left_vars"
+							# detect illegal chars in var name?
+							#regsub {[^A-Za-z0-9_$]} $_left_vars {} _left_vars
+						}
+						# 1st pass of dereferncing assignment variables
+						set _el_assignment [parse_var [lindex $parse_list1 1] $_var]
+						# 2nd pass of dereferencing assignment variables
+						set _el(line) "$_left_vars=[parse_var $_el_assignment $_var]"
+					}
+					# place '+' back on front when needed
+					set _el(line) "$prepend$_el(line)"
+					#puts "l2>$_el_assignment"
+					#puts "l2>$_el(line)"
+				} 
+				{^\-\$.*} {
+					# this is a decr var line - don't touch it
+				}	
+				{^\=\$.*} {
+					# this is a math var definition line - don't dereference first var (it is being set)
+					# separate var from rest of line with space
+					regsub {^(=\$[A-Za-z0-9_]+)}  $_el(line) {\1 } _el(line)
+					set parse_list1 [split $_el(line) " "]
+					set _math_var [lindex $parse_list1 0]
+					# remove math variable from list
+					set parse_list1 [lreplace $parse_list1 0 0]
+					set _parse_line [ join $parse_list1 " " ]
+					#puts "l2.1>$_parse_line"
+					# first pass at dereferencing variables
+					set _parse_line [parse_var $_parse_line $_var]
+					set _el(line) "$_math_var  [parse_var $_parse_line $_var]"
+					
+					#puts "l2>$_el(line)"
+				} 
+				{^\#.*} { 
+					# this is a comment line - don't touch it
+				} 
+				{^\?.+\?.+} {
+					# This is a conditional line, only dereference Vars in Conditional part
+					# remove "if" if present
+					regsub {^\?[iI]?[fF]?} $_el(line) "?" _el(line)
+					# insert spaces around conditional operator to permit proper resolving of variables
+					# Only act on conditional part of the line (between the ?'s)
+					#regsub {([<>][^^][=]?)} $_el(line) { \1 } _el(line)
+					regsub {\?(.+)([<>][=]?)(.+)\?(.+)} $_el(line) {? \1 \2 \3 ?\4} _el(line)
+					#puts "PL0>$_el(line)"
+					# parse cond from action
+					#set parse_list1 [split $_el(line) "?"]
+					
+					set parse_list1 ""
+					# remove first '?' on conditional line
+					regsub {^[ \t]*[?]} $_el(line) {} _el(line)
+					# parse cond from action
+					lappend parse_list1 [string range $_el(line) 0 [expr [string first $_cond $_el(line)] - 1]]
+					lappend parse_list1  [string range $_el(line) [expr [string first $_cond $_el(line)] + [string length $_cond] ] [string length $_el(line)]]
+
+					#puts "PL1>$parse_list1|[llength $parse_list1]"
+					if { [llength $parse_list1] >= 2 } {
+						# rebuild _el_line: ?cond?$action_str
+						# build action assigment and else_action without dereferencing
+						set action_str " [join [lrange $parse_list1 1 [llength $parse_list1] ] ""]"
+						# first pass dereferencing
+						set _parse_line [parse_var [lindex $parse_list1 0] $_var ]
+						set _el(line) "?[parse_var $_parse_line $_var]? $action_str"
+					}
+					#puts "EL_LINE_COND>$_el(line)"
+				
+				}
+				default {
+					#puts "EL_LINE1>$_el(line)"
+					# Process Line resolving vars if needed
+					set parse_list1 [split $_el(line) ]
+					#puts "p1>$parse_list1"
+					set plist2 {}
+					foreach i $parse_list1 {
+						lappend plist2 [ parse_var $i $_var ]
+					}
+					set _el(line2) [join $plist2 " "]
+					set _el(line) $_el(line2)
+					# are there still vars to be dereferenced, if so, to a second pass
+					if { [regexp {.*\$[A-Za-z0-9]+.*} $_el(line) ] } {
+						# Process Line resolving vars if needed
+						set parse_list1 [split $_el(line) ]
+						#puts "p1>$parse_list1"
+						set plist2 {}
+						foreach i $parse_list1 {
+							lappend plist2 [ parse_var $i $_var ]
+						}
+						set _el(line2) [join $plist2 " "]
+						set _el(line) $_el(line2)
+					}
+					#puts "EL_LINE2>$_el(line)"
+
+				} 
+			} 
+			#switch
+		} 
+		#if
+	} 
+	#proc _el_deref_line
+
+
+	#
+	#	Execute expect lines buffered in list variable _el_lines 
+	#
+	#
+	proc _el_exec_expect {} {
+		#Allow embedded Expect access to only the following internal vars
+		#global cli_namespace user_namespace timeout remote_host user_dir 
+		global errorInfo 
+		upvar _el(_el_lines) __el_lines _el_cont_lines __el_cont_lines 
+
+		#puts "=>[llength _el_lines]:$_el_lines:"
+		if {  $__el_lines != {} } {
+
+			# join Expect lines		
+			set __el_cont_lines [join $__el_lines " ; "]
+			if {$::DEBUG} {puts "EL-Expect: $__el_cont_lines \n"}
+
+			if {[ catch { uplevel {eval $_el_cont_lines }}  error ]} {
+				regsub -all " ; " $__el_cont_lines "\n" __el_cont_lines
+				puts "ERROR: Expect: \'\n$__el_cont_lines\' \n$errorInfo\n"
+			}
+
+			# clear cont lines
+			set __el_lines {}
+			# re-derefence variables in $_el(line)
+			#	required when embedded expect changes user_namespace(variable) values
+			_el_deref_line
+		}	
+	} 
+	# end of _el_exec_expect
+
+	
+	# idea: if $cmd_file begins with '|' then process as a _el(line) rather than a file
+	# 	Used for conditional actions, which are a recursive call to _el_script_exec
+	#	Also used by interact to execute lines of expect-lite script
+	# initialize vars
+	set _one_line 0
+
+	if { $cmd_file == "" } {
+		# use pre-read _el_buf(stack)
+		# read first line of buffer
+		set _el(line) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack]
+	
+	} elseif { [ regexp {^\|} $cmd_file ] == 0} {
+		#puts "zzz>$cmd_file|[ regexp {^\|} $cmd_file ]"
+		# read in cmd_file to buffer
+		set buf_stack [_el_buffer $cmd_file]
+		# change to passed directory, if needed (and set term type & shell) for main script
+		if {$cli_namespace($arg0) == [parse_cmd_file_nopath  $cmd_file]} {
+			# is main script name equal to command file (script) name 
+			# or Is this an include file, then don't do remote_host_init
+			read_set_config_directives $buf_stack
+			# init prompt for first (default) session
+			remote_host_init $user_dir
+			# kick the prompt
+			protected_send "$_el_eols"
+		}
+		
+		# set default fork session
+		if { [catch { set _el_fork(default) $spawn_id  } error] } {
+			puts stderr "BUG: Expect-lite: Bug in _el_script_exec init code while setting default FORK session \n   $error"
+			# Fail script?
+			exit 1
+		}
+		
+		# get first line of cmd_file from buffer
+		set _el(line) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack]
+		# remove leading white space on line (permitting indentation
+		regsub {^[ \t]+} $_el(line) {} _el(line)
+		set _one_line 0
+
+	} else {
+		# cmd_file is string to evaluate (trim leading spaces if needed)
+		regsub {\|[ ]*(.*)} $cmd_file {\1} _el(line)
+		set _one_line 1
+	}
+	# set test up for success
+	set _el(success) 1
+	while { -1 != $_el(line) } {
+		# deref line
+		_el_deref_line
+		
+				
+		#puts "el(line):$_el(line)"
+
+		
+		switch -regexp -- $_el(line) {
+			^\#	{	# Don't send lines that start with a '#' which are commented
+			
+					print_comment_line
+
+				}
+			{(^>|^>>)\^[A-\]a-z]}	{
+					# Don't wait for prompt, Generalized routine to send control chars
+					
+					# get ascii value of char
+					scan [string index $_el(line) [expr [string length $_el(line)] -1]] %c control_char_ascii
+					# parse char from passed string
+					set control_char [string index $_el(line) [expr [string length $_el(line)] -1]]
+					# Check if passed char is lower case
+					if {[expr $control_char_ascii - 96] > 0 } {
+						# Send lower case control char
+						send [format %c [expr $control_char_ascii - 96]]
+					} else {
+						# Send upper case control char
+						send [format %c [expr $control_char_ascii - 64]]
+					}
+					#puts "=>$control_char_ascii"
+					# notify user
+					puts "sending ^$control_char\n"
+					set prev_line $_el(line)
+				}
+			^\>>	{	# Don't wait for Prompt just send the line
+			
+					print_comment_line
+					# execute expect lines if present
+					_el_exec_expect
+					
+					# delay to give remote-host a little time (in ms)
+					after 10
+
+					# Check of remote_host is still connected before sending string
+					if { [catch { send  "[_el_strip_char $_el(line) $_out_nowait]$_el_eols"  } error] } {
+						cputs "CONNECT ERROR: Lost connection to $remote_host \n   $error \nExiting..." $el_err_color
+						# Fail script
+						exit 1
+					}
+					set prev_line $_el(line)
+					# clear expect buffer
+					expect -re {.*} {}
+					
+				}
+			^\>	{	# Wait for Prompt and send the line
+					
+					# do not wait for prompt if only one_line
+					if { $_one_line == 0 } {
+						wait_for_prompt
+					}
+					print_comment_line
+					# execute expect lines if present
+					_el_exec_expect
+					
+					# Set test up for success
+					set _el(success) 1
+					
+					# Check of remote_host is still connected before sending string
+					if { [catch { send   "[_el_strip_char $_el(line) $_out]$_el_eols"  } error] } {
+						puts stderr "CONNECT ERROR: Lost connection to $remote_host \n   $error \nExiting..."
+						# Fail script
+						exit 1
+					}
+					set prev_line $_el(line)
+					# clear expect_out buffer
+					expect -re {.*} {}
+					#set expect_out(buffer) ""
+					if {$connect_method == "none"} {
+						# delay in ms - slow down the host, give the target time to respond
+						after [expr $delay_wait_for_host * 2]
+					}	
+				}
+			^\<\<	{ 	# Expect teststr without regex or set success to 0 and fail test		'<<'=no regex
+					set _el(success) 0
+					print_comment_line
+					# execute expect lines if present
+					_el_exec_expect
+					set teststr [_el_strip_char $_el(line) $_in_noregex]
+
+					# catch expect, just in case
+					if {[catch {expect -ex "$teststr" { set _el(success) 1 } } error  ] } {
+						if {$WARN} {
+							cputs "\nExpect error: Expect-lite: $error\n" $el_err_color
+						}
+					}
+					
+					# look at the expect_out(buffer) for debugging
+					if { $DEBUG } {
+						puts "\nfind<<$teststr>>"
+						puts "  in<<$expect_out(buffer)>>"
+						#puts "  found_in<<$expect_out(0,string)>>"
+						puts "\n"
+					}
+					# show expect found string
+					if { $EXP_INFO && $DEBUG==0 && $_el(success)==1 } {
+						cputs "<<$expect_out(0,string)" $el_info_color
+					}
+				}
+			^\<	{ 	# Expect teststr or set success to 0 and fail test	'<'=use regex
+					set _el(success) 0
+					print_comment_line
+					# execute expect lines if present
+					_el_exec_expect
+					set teststr [_el_strip_char $_el(line) $_in]
+
+					# test for single num expect string
+					if {([string length $teststr]==1) && ([regexp \[0-9\] $teststr])} {
+					    expect {
+							 -re \n$teststr\r { 
+					 		    #puts "\nGood=[_el_strip_char $_el(line) $_in]\n" 
+							    set _el(success) 1
+							    } 
+						    }
+					} else {
+						# test for multi-char expect strings
+						# catch expect, just in case
+						if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
+							if {$WARN} {
+								cputs "\nWarning: Expect-lite: $error: Attempting to fix\n" $el_warn_color
+							}
+							# escape parens or square brackets
+							regsub {([^\\])[(]} $teststr {\1\(} teststr
+							regsub {([^\\])[)]} $teststr {\1\)} teststr
+							# fix potential unbalanced square brackets
+							regsub {([^\\])[[]} $teststr {\1\[} teststr
+							regsub {([^\\])[]]} $teststr {\1\]} teststr
+							# escape braces
+							regsub {([^\\])[\{]} $teststr {\1\{} teststr
+							regsub {([^\\])[\}]} $teststr {\1\}} teststr
+							#puts "+>$teststr"
+							if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
+								puts "\nBUG: Expect-lite: $error\n Fix Failed\n"
+							}
+						}
+					 	#puts "\nGood=[_el_strip_char $_el(line) $_in]\n" 
+					}
+					# look at the expect_out(buffer) for debugging
+					if { $DEBUG } {
+						puts "\nfind<<$teststr>>"
+						puts "  in<<$expect_out(buffer)>>"
+						#puts "  found_in<<$expect_out(0,string)>>"
+						puts "\n"
+					}
+					# show expect found string
+					if { $EXP_INFO && $DEBUG==0 && $_el(success)==1} {
+						regsub ".*($teststr)" $expect_out(buffer) {\1} foundstr
+						cputs "<$foundstr" $el_info_color
+					}
+					
+				}
+			^\-<	{ 	# NOT Expect teststr and If it is found then set success to 0 and fail test
+					set _el(success) 0
+					print_comment_line
+					# execute expect lines if present
+					_el_exec_expect
+					set teststr [_el_strip_char $_el(line) $_not_in]
+										
+					# delay in ms - slow down the host, give the target time to respond
+					after $delay_wait_for_host	
+					
+					# wait for something in expect_out buffer if using localhost
+					if {$connect_method == "none"} {
+						expect {
+							-timeout 1 -notransfer -re {\n.+\n} {}
+							}
+					}
+								
+					# search all text in expect in buffer -- using -notransfer to keep data in expect input buffer
+					# Reverse logic, if the NOT match string is found, then set _el(success) to 0 and fail test
+					expect {
+						-timeout 0 -notransfer -re  $teststr {set _el(success) 0} 
+						default {set _el(success) 1}
+						}
+					# look at the expect_out(buffer) for debugging
+					if { $DEBUG } {
+						puts "\nNOT find<<$teststr>>"
+						puts "  in>>$expect_out(buffer)<<"
+						puts "\n"
+					}
+
+				}
+			^\@ 	{ 	# Update the timeout value
+					
+					# validate that the timeout value is a number
+					print_comment_line
+					# execute expect lines if present
+					_el_exec_expect
+					if {([regexp \[^0-9\ \]+ [_el_strip_char $_el(line) $_timeout]])} {
+						cputs "ERROR: Bad Timeout Value: [_el_strip_char $_el(line) $_timeout] " el_err_color
+						send "quit$_el_eols"
+						# Stop the script Now!
+						exit 1
+					} else {
+						#puts "\nSetting Expect Timeout to: [_el_strip_char $_el(line) $_timeout] \n"
+						set timeout_int [_el_strip_char $_el(line) $_timeout]
+
+						if { $cli_namespace($timeout_multiplier) != 1 } {
+							# user has changed timeout_multiplier to something other than 1, use the value
+							set timeout [expr $timeout_int * $cli_namespace($timeout_multiplier)]
+							set timeout_line "\nTimeout Multiplier mode: Setting Expect Timeout to: $timeout \n"
+						} else {
+							set t_timeout $timeout_int
+							set timeout_line "\nSetting Expect Timeout to: $t_timeout \n"
+							set timeout $t_timeout
+						}
+					}
+				}
+			^\\\?[iI]?[fF]?	{	# Conditional processing - ?cond?action::else_action
+					
+					# execute expect lines if present
+					_el_exec_expect
+					
+					print_comment_line
+					
+					set _cond_line [_el_strip_char $_el(line) $_cond_regex]
+					#puts "\n##>[_el_strip_char $_el(line) $_cond_regex]\n"
+					# remove optional 'if' or 'IF'
+					regsub {^[iI]?[fF]?} $_cond_line "" _cond_line
+					
+					#parse conditional and action (and else_action if needed)
+					set _else_action ""
+					set _action [string range $_cond_line [expr [string first $_cond $_cond_line] + [string length $_cond] ] [string length $_cond_line]]
+					#puts "\n##ACT>$_cond_line|$_action|[string first $_cond $_cond_line]|[string length $_cond]|[string length $_cond_line]"
+					if { [regexp $_cond_else $_action] } {
+						# add spaces to else separator
+						regsub "$_cond_else" $_action " $_cond_else " _action
+						# parse action into action::else_action
+						set _else_action [string range $_action [expr [string first $_cond_else $_action] + [string length $_cond_else] ] [string length $_action]]
+						set _action [string range $_action 0 [expr [string first $_cond_else $_action] - [string length $_cond_else] ]]
+						# trim trailing spaces
+						set _action [string trimright $_action]
+						#puts "#2#>then$_action|else$_else_action|"
+					}
+					set _conditional [string range $_cond_line 0 [expr [string first $_cond $_cond_line] - [string length $_cond] ]]
+					
+					# define list of supported conditional operators
+					set _cond_oper_list { == != <= >= < > }
+					
+					# find conditional operator
+					set _cond_oper "."
+					foreach k $_cond_oper_list {
+						if { [regexp $k $_conditional] } {
+							set _cond_oper $k
+							break
+						}
+					}
+					
+					 # parse around conditional operator
+					set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
+					set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
+					#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2"
+					
+					# remove leading and trailing spaces from conditional arguments
+					# count the number of non-space chars in condition
+					if {[string length [regexp -inline {[^ ]+} $_cond_arg1]] > 1 } {
+						# condition larger then 1 byte
+						regsub -all {([ ]*)([^ ].*[^ ])([ ]*)} $_cond_arg1 {\2} _cond_arg1
+					} else {
+						# condition only 1 byte in size
+						regsub -all {([ ]*)([^ ])([ ]*)} $_cond_arg1 {\2} _cond_arg1
+					}
+					
+					if { [string length [regexp -inline {[^ ]+} $_cond_arg2]] > 1 } {
+						# condition larger then 1 byte
+						regsub -all {([ ]*)([^ ].*[^ ])([ ]*)} $_cond_arg2 {\2} _cond_arg2
+						#puts ">$_cond_arg2<"
+					} else {
+						# condition only 1 byte in size
+						regsub -all {([ ]*)([^ ])([ ]*)} $_cond_arg2 {\2} _cond_arg2
+					}
+					
+					# preserve buffer pointer - if not one_line
+					if { $_one_line != 1 } {
+						set _tmp_buf_ptr $_el_buf($buf_stack,ptr)
+					}
+					
+					# validate comparison and if true, send to _el_script_exec (recursive call)
+					
+					# build test line
+					set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
+					# check for syntax errors and evaluate result of test line
+					if {[catch { eval  $_test  } error ] } {
+						if {$WARN} {
+							cputs "\nWarning: Expect-lite: $error: Unable to detect conditional operator\n" $el_warn_color
+							cputs "	Evaluating line:$_test|$_action|$_else_action" $el_warn_color
+						}
+					} else {
+						# Show user the if statement, action and result
+						
+						if {$INFO} {
+							set _test_result [eval  $_test ]
+							if {$_test_result} {
+								set _test_result "TRUE"
+							} else {
+								set _test_result "FALSE"
+							}
+							if { $_else_action == ""} {
+								cputs "\nIf:$_test|then$_action|result=$_test_result\n" $el_info_color
+							} else {
+								cputs "\nIf:$_test|then$_action|else$_else_action|result=$_test_result\n" $el_info_color
+							}
+						}
+						# no syntax error, go ahead and eval the conditional action or else action
+						# skip to label if present in action or else_action
+						if { [eval  $_test ] } {
+							# remove any leading space and trailing from action
+							regsub {^[ \t]+} $_action {} _action
+							regsub {[ \t]+$} $_action {} _action
+							# Is there a jump to a label in action?
+							if { [ regexp "^$_label" $_action ] } {
+								set _el_buf($buf_stack,ptr) [_el_buffer_search $_el_buf($buf_stack,ptr) $_action $buf_stack]
+							} else {
+								# Interpret action with recursive call to _el_script_exec
+								_el_script_exec "\|$_action" $buf_stack
+							}
+						} elseif { $_else_action != "" } {
+							# remove any leading and trailing space from else_action
+							regsub {^[ \t]+} $_else_action {} _else_action
+							regsub {[ \t]+$} $_else_action {} _else_action
+							# Is there a jump to a label in else_action?
+							if { [ regexp "^$_label" $_else_action ] } {
+								set _el_buf($buf_stack,ptr)  [_el_buffer_search $_el_buf($buf_stack,ptr) $_else_action $buf_stack]
+							} else {
+								# Interpret else_action with recursive call to _el_script_exec
+								_el_script_exec "\|$_else_action" 
+							}
+						}
+					}
+					if { $_one_line != 1 } {					
+						# label not found
+						if { $_el_buf($buf_stack,ptr) == -1 } {
+							# label search failed (-1), restore buf_ptr, allow script to continue
+							set _el_buf($buf_stack,ptr) $_tmp_buf_ptr
+						}
+
+						# infinite loop detected!
+						if { $_el_buf($buf_stack,ptr) == -2 } {
+							# label search failed (-2), restore buf_ptr, allow script to continue
+							set _el_buf($buf_stack,ptr) $_tmp_buf_ptr
+							# signal to fail script - something is wrong
+							set _el(success) 0
+							# tell the user why this failed
+							set prev_line "Infinite Loop Detected!"
+						}
+						#puts "++++++ptr>$_el_buf($buf_stack,ptr)"
+					}
+				}
+			^\;;	{	# Send "comment" to stdout unbuffered
+					
+					# execute expect lines if present
+					_el_exec_expect
+					
+					# Find color at beginning of comment line and use it, if not, use default comment color
+					set unbuf_comment [_el_strip_char $_el(line) $_stdout_comment_nobuf]
+					set unbuf_color [find_color $unbuf_comment] 
+					if { $unbuf_color != "" } {
+						# remove first word
+						regsub "$unbuf_color" $unbuf_comment "" unbuf_comment
+						# use custom color
+						cputs $unbuf_comment $unbuf_color
+					} else {
+						# use default comment color
+						cputs $unbuf_comment $_el_comment_color
+					}
+					
+				}
+			^\;	{	# Send "comment" to stdout buffered
+					
+					# execute expect lines if present
+					_el_exec_expect
+					
+					print_comment_line
+					
+					set comment_line [_el_strip_char $_el(line) $_stdout_comment]
+					# print comment if one_line is set
+					if {$_one_line} { print_comment_line }
+					
+				}
+			^\~ 	{	# include file from same location at cmd_file
+					# Uses recursion to interpret included file
+					
+					# execute expect lines if present
+					_el_exec_expect
+					
+					set _include_file [_el_strip_char $_el(line) $_include]
+					#puts "==========> $_include_file"
+					# don't include file if name is set to __NO_STRING_CAPTURED__ (which is a blank dynamic/capture variable)
+					if { $_include_file != "__NO_STRING_CAPTURED__" } {
+						# absolute path to include file?
+						set _slash "/"
+						if { [string index $_include_file 0] == $_slash} {
+							set include_path_file "$_include_file"
+						} else {
+							set include_path_file "[parse_cmd_file_path $cmd_file]$_include_file"
+						}
+						#puts "->$include_path_file"
+						if {$INFO} {
+							cputs "\nIncluding: $_include_file\n" $el_info_color
+						}
+						# Make Recursive Call
+						_el_script_exec $include_path_file
+						
+						# pop _el_buf(stack)
+						incr _el_buf(stack) -1
+					}
+			
+				}
+			^\\+\\$[A-Za-z0-9_]+[=]	{ 	# Setup Dynamic Var using Expect Capture
+					# execute expect lines if present
+					_el_exec_expect
+					
+					print_comment_line
+					# delay in ms - slow down the host, give the target time to respond
+					after $delay_wait_for_host
+					# parse $_el(line) to pull out var and expect parts
+					#puts "\n->$_el(line)"
+					set user_var [string range $_el(line) 1 [expr [string first "=" $_el(line)] -1 ]]
+					set user_value [string range $_el(line) [expr [string first "=" $_el(line)] +1 ] [string length $_el(line)]]
+					#puts "\n->$user_var=$user_value"
+					# remove '$' in front of the Var
+					regsub {\$} $user_var "" user_var
+
+					#set teststr [_el_strip_char $_el(line) $_setvar]
+					set capture_val "__NO_STRING_CAPTURED__"
+					set _el(var_capture_begin) [ clock seconds ]
+					expect {
+						-notransfer -re "\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $" {
+
+							# Do capture in expect buffer
+							if { [catch {regexp -line "$user_value" $expect_out(buffer) match_val capture_val}]  } {
+								set capture_val "__NO_STRING_CAPTURED__"
+								set match_val ""
+							}
+							# remove newlines from capture value
+							regsub -all {[\n\r]+} $capture_val "" capture_val
+							if { $DEBUG } {
+								puts "\nvar_found<<$capture_val>>"
+								puts "\nvar_in<<$expect_out(buffer)>>"
+							}
+							if { $INFO } {
+								#puts "\nAssigned Var:$user_var=|$capture_val|\n"
+								cputs "\nAssigned Var:$user_var=$capture_val\n" $el_info_color
+							}
+							# Trigger a new prompt - commented out cvm 10/2/10
+							#protected_send "$_el_eols"
+							}
+						# expect should never timeout, but just in case
+						timeout {
+							set _el(var_capture_end)	[ clock seconds ]
+							set _el(var_capture_duration) [ expr $_el(var_capture_end) - $_el(var_capture_begin)]
+							if { $timeout != $_el(var_capture_duration)} {
+								puts "BUG: Expect-lite: Var Capture Timed Out!\n"
+								puts "Debugging Info: \n\tEL_Line:$_el(line)\n\texpect timeout=$timeout secs \n\tDuration of capture:$_el(var_capture_duration) secs \n\n"
+								show_vars
+							} elseif {$WARN} {
+								cputs "Warning: Expect-lite: Var Capture Timed Out! Recommend lengthening timeout, current timeout is: $timeout secs\n" $el_warn_color
+								if { $DEBUG } {
+									puts "\nfound<<$capture_val>>"
+									puts "\nin<<$expect_out(buffer)>>"
+								}
+
+							}
+						}
+					}
+					# set var (similar to below)
+					set user_namespace($user_var) $capture_val
+				}
+			{^\$[A-Za-z0-9_]+[=]([ ]?|[~\$\[/A-Za-z0-9_.-]+)} {
+					# allow a single space or blank as a value in addition to the normal assignment
+					
+					# execute expect lines if present
+					_el_exec_expect
+					
+					# Set a user variable 
+					
+					set user_var [string range $_el(line) 1 [expr [string first "=" $_el(line)] -1 ]]
+					set user_value [string range $_el(line) [expr [string first "=" $_el(line)] +1 ] [string length $_el(line)]]
+					
+					# remove '$' in front of the Var
+					regsub {\$} $user_var "" user_var
+					
+					# Assign the Var
+					set user_namespace($user_var) $user_value
+					
+					# Used for debugging
+					#puts "->$user_var $user_value"
+					#parray user_namespace
+					}
+			^\\+\\$[A-Za-z0-9_]+	{ 	# increment Var, decimal 
+					# execute expect lines if present
+					_el_exec_expect
+					
+					print_comment_line
+					
+					set _tmp_var [_el_strip_char $_el(line) $_incr_var]
+					#increment decimal number if possible
+					catch { incr user_namespace($_tmp_var)}
+
+					# else, pass string value back without incrementing					
+				}
+			^\-\\$[A-Za-z0-9_]+	{ 	# decrement Var 
+					# execute expect lines if present
+					_el_exec_expect
+					print_comment_line
+					
+					set _tmp_var [_el_strip_char $_el(line) $_decr_var]
+					# decrement variable
+					catch { incr user_namespace($_tmp_var) -1 }
+					#puts "->$_el(line) $_decr_var $_tmp_var"
+					
+				}
+			{^=\$[A-Za-z0-9_]+}	{ 	# math variable
+					# execute expect lines if present
+					_el_exec_expect
+					print_comment_line
+					
+					# supports oper: << >> & | ^ + = * / % pow(x,y)
+					
+					# strip math_var symbol from beginning of line
+					regsub {^=\$} $_el(line) "" _tmp_var
+					set _el_parse_list [split $_tmp_var " "]
+					set var [lindex $_el_parse_list 0]
+					# remove $var from list
+					set _el_parse_list [lreplace $_el_parse_list 0 0]
+					set _el_predicate [join $_el_parse_list " "]
+					# check if math variable exists
+					if { [info exists ::user_namespace($var)] == 0 } {
+						# if not, set to blank
+						set ::user_namespace($var) ""
+					}
+					if { [catch { set ::user_namespace($var) [expr $::user_namespace($var)$_el_predicate] } error]} {
+						if {$WARN} {
+							cputs "\nWarning: Expect-lite: Unable to interpret $_el(line) \n	$error" $el_warn_color
+						}
+					}
+					
+				}
+			^\!	{	# Run an Embedded Expect Line(s) (limited support)
+			
+					# don't add Expect comment lines (hint they start with '!#'
+					if { [regexp -line {^![ \t]*#} $_el(line) ] == 0  } {
+						# add Expect Lines to _el(_el_lines) list
+						lappend _el(_el_lines) [_el_strip_char $_el(line) $_exec] 
+						#puts "+>[llength $_el(_el_lines)]:$_el(_el_lines):"
+
+					}
+				}
+			^\\*~ 	{	# include file of failure script - called when test fails
+						# Uses recursion to interpret included file
+						# expect-lite directive
+					
+					# execute expect lines if present
+					_el_exec_expect
+					if { $_one_line == 0 } {
+						set _el_fail_script [_el_strip_char $_el(line) $_include_fail]
+					} else {
+						# we are inside a recursive call
+						uplevel {set _el_fail_script [_el_strip_char $_el(line) $_include_fail]}
+					}
+					# don't include file if name is set to __NO_STRING_CAPTURED__ (which is a blank dynamic/capture variable)
+					if { $_el_fail_script == "__NO_STRING_CAPTURED__" } {
+						# don't set fail_script
+						set _el_fail_script ""
+					}
+					if { $_one_line == 0 } {
+						if {$INFO} {
+							puts "\nFail Include Script: $_el_fail_script\n"
+						}
+					} else {
+						# we are inside a recursive call
+						if {$INFO} {
+							uplevel {puts "\nFail Include Script: $_el_fail_script\n"}
+						}
+					}
+			
+				}
+			^\\*/.*/$	{	# Set a user defined prompt
+						# expect-lite directive
+					
+					# execute expect lines if present
+					_el_exec_expect
+					
+					# strip leading and trailing slashes
+					regsub {^\*/} $_el(line) {} el_u_prompt
+					regsub {/$} $el_u_prompt {} _el(prompt)
+					#  Set empty prompt to something sane, the default prompt
+					if { $_el(prompt) == "" } {
+						set _el(prompt) $_el(default_prompt)
+					}
+					
+					if $INFO {
+						if { $_el(prompt) == $_el(default_prompt) } {
+							cputs "INFO: User Defined Prompt is now default: $_el(prompt)" $el_info_color
+						} else {
+							cputs "INFO: User Defined Prompt: $_el(prompt)" $el_info_color
+						}
+					}
+					
+				}
+			^\\*[a-zA-Z]	{	# Process expect-lite run-time directives
+							# expect-lite directives
+					
+					# execute expect lines if present
+					_el_exec_expect
+					print_comment_line
+					# Process the directive
+					_el_global_directive $_el(line)
+					
+			
+				}
+			default {	# blank lines are allowed
+						
+			 	}
+		}
+		
+		#puts "line_ptr->$_el_buf($buf_stack,ptr)|$_el(success)"
+		
+		# Fail the test if Expect fails
+		if {$_el(success) != 1 && [regexp "^$_in" $_el(line)]==1  } {
+			cputs "\n\n FAILED COMMAND:[_el_strip_char $prev_line $_out] \n" $el_err_color
+			cputs "    Expect Failed:$teststr\n" $el_err_color
+			if { $_el_current_session != "default" } {
+				cputs "    Current Fork Session: $_el_current_session \n\n" $el_err_color
+			}
+		}
+		# Fail the test if NOT Expect fails
+		if {$_el(success) != 1 && [regexp "^$_not_in" $_el(line)]==1  } {
+			cputs "\n\n FAILED COMMAND:[_el_strip_char $prev_line $_out] \n" $el_err_color
+			cputs "    Expect Found:$teststr\n\n" $el_err_color
+			if { $_el_current_session != "default" } {
+				cputs "    Current Fork Session: $_el_current_session \n\n" $el_err_color
+			}
+		}
+		# Fail the test, and invoke Fail_script
+		if {$_el(success) != 1 } {
+			if { $_el_fail_script != "" } {
+				# run fail script to clean up
+				# absolute path to fail include file?
+				set _slash "/"
+				if { [string index $_el_fail_script 0] == $_slash} {
+					set include_path_file "$_el_fail_script"
+				} else {
+					set include_path_file "[parse_cmd_file_path $cmd_file]$_el_fail_script"
+				}
+				#puts "->$include_path_file"
+				if {$INFO} {
+					cputs "\nIncluding Fail Script: $_el_fail_script\n" $el_info_color
+				}
+				# set fail_script up for success
+				set _el(success) 1
+				
+				# Make Recursive Call
+				_el_script_exec $include_path_file
+								
+				# special short cut to allow main script to continue
+				if { [info exists _el(continue)] == 1 } {
+					if { $_el(continue) == 1 } { set _el(success) 1 }
+					set _el(continue) 0
+				}
+				#puts "success->$_el(success)"
+				#puts "FS>$_el_fail_script"	
+			}
+			# last chance to let script continue, even though it should fail
+			if {$NOFAIL} {
+				set _el(success) 1
+				set _el(test_failed) 1
+			} 			
+			if { $_el(success) != 1 } {
+				# allow fail script to set success, and continue if need be
+				if {$INFO} {cputs "\n\n##Overall Result: FAILED \n\n" $el_err_color }
+				send "quit$_el_eols"
+				exit 1
+			}
+		}
+		
+		# ensure we stop at end of file/buffer
+		if { $_one_line == 0 } {
+			if { $_el_buf($buf_stack,ptr) >= [llength $_el_buf($buf_stack)] } {
+				set _el(line) -1
+			}
+			if {$_el_buf($buf_stack,ptr) < 0 } {
+				return
+			}
+		}
+		# Get next line in buffer
+		# Or return if in one_line mode
+		if { $_one_line == 0 } {
+			# not in one line, normal processing
+			# read next line from buffer
+			incr _el_buf($buf_stack,ptr)
+			set _el(line) [_el_buffer_read $_el_buf($buf_stack,ptr) $buf_stack]
+			# remove leading white space on line (permitting indentation)
+			regsub {^[ \t]+} $_el(line) {} _el(line)
+		} else {
+			# one_line is true (which means invoked by a conditional)
+			# Done processing one line, and handling failures
+			# so just return from this recursive call
+			return
+		}
+		
+	}
+	
+} 
+# end of _el_script_exec
+
+
+# ############# MAIN ######################
+#
+#	Main Program starts here
+#	
+#
+proc main { } {
+	global connect_method remote_host el_info_color el_warn_color el_err_color
+	global delay_wait_for_host WARN INFO _el_eols _el DEBUG_LOG cmd_file 
+	
+	_el_read_args $::argc $::argv
+
+	# Check Expect Version, warn if old
+	# if { [exp_version] < "5.42.0" } {
+	# 	puts "Warning: older version of expect\n"
+	# }
+	if [catch { exp_version 5.42.0 } msg ] {
+		cputs "\nWarning: $msg\n" $el_err_color
+	}
+
+	# check terminal type for use of colors
+	check_term_type
+
+	# Use selected (at top of file) connect_method
+	switch $connect_method {
+		telnet	{connect_telnet_host $remote_host }
+		ssh		{connect_ssh_host 	$remote_host }
+		ssh_key	{connect_ssh_key_host $remote_host }
+		none		{_el_connect_localhost $remote_host }
+	}
+
+
+	if { $DEBUG_LOG==1 } { log_file -noappend debug_output.txt }
+
+
+	# Send commands to remote host, and validate response
+	_el_script_exec $cmd_file
+
+
+	after [expr 5 * $delay_wait_for_host]
+	#To show the very end of the test, wait for that very last prompt
+	# clear expect buffer
+	expect -re {.*} {}
+
+	# exit local or remote shell
+	if { [catch {  send "exit $_el_eols" } error] } {
+		if {$WARN} {cputs  "Warning: Lost connection to $remote_host \n  $error " $el_warn_color}
+	}
+
+	wait_for_prompt
+
+	# Print result of test
+	if {$_el(test_failed) && $NOFAIL} {
+		# test must have failed somewhere but NOFAIL was true
+		if {$INFO} {cputs "\n\n##Overall Result: FAILED (*NOFAIL on)\n\n" $el_err_color }
+		exit 1
+	} else {
+		#If we get this far, then we passed!
+		if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $el_info_color }
+	}
+
+	if { $DEBUG_LOG==1 } { log_file }
+
+	# exit with 0 to indicate that test passed
+	exit 0
+}
+
+# run the main program (in standalone)
+if { [info exist ::EL_LIBRARY]  != 1} { main }
+
