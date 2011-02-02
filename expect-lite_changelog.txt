@@ -746,8 +746,18 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed terminal-type to include xterm-color
 	Librarized expect-lite
 		Set EL_LIBRARY to run as library, rather than stand-alone
+
+22 Jan 2011 - 4.0.3.d5-lib
+	added _el_init_lib to initialize the library function
+	added _el_init_globals to initialize globals
+		This is required because the library must be sourced in native TCL before loading libexpect
+		
+31 Jan 2011 - 4.0.3.d6-lib
+	Fixed bug in Bad Time Out Value (found by Tajas Petal pateltejas.1987@gmail.com)
+	Cleaned up _el_color variable names
 	
-	
+
+
 ------------ Future Versions --------------------------
 		
 Future

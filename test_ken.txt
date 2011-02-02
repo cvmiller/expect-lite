@@ -1,7 +1,7 @@
 #!/usr/bin/env expect-lite
 # make this puppy run
 
-@3
+@3 #junk
 >echo "hello ken"
 <ken
 
