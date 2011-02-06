@@ -1,69 +1,91 @@
-#!/usr/bin/env tclsh
+#!/usr/bin/env tclsh8.5
 #
-#	Load the correct expect-library
+#	libexpect is compiled with tclsh version 8.5
+#
+#	expect-lite library demo script
+#
+#	by Craig Miller 5 Feb 2011
 #
 
-# script will core dump if libexpect is wrong version
-#load /usr/lib/libexpect.so.5
-#puts "platform:$tcl_platform(platform)"
-puts "tclsh version:[info patchlevel]"
-switch $tcl_platform(platform) {
-    windows {
-        load [file join /usr/lib libexpect526.a]
-    }
-    unix {
-        load [file join /usr/lib libexpect[info sharedlibextension].5]
-    }
+# Add library to search path
+lappend auto_path "."
+# Load el_lib
+package require expect-lite
+puts "el_lib loaded"
+
+# Initialize EL library
+#	_el_init_library <cli init string>
+#	Loads libexpect, initializes el global variables, spawns bash session
+#
+_el_init_library "*EXP_INFO IP=10.5.5.5 *NODEBUG"
+puts "el_lib initialized"
+
+
+# create spawn sessions and set prompt to identify the session
+spawn bash
+send "export PS1='0\$ '\n"
+set session(def) $spawn_id
+
+spawn bash
+send "export PS1='1\$ '\n"
+set session(dut1) $spawn_id
+
+spawn bash
+send "export PS1='2\$ '\n"
+set session(dut2) $spawn_id
+
+spawn bash
+send "export PS1='3\$ '\n"
+set session(dut3) $spawn_id
+
+_el_import_session_ids [array get session]
+
+
+################ initialization complete. Begin of script ############33
+
+proc test_funct { str } { 
+	puts "calling test_funct param=$str"
+	return 0
 }
 
 
-# test expect extensions
-send_user "expect library loaded\n"
 
-# set el library mode
-set ::EL_LIBRARY 1
+set session(default) 0
+set session(dut1) 2
+set session(dut2) 3
+set session(dut3) 4
 
-source el_lib
-
-puts "el_lib loaded"
-
-# Set arguments to el_lib and call el_read_args
-set ac 4
-set av "-r none IP=10.5.5.5 *DEBUG"
-_el_read_args $ac $av
-
+#test_array [array get session]
 
 puts "argv0 is:$argv0"
 
 # read this file as el script, reference by buf_stack pointer
 set cmd_file $argv0
-set buf_stack [_el_buffer $cmd_file]
+set cmd_list_ptr [_el_buffer $cmd_file]
 
-
-# spawn to bash for now
-_el_connect_localhost ""
 
 # call el script exec
-_el_script_exec "" $buf_stack
-
+set RESULT [ _el_script_exec "" $cmd_list_ptr ]
 
 # Print result of test
-if {$_el(test_failed) && $NOFAIL} {
-	# test must have failed somewhere but NOFAIL was true
-	if {$INFO} {cputs "\n\n##Overall Result: FAILED (*NOFAIL on)\n\n" $el_err_color }
-	exit 1
-} else {
-	#If we get this far, then we passed!
-	if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $el_info_color }
+switch $RESULT {
+	0 	{ puts "\nTest Passed" }
+	1	{ puts "\nTest Abend" }
+	2	{ puts "\nTest Failed" }
 }
 
 
 #stop TCLSH from reading EL Script
 exit 0
 
-########## EL Scrtpt ###############
+########## Embedded EL Scrtpt ###############
 ; === start script $IP
+@3
+#*DEBUG
 >date
 <2011
+*FORK
+*TCL puts "\nARGV:$argv0"
+*TCL puts [test_funct $cmd_list_ptr]
 >echo "pau"
 >

@@ -32,7 +32,6 @@
 #
 #
 
-
 ##################################################################################
 #	
 #	The user may want to customize the following variables & procs to suite one's needs
@@ -40,7 +39,7 @@
 #
 
 # echo version in usage
-set version "4.0.3.d6-lib"
+set version "4.0.3.d7-lib"
 
 #set starting expect timeout 
 set timeout 10 
@@ -116,6 +115,11 @@ set _el_eols "\n"
 #
 
 
+#
+#	Provide info for library mode
+#
+package provide expect-lite 4.0
+
 
 #
 #	Initialization of Global Variables
@@ -159,7 +163,7 @@ proc _el_init_globals { } {
 	set ::arg0 "arg0"
 
 	# set ::global fork count (for multiple sessions) to 0
-	set ::_el_fork(count) 0
+	set ::_el(fork_count) 1
 
 	# set ::global fork stack to blank
 	set ::_el_fork_stack {}
@@ -168,10 +172,10 @@ proc _el_init_globals { } {
 	set ::_el_fork_id_list { default }
 
 	# set ::default FORK session
-	set ::_el_fork(current) "default"
+	set ::_el(fork_current) "default"
 
-	# set ::global fork_context array to blank
-	set ::_el_fork_context(default,eols) $::_el_eols
+	# set ::default fork_context to default end-of-line-sequence (eols)
+	set ::_el_fork(default,eols) $::_el_eols
 
 	#
 	# Scripts (aka Command files) are kept in buffers for random access, and looping
@@ -359,7 +363,7 @@ proc interact_help { } {
 #	This function is also called by *INTERACT, providing similar functionality
 #
 proc instant_interact_sig {} {
-	global remote_host _el _el_fork_id_list _el_fork DEBUG NOFAIL _el_info_color _el_eols _el_buf expect_out _el_warn_color
+	global remote_host _el DEBUG NOFAIL _el_info_color _el_eols _el_buf expect_out _el_warn_color
 
 	# change user message depending on how the function is called
 	if { $_el(line) != "*INTERACT" } {
@@ -373,7 +377,7 @@ proc instant_interact_sig {} {
 	incr NOFAIL
 	protected_send "$_el_eols"
 	# preserve script fork session
-	push_session_id $_el_fork(current)
+	push_session_id $_el(fork_current)
 	set restart_interact 1
 	# restart interact if *FORK is called to set to new spawn_id
 	while {$restart_interact} {
@@ -667,20 +671,16 @@ proc _el_init_library { {cli_str ""} } {
 	# script will core dump if libexpect is wrong version
 	#puts "tclsh version:[info patchlevel]|[info tclversion]"
 
-	if { [info tclversion ] != "8.5" } {
-		# check tclsh version before loading libexpect 
-		puts "ERROR:tclsh version mismatch with libexpect, expected version 8.5, using tclversion:[info tclversion ]" 
-		exit 1
-	}
-	switch $::tcl_platform(platform) {
-    	windows {
-        	load [file join /usr/lib libexpect526.a]
-    	}
-    	unix {
-        	load [file join /usr/lib libexpect[info sharedlibextension].5]
-    	}
-	}
-
+	if { [ catch {[package present Expect] } error ]} {
+		#puts $error
+		if { [info tclversion ] != "8.5" } {
+			# check tclsh version before loading libexpect 
+			puts "ERROR:tclsh version mismatch with libexpect, expected version 8.5, using tclversion:[info tclversion ]" 
+			exit 1
+		}
+		package require Expect
+	} 
+	
 	# test expect extensions
 	if {[ catch { send_user "libexpect loaded\n"}  error ]} {
 		puts "ERROR: libexpect not loaded \n$error\n"
@@ -699,7 +699,7 @@ proc _el_init_library { {cli_str ""} } {
 	_el_read_args $argc $cli_str
 
 	# spawn to bash for now
-	_el_connect_localhost ""
+	#_el_connect_localhost ""
 }
 
 
@@ -1185,12 +1185,12 @@ proc remote_host_init { user_dir  } {
 #
 #
 proc session_id_manager { fork_id } {
-	global spawn_id _el_fork _el_fork_id_list INFO connect_method remote_host _el timeout 
-	global DEBUG user_dir _el_info_color _el_eols _el_fork_context
+	global spawn_id _el _el_fork _el_fork_id_list INFO connect_method remote_host _el timeout 
+	global DEBUG user_dir _el_info_color _el_eols 
 
 	if { $fork_id == "default" } {
 		# set fork session back to default if count > 0
-		if { $_el_fork(count) > 0 } {
+		if { $_el(fork_count) > 0 } {
 			set spawn_id  $_el_fork(default)
 		}
 	} elseif { $fork_id != "" } {
@@ -1215,11 +1215,11 @@ proc session_id_manager { fork_id } {
 			# restore current timeout
 			set timeout $current_timeout 
 			set _el_fork($fork_id) $spawn_id
-			incr _el_fork(count)
+			incr _el(fork_count)
 			# update list of fork_id's
 			lappend _el_fork_id_list $fork_id
 			# set default eols for this session
-			set _el_fork_context($fork_id,eols) $_el_eols
+			set _el_fork($fork_id,eols) $_el_eols
 		}
 		if { $_el_fork($fork_id) == "default" } {
 			set spawn_id  $_el_fork(default)
@@ -1227,8 +1227,8 @@ proc session_id_manager { fork_id } {
 		# end if		
 	} elseif {$fork_id == "" } {
 		# Show current session name
-		if { [info exists _el_fork(current)] } {
-			set fork_id $_el_fork(current)
+		if { [info exists _el(fork_current)] } {
+			set fork_id $_el(fork_current)
 		} else {
 			set fork_id "default"
 		}
@@ -1236,10 +1236,53 @@ proc session_id_manager { fork_id } {
 	if {$INFO && !$DEBUG} {
 		cputs "\n\nINFO: FORK session is: $fork_id,	Active sessions are: $_el_fork_id_list\n" $_el_info_color
 	} elseif { $DEBUG } {
-		puts "\n\nDEBUG: FORK session is: $fork_id, Spawn_id=$spawn_id, fork_count:$_el_fork(count), active sessions:$_el_fork_id_list\n"
+		puts "\n\nDEBUG: FORK session is: $fork_id, Spawn_id=$spawn_id, fork_count:$_el(fork_count), active sessions:$_el_fork_id_list\n"
 	}
-	set _el_fork(current) $fork_id
+	set _el(fork_current) $fork_id
 	return $fork_id
+}
+
+#
+#	el_lib: import session names and spawn_ids
+#	Enables external app to spawn sessions, and feed list to EL
+#
+proc _el_import_session_ids { session_list } {
+	global spawn_id _el _el_fork _el_fork_id_list  _el_eols
+	global DEBUG INFO _el_info_color _el_err_color 
+	
+	puts  "SL>$session_list|[llength $session_list]"
+	if { [ catch { array set _el_fork  $session_list} error ]} {
+		cputs "ERROR: Invalid array:$session_list:\n$error\n" $_el_err_color
+	}
+	# update fork_id count
+	#set _el(fork_count) [expr [array size _el_fork] -0]
+	
+	# set current fork_id to current spawn_id
+	foreach keyitem [array names _el_fork] {
+		#filter out eols from keyitems
+		if { [string match "*eols*" $keyitem] == 0 } {
+			if { $_el_fork($keyitem) == $spawn_id } {
+				set _el(fork_current) $keyitem
+			}
+			# set default eol context 
+			set _el_fork($keyitem,eols) $_el_eols
+			# populate fork id list with new sessions
+			lappend _el_fork_id_list $keyitem
+			# increment fork count
+			incr _el(fork_count)
+		}
+	}
+	
+	# show array
+	if { $DEBUG } {
+		puts "Printing session ids:"
+		foreach keyitem [array names _el_fork] {
+			#filter out eols from session printout
+			if { [string match "*eols*" $keyitem] == 0 } {
+				puts "	$keyitem=$_el_fork($keyitem)"
+			}
+		}
+	}; #endif DEBUG
 }
 
 
@@ -1248,13 +1291,13 @@ proc session_id_manager { fork_id } {
 #	used by interact
 #
 proc push_session_id { fork_id } {
-	global spawn_id _el_fork _el_fork_stack INFO  DEBUG
+	global spawn_id _el _el_fork _el_fork_stack INFO  DEBUG
 
 	# remove any \n or \r's
 	regsub -all {[ \n\r]+} $fork_id "" fork_id
 	if { [string length $fork_id ] > 0 } {
 		# push new session_id on stack
-		lappend _el_fork_stack $_el_fork(current)
+		lappend _el_fork_stack $_el(fork_current)
 	}
 	set len [llength $_el_fork_stack]
 }
@@ -1264,7 +1307,7 @@ proc push_session_id { fork_id } {
 #	used by interact, to set proper *FORK session when continuing the expect-lite script
 #
 proc pop_session_id { } {
-	global spawn_id _el_fork _el_fork_stack INFO  DEBUG
+	global spawn_id _el _el_fork _el_fork_stack INFO  DEBUG
 
 	if {[info exists _el_fork_stack ]} {
 		set len [llength $_el_fork_stack]
@@ -1598,7 +1641,6 @@ proc _el_buffer {cmd_file} {
 		if { [regexp {^[$-/:-@!~]} $buf_line ] } {
 			lappend line_buffer $buf_line
 		}
-		
 	}
 	close $infile
 	#puts "-> $line_buffer|[llength $line_buffer] "
@@ -1721,7 +1763,7 @@ proc _el_buffer_search {line_ptr line_search buf_stack} {
 #
 proc _el_global_directive { g_dir_str } {
 	global INFO EXP_INFO WARN DEBUG _el_info_color _el_warn_color _el_err_color _el_comment_color
-	global _el_eols _el_fork_context _el_current_session _el_infinite_loop NOFAIL
+	global _el_eols _el_fork _el_current_session _el_infinite_loop NOFAIL
 	
 	switch -glob $g_dir_str {	
 		"\\*INFO"	{	# Turn on INFO logging
@@ -1816,7 +1858,7 @@ proc _el_global_directive { g_dir_str } {
 				# set the fork_id to the passed value
 				set fork_id [lindex $fork_list 1]
 				# store current eols in current session fork_context
-				set _el_fork_context($_el_current_session,eols) $_el_eols
+				set _el_fork($_el_current_session,eols) $_el_eols
 
 			} elseif {[llength $fork_list] == 1 } {
 				# no arguments to *FORK, then display current session name
@@ -1825,7 +1867,7 @@ proc _el_global_directive { g_dir_str } {
 			# spawn/switch to fork_id session
 			set _el_current_session [session_id_manager $fork_id]
 			# set eols from new fork_id_context
-			set _el_eols $_el_fork_context($_el_current_session,eols)
+			set _el_eols $_el_fork($_el_current_session,eols)
 
 
 		}
@@ -1879,7 +1921,7 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 	set _el_cont_lines ""
 	
 	# set default session (aka fork)
-	set _el_current_session $_el_fork(current)
+	set _el_current_session $_el(fork_current)
 	#fork_id
 
 	#
@@ -2771,19 +2813,23 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 			} 			
 			if { $_el(success) != 1 } {
 				# allow fail script to set success, and continue if need be
-				if {$INFO} {cputs "\n\n##Overall Result: FAILED \n\n" $_el_err_color }
+				#if {$INFO} {cputs "\n\n##Overall Result: FAILED \n\n" $_el_err_color }
 				send "quit$_el_eols"
-				exit 1
+				#exit 1
+				# FATAL
+				return 2
 			}
 		}
-		
+
 		# ensure we stop at end of file/buffer
 		if { $_one_line == 0 } {
 			if { $_el_buf($buf_stack,ptr) >= [llength $_el_buf($buf_stack)] } {
+				# exit the while loop
 				set _el(line) -1
 			}
 			if {$_el_buf($buf_stack,ptr) < 0 } {
-				return
+				# last chance to return unknown
+				return -1
 			}
 		}
 		# Get next line in buffer
@@ -2802,6 +2848,14 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 			return
 		}
 		
+	}
+	# set result code
+	if { $_el(test_failed) == 1} {
+		# FAIL
+		return 1
+	} else {
+		# PASS
+		return 0
 	}
 	
 } 
@@ -2845,7 +2899,7 @@ proc main { } {
 
 
 	# Send commands to remote host, and validate response
-	_el_script_exec $cmd_file
+	set _el_result [ _el_script_exec $cmd_file ]
 
 
 	after [expr 5 * $delay_wait_for_host]
@@ -2861,15 +2915,25 @@ proc main { } {
 	wait_for_prompt
 
 	# Print result of test
-	if {$_el(test_failed) && $NOFAIL} {
-		# test must have failed somewhere but NOFAIL was true
-		if {$INFO} {cputs "\n\n##Overall Result: FAILED (*NOFAIL on)\n\n" $_el_err_color }
-		exit 1
-	} else {
-		#If we get this far, then we passed!
-		if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $_el_info_color }
+	switch $_el_result {
+		0 { # PASS
+			if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $_el_info_color }
+		}
+		1 { # FAIL
+			if {$INFO} {cputs "\n\n##Overall Result: FAILED (*NOFAIL on)\n\n" $_el_err_color }
+			exit 1
+		}
+		2 { # FATAL
+			if {$INFO} {cputs "\n\n##Overall Result: FAILED \n\n" $_el_err_color }
+			exit 1
+		}
+		-1 { # UNKNOWN
+			if {$INFO} {cputs "\n\n##Overall Result: UNKNOWN \n\n" $_el_err_color }
+			exit 1
+		}
 	}
-
+	
+	
 	if { $DEBUG_LOG==1 } { log_file }
 
 	# exit with 0 to indicate that test passed

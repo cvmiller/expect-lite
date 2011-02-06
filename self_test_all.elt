@@ -4,7 +4,7 @@
 # Convert --parms to expect-lite param=value format
 PARAMS=`echo $* | /bin/sed -r 's;--([a-z_-]+) ([0-9a-zA-Z_/-]+);\1=\2;g'`
 echo $PARAMS
-expect-lite r=none c=$0 el=expect-lite d=$PWD $PARAMS
+expect-lite  c=$0 el=expect-lite d=$PWD $PARAMS
 exit $?
 # How to use this expect-lite file, Lines that begin with:
 #	'>' send to remote host, implies "wait for prompt"
@@ -24,12 +24,19 @@ exit $?
 #
 #	Requires expect-lite version 3.1.4
 
+#
+#	Self Test Suite for expect-lite, use connect_method=ssh_key
+#
+#	NOTE: Not all tests will pass when running connect method=none
+#		self_test_directives.txt & self_test_fork.txt will fail
+#
+
 @45
 >
 >
 # default expect-lite app
 $el=expect-lite
-$test_host=camelot-017
+$test_host=localhost
 
 ######## Get PWD to pass to child tests
 >echo $PWD
@@ -41,6 +48,7 @@ $test_host=camelot-017
 !if { $::remote_host == "none" } { set ::user_namespace(test_host) "none" }
 >hostname
 ?if $test_host == none? :: +$test_host=\n([a-zA-Z0-9/_-]+)
+$test_host=localhost
 
 
 ######## set defaults
@@ -52,15 +60,15 @@ $fail=0
 $self_test0=self_test_conditional.txt
 $self_test1=self_test_math.txt 
 $self_test2=self_test_var_deref.txt
-$self_test3=self_self_directive_test.txt
+$self_test3=self_test_basics.txt
 $self_test4=self_test_fork.txt
-$self_test5=self_test_basics.txt
+$self_test5=self_self_directive_test.txt
 
 
 %START_LOOP
 	; ******************** start self test: $self_test$count ********************
 
-	>$el r=$test_host c=$self_test$count el=$el test_host=$test_host d=$pwd
+	>$el r=$test_host c=$self_test$count el=$el test_host=$test_host d=$pwd 
 	<Overall Result
 	>echo $?
 	<0

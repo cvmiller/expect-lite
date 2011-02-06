@@ -756,6 +756,18 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed bug in Bad Time Out Value (found by Tajas Petal pateltejas.1987@gmail.com)
 	Cleaned up _el_color variable names
 	
+6 Feb 2011 - 4.0.3.d8-lib
+	Added lib proc _el_import_session_ids to import existing sessions
+	Created pkgIndex.tcl to load library as a package
+	Summary of EL Lib API
+		package require expect-lite
+		# initialize the library with CLI args
+		_el_init_library "*EXP_INFO IP=10.5.5.5 *NODEBUG"
+		# read this file as el script, reference by buf_stack pointer
+		set cmd_file $argv0
+		set cmd_list_ptr [_el_buffer $cmd_file]
+		# call el script exec
+		set RESULT [ _el_script_exec "" $cmd_list_ptr ]
 
 
 ------------ Future Versions --------------------------
