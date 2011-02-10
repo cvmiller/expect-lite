@@ -39,7 +39,7 @@
 #
 
 # echo version in usage
-set version "4.0.3.d7-lib"
+set version "4.0.3.d9-lib"
 
 #set starting expect timeout 
 set timeout 10 
@@ -153,6 +153,9 @@ proc _el_init_globals { } {
 	# debugging aid: turn on to display match string and expect buffer
 	set ::DEBUG 0
 
+	# timestamp on send: turn on to display timestamp when sending > or >>
+	set ::TIMESTAMP 0
+
 	# keep script running to end: turn on to never fail test
 	set ::NOFAIL 0
 
@@ -163,13 +166,13 @@ proc _el_init_globals { } {
 	set ::arg0 "arg0"
 
 	# set ::global fork count (for multiple sessions) to 0
-	set ::_el(fork_count) 1
+	set ::_el(fork_count) 0
 
 	# set ::global fork stack to blank
 	set ::_el_fork_stack {}
 
 	# set ::global fork id list to blank
-	set ::_el_fork_id_list { default }
+	set ::_el_fork_id_list { }
 
 	# set ::default FORK session
 	set ::_el(fork_current) "default"
@@ -703,6 +706,20 @@ proc _el_init_library { {cli_str ""} } {
 }
 
 
+#
+#	Imports expect-lite constants into expect-lite
+#	Pass in values for Constants and Directives (cli_str)
+#	Can be called multiple times, values are additive
+#
+proc _el_import_const { {cli_str ""} } {
+
+	# Read arguments to el_lib and call el_read_args
+	# count words on cli_str
+	set argc [llength [split $cli_str " "]]
+	_el_read_args $argc $cli_str
+
+}
+
 
 #
 #	Takes full command path+file, and returns just the file name minus path
@@ -772,6 +789,7 @@ proc _el_read_args { argc argv } {
 			# Make script executable: check if script name, no other argument or directive
 			# script name cannot have '=', which would be interpretted as a constant
 			if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
+				#puts ">>>$optarg>>>$optargval"
 				set cmd_file $optarg
 				set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] 
 			}
@@ -1233,6 +1251,17 @@ proc session_id_manager { fork_id } {
 			set fork_id "default"
 		}
 	}
+	# clear and regenerate fork id list and count
+	set _el_fork_id_list { }
+	set _el(fork_count) 0
+	foreach keyitem [array names _el_fork] {
+		#filter out eols from session printout
+		if { [string match "*eols*" $keyitem] == 0 } {
+			lappend _el_fork_id_list $keyitem
+			incr _el(fork_count)
+		}
+	}
+	
 	if {$INFO && !$DEBUG} {
 		cputs "\n\nINFO: FORK session is: $fork_id,	Active sessions are: $_el_fork_id_list\n" $_el_info_color
 	} elseif { $DEBUG } {
@@ -1250,7 +1279,7 @@ proc _el_import_session_ids { session_list } {
 	global spawn_id _el _el_fork _el_fork_id_list  _el_eols
 	global DEBUG INFO _el_info_color _el_err_color 
 	
-	puts  "SL>$session_list|[llength $session_list]"
+	#puts  "SL>$session_list|[llength $session_list]"
 	if { [ catch { array set _el_fork  $session_list} error ]} {
 		cputs "ERROR: Invalid array:$session_list:\n$error\n" $_el_err_color
 	}
@@ -1261,8 +1290,9 @@ proc _el_import_session_ids { session_list } {
 	foreach keyitem [array names _el_fork] {
 		#filter out eols from keyitems
 		if { [string match "*eols*" $keyitem] == 0 } {
-			if { $_el_fork($keyitem) == $spawn_id } {
-				set _el(fork_current) $keyitem
+			# set current fork_id to current spawn_id
+			if { [info exists spawn_id ] && $_el_fork($keyitem) == $spawn_id } {
+					set _el(fork_current) $keyitem
 			}
 			# set default eol context 
 			set _el_fork($keyitem,eols) $_el_eols
@@ -1272,7 +1302,13 @@ proc _el_import_session_ids { session_list } {
 			incr _el(fork_count)
 		}
 	}
-	
+	# set spawn_id to default, if not currently set
+	if { [info exists spawn_id ] != 1 && [ info exists _el_fork(default)] } {
+		set spawn_id $_el_fork(default)
+	} else {
+		cputs "ERROR: no default session found" $_el_err_color 
+		exit 1
+	}
 	# show array
 	if { $DEBUG } {
 		puts "Printing session ids:"
@@ -1412,10 +1448,11 @@ proc show_vars { } {
 
 	puts "DEBUG Info: Printing all expect-lite variables"
 	# print internal vars
-	set ii_len [string length $arg0]
-	set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
-	puts "Var:arg0 $ii_blank Value:$cli_namespace($arg0)"
-	
+	if { [ info exists cli_namespace($arg0) ] } { 
+		set ii_len [string length $arg0]
+		set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
+		puts "Var:arg0 $ii_blank Value:$cli_namespace($arg0)"
+	}
 	foreach ii $var_list_sorted {
 		# create aligned columns
 		set ii_len [string length $ii]
@@ -1763,7 +1800,7 @@ proc _el_buffer_search {line_ptr line_search buf_stack} {
 #
 proc _el_global_directive { g_dir_str } {
 	global INFO EXP_INFO WARN DEBUG _el_info_color _el_warn_color _el_err_color _el_comment_color
-	global _el_eols _el_fork _el_current_session _el_infinite_loop NOFAIL
+	global _el_eols _el_fork _el_current_session _el_infinite_loop NOFAIL _el TIMESTAMP
 	
 	switch -glob $g_dir_str {	
 		"\\*INFO"	{	# Turn on INFO logging
@@ -1815,6 +1852,11 @@ proc _el_global_directive { g_dir_str } {
 			set _el_err_color none
 			# set global color
 			set _el_comment_color none		 	
+		}
+		"\\*NOTIMESTAMP"	{	# Turn off TIMESTAMP logging
+			cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+			# do not disable if CLI has enabled
+			if {$TIMESTAMP != 10 } { set TIMESTAMP 0 }
 		}
 		"\\*TERM"	{	# Terminate but Pass Test
 			cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
@@ -1897,6 +1939,33 @@ proc _el_global_directive { g_dir_str } {
 				}
 			}
 		}
+		"\\*TIMESTAMP[ ]?(ISO|EU|US)*" { #Issue Time Stamps with each > or >>
+			cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+			set ts_list [split $g_dir_str]
+			if { [llength $ts_list] > 2 } {
+				if {$WARN} {
+					cputs "\n\nWarning: TIMESTAMP: Too Many Parameters: $g_dir_str\n" $_el_warn_color
+				}
+				# invalid *TIMESTAMP command, exit this function
+				return
+			} elseif {[llength $ts_list] == 2 } {
+				# set timestamp on & format string
+				set ::TIMESTAMP 1
+				set ts_format [lindex $ts_list 1]
+				switch $ts_format {
+					"ISO" { set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] " }
+					"US"	 { set _el(ts_fmt) "\n\[ %D %T \] " }
+					"EU"	 { set _el(ts_fmt) "\n\[ %d-%m-%Y %T \] " }
+				}
+				
+			} elseif {[llength $ts_list] == 1 } {
+				# no arguments to *TIMESTAMP, default to ISO
+				set ::TIMESTAMP 1
+				set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] "
+			}
+			
+		}
+
 	}
 	# end switch regex
 }
@@ -1910,7 +1979,7 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 	#	buf_stack is used when el_script is called recursively (e.g. include)
 	global remote_host _out _out_nowait _in _in_noregex _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
 	global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 _el_comment_color _el_info_color _el_warn_color _el_err_color _el_eols _el_fork_context _el_buf EXP_INFO
-	global _el_current_session NOFAIL
+	global _el_current_session NOFAIL TIMESTAMP
 		
 	set prev_line ""
 	set comment_line ""
@@ -2155,6 +2224,10 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 					scan [string index $_el(line) [expr [string length $_el(line)] -1]] %c control_char_ascii
 					# parse char from passed string
 					set control_char [string index $_el(line) [expr [string length $_el(line)] -1]]
+					# print timestamp
+					if { $TIMESTAMP } {
+						puts -nonewline [timestamp -format $_el(ts_fmt)]
+					}
 					# Check if passed char is lower case
 					if {[expr $control_char_ascii - 96] > 0 } {
 						# Send lower case control char
@@ -2176,7 +2249,10 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 					
 					# delay to give remote-host a little time (in ms)
 					after 10
-
+					# print timestamp
+					if { $TIMESTAMP } {
+						puts -nonewline [timestamp -format $_el(ts_fmt)]
+					}
 					# Check of remote_host is still connected before sending string
 					if { [catch { send  "[_el_strip_char $_el(line) $_out_nowait]$_el_eols"  } error] } {
 						cputs "CONNECT ERROR: Lost connection to $remote_host \n   $error \nExiting..." $_el_err_color
@@ -2200,6 +2276,10 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 					
 					# Set test up for success
 					set _el(success) 1
+					# print timestamp
+					if { $TIMESTAMP } {
+						puts -nonewline [timestamp -format $_el(ts_fmt)]
+					}
 					
 					# Check of remote_host is still connected before sending string
 					if { [catch { send   "[_el_strip_char $_el(line) $_out]$_el_eols"  } error] } {

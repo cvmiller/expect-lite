@@ -769,10 +769,22 @@ Released 21 Dec 2010 - 4.0.2
 		# call el script exec
 		set RESULT [ _el_script_exec "" $cmd_list_ptr ]
 
+9 Feb 2011 - 4.0.3.d9-lib
+	Added _el_import_cont to import constants in lib mode
+		Can be repeatedly called
+	Fixed *SHOW VARS in lib mode - arg0 was not defined
+	Added *TIMESTAMP US|EU|ISO & *NOTIMESTAMP (idea from Kevin Broch kevbroch@gmail.com)
+		ISO is default timestamp format
+
+
+
+
 
 ------------ Future Versions --------------------------
 		
 Future
+
+o	Clean up fork _el_fork($fork_id) to _el_fork($fork_id,session)
 
 x	Fix IDE '>' paste (added chars ./$)
 

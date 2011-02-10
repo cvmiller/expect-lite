@@ -17,14 +17,14 @@ puts "el_lib loaded"
 #	_el_init_library <cli init string>
 #	Loads libexpect, initializes el global variables, spawns bash session
 #
-_el_init_library "*EXP_INFO IP=10.5.5.5 *NODEBUG"
+_el_init_library "*EXP_INFO IP=10.5.5.5 "
 puts "el_lib initialized"
 
 
 # create spawn sessions and set prompt to identify the session
 spawn bash
 send "export PS1='0\$ '\n"
-set session(def) $spawn_id
+set session(default) $spawn_id
 
 spawn bash
 send "export PS1='1\$ '\n"
@@ -38,7 +38,20 @@ spawn bash
 send "export PS1='3\$ '\n"
 set session(dut3) $spawn_id
 
+# remove global to simulate STAF
+unset spawn_id
+
+# Import the session array into EL
+#	_el_import_session_ids <session list, alternating name spawn_id>
+#	e.g. _el_import_session_ids dut3 exp9 dut1 exp7 dut2 exp8 def exp6
+# Note: TCL does not actually pass arrays, therefore a list is passed
+#
 _el_import_session_ids [array get session]
+
+#
+#	Import more vars into EL (as constants)
+#
+_el_import_const "DUT=mydut *NOFAIL -r none"
 
 
 ################ initialization complete. Begin of script ############33
@@ -49,13 +62,6 @@ proc test_funct { str } {
 }
 
 
-
-set session(default) 0
-set session(dut1) 2
-set session(dut2) 3
-set session(dut3) 4
-
-#test_array [array get session]
 
 puts "argv0 is:$argv0"
 
@@ -81,10 +87,15 @@ exit 0
 ########## Embedded EL Scrtpt ###############
 ; === start script $IP
 @3
-#*DEBUG
+*TIMESTAMP US
+$IP=2001::DEAD
 >date
 <2011
+>pwd
 *FORK
+>
+*NOTIMESTAMP
+*SHOW VARS
 *TCL puts "\nARGV:$argv0"
 *TCL puts [test_funct $cmd_list_ptr]
 >echo "pau"
