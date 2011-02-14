@@ -17,7 +17,7 @@ puts "el_lib loaded"
 #	_el_init_library <cli init string>
 #	Loads libexpect, initializes el global variables, spawns bash session
 #
-_el_init_library "*EXP_INFO IP=10.5.5.5 "
+_el_init_library "*EXP_INFO IP=10.5.5.5 *DEBUG"
 puts "el_lib initialized"
 
 
@@ -51,13 +51,15 @@ _el_import_session_ids [array get session]
 #
 #	Import more vars into EL (as constants)
 #
-_el_import_const "DUT=mydut *NOFAIL -r none"
+_el_import_const "DUT=mydut *NOFAIL"
 
+_el_import_const "DUT2=thatdut "
 
 ################ initialization complete. Begin of script ############33
 
 proc test_funct { str } { 
 	puts "calling test_funct param=$str"
+	sleep 3
 	return 0
 }
 
@@ -86,8 +88,8 @@ exit 0
 
 ########## Embedded EL Scrtpt ###############
 ; === start script $IP
-@3
-*TIMESTAMP US
+@2
+*TIMESTAMP ISO
 $IP=2001::DEAD
 >date
 <2011

@@ -770,21 +770,27 @@ Released 21 Dec 2010 - 4.0.2
 		set RESULT [ _el_script_exec "" $cmd_list_ptr ]
 
 9 Feb 2011 - 4.0.3.d9-lib
-	Added _el_import_cont to import constants in lib mode
+	Added _el_import_const to import constants in lib mode
 		Can be repeatedly called
 	Fixed *SHOW VARS in lib mode - arg0 was not defined
 	Added *TIMESTAMP US|EU|ISO & *NOTIMESTAMP (idea from Kevin Broch kevbroch@gmail.com)
 		ISO is default timestamp format
 
 
-
-
-
+10 Feb 2011 - 4.0.3.d10-lib
+	Library changes
+		_el_import_const Warning: remote host - should be supressed
+		Remove proc parray	- conflicts with other calls to parray
+		*TCL suppress timeouts. reset upon return
+	Cleaned up FORK code, nicer internal management of sessions
+	Changed *TIMESTAMP params to ISO|YMD|DMY|MDY, default is ISO
+	
+	
 ------------ Future Versions --------------------------
 		
 Future
 
-o	Clean up fork _el_fork($fork_id) to _el_fork($fork_id,session)
+x	Clean up fork _el_fork($fork_id) to _el_fork($fork_id,session)
 
 x	Fix IDE '>' paste (added chars ./$)
 

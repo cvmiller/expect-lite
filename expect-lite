@@ -39,7 +39,7 @@
 #
 
 # echo version in usage
-set version "4.0.3.d9-lib"
+set version "4.0.3.d10-lib"
 
 #set starting expect timeout 
 set timeout 10 
@@ -786,7 +786,7 @@ proc _el_read_args { argc argv } {
 				set optargval "--"
 			}
 			#puts "=====>$x|$optarg|$optargval|"
-			# Make script executable: check if script name, no other argument or directive
+			# Check that last parameter is command file name
 			# script name cannot have '=', which would be interpretted as a constant
 			if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
 				#puts ">>>$optarg>>>$optargval"
@@ -855,7 +855,7 @@ proc _el_read_args { argc argv } {
 			cputs "Error: Missing remote_host" $_el_err_color
 			usage
 			}
-		if { $remote_host=="none" || $remote_host=="NONE" } { 
+		if { [info exists ::EL_LIBRARY] != 1 && $remote_host=="none" || $remote_host=="NONE" } { 
 			if {$WARN} { cputs "Warning: Remote Host=none, using Localhost" $_el_warn_color }
 			# don't use remote login method but use localhost	
 			set connect_method "none"
@@ -867,12 +867,13 @@ proc _el_read_args { argc argv } {
 	}
 
 	# Assign any Environment Variables starting with 'EL_' to Constants
-	if { $DEBUG } {
+	# only show in Debug and not Library mode
+	if { $DEBUG && [info exists ::EL_LIBRARY] != 1} {
 		puts "Env Vars -> Constants:"
 	}
 	foreach key [array names env] {
 		if {[regexp {^EL_} $key] == 1 } {
-			if { $DEBUG } {
+			if { $DEBUG && [info exists ::EL_LIBRARY] != 1} {
 				puts "$key=$env($key)"
 			}
 			set cli_namespace($key) $env($key)
@@ -1209,14 +1210,14 @@ proc session_id_manager { fork_id } {
 	if { $fork_id == "default" } {
 		# set fork session back to default if count > 0
 		if { $_el(fork_count) > 0 } {
-			set spawn_id  $_el_fork(default)
+			set spawn_id  $_el_fork(default,session)
 		}
 	} elseif { $fork_id != "" } {
 		# request for new fork session
 		
-		if {[info exists _el_fork($fork_id) ]} {
+		if {[info exists _el_fork($fork_id,session) ]} {
 			# connect to existing session
-			set spawn_id $_el_fork($fork_id)
+			set spawn_id $_el_fork($fork_id,session)
 		} else {
 			# save current timeout
 			set current_timeout $timeout
@@ -1232,15 +1233,15 @@ proc session_id_manager { fork_id } {
 			remote_host_init $user_dir
 			# restore current timeout
 			set timeout $current_timeout 
-			set _el_fork($fork_id) $spawn_id
+			set _el_fork($fork_id,session) $spawn_id
 			incr _el(fork_count)
 			# update list of fork_id's
 			lappend _el_fork_id_list $fork_id
 			# set default eols for this session
 			set _el_fork($fork_id,eols) $_el_eols
 		}
-		if { $_el_fork($fork_id) == "default" } {
-			set spawn_id  $_el_fork(default)
+		if { $_el_fork($fork_id,session) == "default" } {
+			set spawn_id  $_el_fork(default,session)
 		}
 		# end if		
 	} elseif {$fork_id == "" } {
@@ -1256,8 +1257,10 @@ proc session_id_manager { fork_id } {
 	set _el(fork_count) 0
 	foreach keyitem [array names _el_fork] {
 		#filter out eols from session printout
-		if { [string match "*eols*" $keyitem] == 0 } {
-			lappend _el_fork_id_list $keyitem
+		if { [string match "*session*" $keyitem] } {
+			# retrieve session name, drop ',session' from keyitem
+			set session_name [lindex [split $keyitem ,] 0]
+			lappend _el_fork_id_list $session_name
 			incr _el(fork_count)
 		}
 	}
@@ -1280,42 +1283,42 @@ proc _el_import_session_ids { session_list } {
 	global DEBUG INFO _el_info_color _el_err_color 
 	
 	#puts  "SL>$session_list|[llength $session_list]"
-	if { [ catch { array set _el_fork  $session_list} error ]} {
+	if { [ catch { array set import_fork  $session_list} error ]} {
 		cputs "ERROR: Invalid array:$session_list:\n$error\n" $_el_err_color
 	}
-	# update fork_id count
-	#set _el(fork_count) [expr [array size _el_fork] -0]
 	
 	# set current fork_id to current spawn_id
-	foreach keyitem [array names _el_fork] {
+	foreach keyitem [array names import_fork] {
 		#filter out eols from keyitems
-		if { [string match "*eols*" $keyitem] == 0 } {
+		if { [string match "*session*" $keyitem] == 1 } {
 			# set current fork_id to current spawn_id
-			if { [info exists spawn_id ] && $_el_fork($keyitem) == $spawn_id } {
-					set _el(fork_current) $keyitem
+			if { [info exists spawn_id ] && $import_fork($keyitem,session) == $spawn_id } {
+				set _el(fork_current) $keyitem
 			}
 			# set default eol context 
 			set _el_fork($keyitem,eols) $_el_eols
-			# populate fork id list with new sessions
-			lappend _el_fork_id_list $keyitem
-			# increment fork count
-			incr _el(fork_count)
 		}
 	}
 	# set spawn_id to default, if not currently set
-	if { [info exists spawn_id ] != 1 && [ info exists _el_fork(default)] } {
-		set spawn_id $_el_fork(default)
+	if { [info exists spawn_id ] != 1 && [ info exists import_fork(default)] } {
+		set spawn_id $import_fork(default)
 	} else {
-		cputs "ERROR: no default session found" $_el_err_color 
+		cputs "ERROR: Import Sessions: no 'default' session found\n    Sessions imported: [array names import_fork]" $_el_err_color 
 		exit 1
 	}
+	# convert imported session array to el_fork array
+	foreach keyitem [array names import_fork] {
+		set _el_fork($keyitem,session) $import_fork($keyitem)
+	}
+	
 	# show array
 	if { $DEBUG } {
 		puts "Printing session ids:"
 		foreach keyitem [array names _el_fork] {
 			#filter out eols from session printout
-			if { [string match "*eols*" $keyitem] == 0 } {
-				puts "	$keyitem=$_el_fork($keyitem)"
+			if { [string match "*session*" $keyitem] == 1 } {
+				set session_name [lindex [split $keyitem ,] 0]
+				puts "	$session_name=$_el_fork($keyitem)"
 			}
 		}
 	}; #endif DEBUG
@@ -1422,17 +1425,6 @@ proc print_comment_line { } {
 
 }
 
-
-#
-#	Used for debugging only, Prints array
-#	
-#
-proc parray { name } {
-	upvar $name a
-	foreach e1 [lsort [array names a]]  {
-		puts "$e1 = $a($e1)"
-	}
-}
 
 #
 #	Prints all user vars and constants
@@ -1930,6 +1922,10 @@ proc _el_global_directive { g_dir_str } {
 		"\\*TCL .+" { #native TCL command for library use
 			if { [info exist ::EL_LIBRARY] } {
 				set ::_el_tcl_cmd [string trim $g_dir_str "*TCL "]
+				# preserve timeout
+				set el_timeout $::timeout
+				# disable timeout during function call
+				set timeout 0
 				if { $DEBUG } {
 					puts "EL TCL CMD>$::_el_tcl_cmd"
 				}
@@ -1937,9 +1933,11 @@ proc _el_global_directive { g_dir_str } {
 				if {[ catch { uplevel #0 {eval $::_el_tcl_cmd }}  error ]} {
 					puts "ERROR: Expect: \'\n$::_el_tcl_cmd\' \n$error\n"
 				}
+				# restore timeout
+				set ::timeout $el_timeout
 			}
 		}
-		"\\*TIMESTAMP[ ]?(ISO|EU|US)*" { #Issue Time Stamps with each > or >>
+		"\\*TIMESTAMP" { #Issue Time Stamps with each > or >>
 			cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 			set ts_list [split $g_dir_str]
 			if { [llength $ts_list] > 2 } {
@@ -1952,15 +1950,21 @@ proc _el_global_directive { g_dir_str } {
 				# set timestamp on & format string
 				set ::TIMESTAMP 1
 				set ts_format [lindex $ts_list 1]
-				switch $ts_format {
-					"ISO" { set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] " }
-					"US"	 { set _el(ts_fmt) "\n\[ %D %T \] " }
-					"EU"	 { set _el(ts_fmt) "\n\[ %d-%m-%Y %T \] " }
+				switch -glob $ts_format {
+					"YMD"	-
+					"ISO"    { set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] " }
+					"MDY"	 { set _el(ts_fmt) "\n\[ %D %T \] " }
+					"DMY"	 { set _el(ts_fmt) "\n\[ %d-%m-%Y %T \] " }
+					default { # set a ISO as default
+								if {$WARN} { cputs "\n\nWarning: unknown format, using YMD" $_el_warn_color }
+								set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] " 
+							}
 				}
 				
 			} elseif {[llength $ts_list] == 1 } {
 				# no arguments to *TIMESTAMP, default to ISO
 				set ::TIMESTAMP 1
+				# use YMD format as default
 				set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] "
 			}
 			
@@ -2184,7 +2188,7 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 		}
 		
 		# set default fork session
-		if { [catch { set _el_fork(default) $spawn_id  } error] } {
+		if { [catch { set _el_fork(default,session) $spawn_id  } error] } {
 			puts stderr "BUG: Expect-lite: Bug in _el_script_exec init code while setting default FORK session \n   $error"
 			# Fail script?
 			exit 1
