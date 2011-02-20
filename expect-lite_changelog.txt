@@ -785,6 +785,12 @@ Released 21 Dec 2010 - 4.0.2
 	Cleaned up FORK code, nicer internal management of sessions
 	Changed *TIMESTAMP params to ISO|YMD|DMY|MDY, default is ISO
 	
+20 Feb 2011 - 4.0.3.d12-lib
+	Library changes
+		Include files are not included, warning is printed
+
+
+
 	
 ------------ Future Versions --------------------------
 		
@@ -808,7 +814,8 @@ o	Add Conditional if, used right after > command. Eliminates need to capture var
 	If [text] then - possible format ?if [text]? or ?if text?
 	
 o	Add if Var exists to conditional
-	If $VAR then...
+	If $VAR exists then...
+	if $VAR notexist then..
 
 
 ------------ Future Version 4.0 --------------------------

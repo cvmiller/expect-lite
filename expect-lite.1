@@ -3,7 +3,7 @@
 .\" Updated Man Page for expect-lite - version 3.7.0	7/31/2010
 .\" Updated Man Page for expect-lite - version 4.0.x	9/28/2010
 .\"
-.TH EXPECT-LITE "1" "October 2010" "expect-lite " "User Commands"
+.TH EXPECT-LITE "1" "February 2011" "expect-lite version 4.0.3" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -20,7 +20,7 @@ or
 Written in Expect, it is designed to directly map an interactive terminal session into an
 automation script. expect-lite scripts use punctuation character(s) at the beginning of each line
 to indicate the action. Basic expect-lite scripts can be created by simply cutting and pasting
-text from a terminal window into a script, and adding '>' '<' characters. Knowledge of
+text from a terminal window into a script, and adding \fB>\fR \fB<\fR characters. Knowledge of
 Expect is not required.
 
 .PP
@@ -169,6 +169,13 @@ Enable/disable debug messages
 .TP
 *NOCOLOR
 Disables color on stdout
+.TP
+*TIMESTAMP <ISO|YMD|DMY|MDY>
+Prints Date and Timestamp for each command sent, ISO is default
+.TP
+*NOTIMESTAMP
+Disables timestamp printing
+
 
 .P
 
@@ -249,7 +256,7 @@ Written by Craig Miller
 .SH "REPORTING BUGS"
 Report bugs to <cvmiller at gmail dot com>.
 .SH COPYRIGHT
-Copyright \(co 2008-2010 Craig Miller
+Copyright \(co 2008-2011 Craig Miller
 .br
 Copyright \(co 2005-2007 FreeScale Semiconductor and Craig Miller
 .br

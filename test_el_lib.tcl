@@ -91,6 +91,7 @@ exit 0
 @2
 *TIMESTAMP ISO
 $IP=2001::DEAD
+~junk
 >date
 <2011
 >pwd

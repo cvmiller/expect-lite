@@ -39,7 +39,7 @@
 #
 
 # echo version in usage
-set version "4.0.3.d10-lib"
+set version "4.0.3"
 
 #set starting expect timeout 
 set timeout 10 
@@ -1654,7 +1654,7 @@ proc _el_buffer {cmd_file} {
 	# Protect against no file to read
 	if { [ catch { set infile [open $cmd_file r ] } error] } {
 		puts stderr "Unable to open cmd/include_file \n   $error"
-		exit 1
+			exit 1
 	}
 	while { -1 != [gets $infile buf_line ]} {
 		# remove leading white space on line (permitting indentation
@@ -2627,8 +2627,12 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 						if {$INFO} {
 							cputs "\nIncluding: $_include_file\n" $_el_info_color
 						}
-						# Make Recursive Call
-						_el_script_exec $include_path_file
+						# Make Recursive Call in stand alone mode
+						if { [info exist ::EL_LIBRARY] != 1 } {
+							_el_script_exec $include_path_file
+						} else {
+							cputs "\nWarning: Skipping include file:$_include_file\n" $_el_warn_color
+						}
 						
 						# pop _el_buf(stack)
 						incr _el_buf(stack) -1
