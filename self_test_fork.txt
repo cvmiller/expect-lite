@@ -24,6 +24,8 @@ exit $?
 #	Later in the test, it switches back, and does a pwd to check
 #		that it is in the correct session
 #
+#	Includes include file tcl_funtions.inc in session to ensure default
+#		session is correctly initialized
 #
 #	Requires expect-lite version 3.5.0
 #
@@ -43,6 +45,9 @@ $fork_session2=MY_2nd_HOST
 @10
 *FORK $fork_session
 ; ======== "SESSION 1a"
+>
+; === Test file inclusion inside a session
+~tcl_functions.inc
 >
 # show fork status
 *FORK
@@ -106,6 +111,7 @@ $fork_session2=MY_2nd_HOST
 >rmdir /tmp/$fork_session
 >
 
+; === switch back to original session (aka default)
 *FORK default
 ; ======== "SESSION 0b"
 >>pwd

@@ -789,8 +789,14 @@ Released 21 Dec 2010 - 4.0.2
 	Library changes
 		Include files are not included, warning is printed
 
+22 Feb 2011 - 4.0.3 released
 
-
+24 Feb 2011 - 4.0.4.d1-lib
+	Fixed *FORK default bug (wasn't switching back to default)
+		Occurs after using include file in second session
+		Need to update regression test
+	Fixed multiple failure report, when inside an include file
+	
 	
 ------------ Future Versions --------------------------
 		

@@ -39,7 +39,7 @@
 #
 
 # echo version in usage
-set version "4.0.3"
+set version "4.0.4.d1-lib"
 
 #set starting expect timeout 
 set timeout 10 
@@ -1207,6 +1207,7 @@ proc session_id_manager { fork_id } {
 	global spawn_id _el _el_fork _el_fork_id_list INFO connect_method remote_host _el timeout 
 	global DEBUG user_dir _el_info_color _el_eols 
 
+
 	if { $fork_id == "default" } {
 		# set fork session back to default if count > 0
 		if { $_el(fork_count) > 0 } {
@@ -1239,9 +1240,6 @@ proc session_id_manager { fork_id } {
 			lappend _el_fork_id_list $fork_id
 			# set default eols for this session
 			set _el_fork($fork_id,eols) $_el_eols
-		}
-		if { $_el_fork($fork_id,session) == "default" } {
-			set spawn_id  $_el_fork(default,session)
 		}
 		# end if		
 	} elseif {$fork_id == "" } {
@@ -1989,6 +1987,7 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 	set comment_line ""
 	set timeout_line ""
 	set _el_fail_script ""
+	set teststr ""
 	
 	# clear expect lines list
 	set _el_cont_lines ""
@@ -2187,11 +2186,13 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 			protected_send "$_el_eols"
 		}
 		
-		# set default fork session
-		if { [catch { set _el_fork(default,session) $spawn_id  } error] } {
-			puts stderr "BUG: Expect-lite: Bug in _el_script_exec init code while setting default FORK session \n   $error"
-			# Fail script?
-			exit 1
+		# set default fork session if it doesn't already exist
+		if { [info exists _el_fork(default,session)] != 1 } {
+			if { [catch { set _el_fork(default,session) $spawn_id  } error] } {
+				puts stderr "BUG: Expect-lite: Bug in _el_script_exec init code while setting default FORK session \n   $error"
+				# Fail script?
+				exit 1
+			}
 		}
 		
 		# get first line of cmd_file from buffer
@@ -2629,13 +2630,19 @@ proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 						}
 						# Make Recursive Call in stand alone mode
 						if { [info exist ::EL_LIBRARY] != 1 } {
-							_el_script_exec $include_path_file
+							set result [_el_script_exec $include_path_file]
 						} else {
 							cputs "\nWarning: Skipping include file:$_include_file\n" $_el_warn_color
 						}
 						
 						# pop _el_buf(stack)
 						incr _el_buf(stack) -1
+						
+						# don't report false include failure, set test_failed
+						if { $result != 0 } {
+							set _el(success) 1
+							set _el(test_failed) 1
+						}
 					}
 			
 				}
