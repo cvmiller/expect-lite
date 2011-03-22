@@ -45,7 +45,7 @@ $test_host=localhost
 
 ######## Get host to pass to child tests
 # back door to get --r parameter
-!if { $::remote_host == "none" } { set ::user_namespace(test_host) "none" }
+!if { $::expectlite::remote_host == "none" } { set ::expectlite::user_namespace(test_host) "none" }
 >hostname
 ?if $test_host == none? :: +$test_host=\n([a-zA-Z0-9/_-]+)
 $test_host=localhost

@@ -794,13 +794,28 @@ Released 21 Dec 2010 - 4.0.2
 24 Feb 2011 - 4.0.4.d1-lib
 	Fixed *FORK default bug (wasn't switching back to default)
 		Occurs after using include file in second session
-		Need to update regression test
+		Added self_test_fork, test case.
 	Fixed multiple failure report, when inside an include file
 	
+1 March 2011 - 4.0.4.d2-lib
+	Fixed multiple failure report fix in library mode
+
+
+22 March 2011 - 4.0.4.d4-lib-ns
+	Added 'expectlite' name space to protect against name conflicts
+		Only expect vars (timeout expect_out spawn_id) remain global
+		Passes regression		
+
 	
 ------------ Future Versions --------------------------
 		
 Future
+
+o	_el_global_directive should use el(fork_current) rather than _el_current_session
+
+o	Look at SIGPIPE and handle broken pipe better
+
+o	Place ::TCL and ::EL_LIBRARY in namespace 'expect-lite'
 
 x	Clean up fork _el_fork($fork_id) to _el_fork($fork_id,session)
 
@@ -822,6 +837,11 @@ o	Add Conditional if, used right after > command. Eliminates need to capture var
 o	Add if Var exists to conditional
 	If $VAR exists then...
 	if $VAR notexist then..
+
+x	Creating el-lib: 
+		in EL add line: package provide expect-lite 4.0 
+		from tclsh: pkg_mkIndex <dir> expect-lite 
+			Creates pkgIndex.tcl in <dir>
 
 
 ------------ Future Version 4.0 --------------------------

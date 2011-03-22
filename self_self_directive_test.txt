@@ -3,7 +3,7 @@
 # Little bootstrap bash script to run kick start expect-lite script
 # Convert --parms to expect-lite param=value format
 PARAMS=`echo $* | /bin/sed -r 's;--([a-z_]+) ([0-9a-zA-Z]+);\1=\2;g'`
-echo $PARAMS
+echo "PARMS=$PARAMS"
 expect-lite r=localhost c=$0 el=expect-lite test_host=none $PARAMS d=$PWD
 exit $?
 # How to use this expect-lite file, Lines that begin with:
@@ -18,6 +18,9 @@ exit $?
 
 #
 # Self Self Test of Expect-lite Directives
+#
+#	Run as executable, not within expect-lite
+#
 #	Runs another expect-lite self test, and monitors INFO & WARNings
 #	
 #	Requires ssh connection, timing issues with remote_host=none

@@ -31,11 +31,11 @@
 # Define random functions
 !proc set_random_seed { var } {
 # proc sets the random seed based on expect-lite variable $var
-!	set seed $::user_namespace($var)
+!	set seed $::expectlite::user_namespace($var)
 !	if { $seed == "none" } {
 !		set seed [clock seconds]
 !		expr srand($seed)
-!		set ::user_namespace($var) $seed
+!		set ::expectlite::user_namespace($var) $seed
 !	} else {
 !		expr srand($seed)
 !	}
@@ -48,46 +48,46 @@
 !}
 !proc randomize { var start end } {
 # proc sets expect-lite variable to random value in range start-end
-!       set ::user_namespace($var) [random $start $end]
+!       set ::expectlite::user_namespace($var) [random $start $end]
 !}
 >
 
 # Define Additional Functions
 !proc dec2hex { hex_var_name } {
 !	# A Procedure that converts decimal a hexadecimal value, updates expect-lite variable
-!	set x $::user_namespace($hex_var_name)
+!	set x $::expectlite::user_namespace($hex_var_name)
 !	set x [format %02X $x]
-!	set ::user_namespace($hex_var_name) $x
+!	set ::expectlite::user_namespace($hex_var_name) $x
 !}
 !proc bitwise { var oper val } {
 # proc sets expect-lite variable to bitwise operation 'oper' by $val
 # supports oper: << >> & | ^ + = * / %
 # depricated by expect-lite math function
-!       set ::user_namespace($var) [expr $::user_namespace($var) $oper $val]
+!       set ::expectlite::user_namespace($var) [expr $::expectlite::user_namespace($var) $oper $val]
 !}
 >
 !proc incr_wrap { var start end } {
 # increments expect-lite var unless at $end, then wraps to $start
-!	if { $::user_namespace($var) == [expr $end ] } {
-!		set ::user_namespace($var) $start
+!	if { $::expectlite::user_namespace($var) == [expr $end ] } {
+!		set ::expectlite::user_namespace($var) $start
 !	} else {
-!		incr ::user_namespace($var)
+!		incr ::expectlite::user_namespace($var)
 !	}
 !}
 >
 
 # Shows all defined expect-lite Vars using 'str' as filter
 !proc show_all_vars { str } {
-!	set var_list [array names ::user_namespace]
+!	set var_list [array names ::expectlite::user_namespace]
 !	set var_list_sorted [lsort $var_list]
 !	puts "Displaying expect-lite Variables:"
 !	foreach i $var_list_sorted {
 !		if { $str != "*" } {
 !			if { [ regexp ".*$str.*" $i ] } {
-!				puts "Var:$i \t\t\Value:$::user_namespace($i)"
+!				puts "Var:$i \t\t\Value:$::expectlite::user_namespace($i)"
 !			}
 !		} else {
-!	     	puts "Var:$i \t\t\Value:$::user_namespace($i)"
+!	     	puts "Var:$i \t\t\Value:$::expectlite::user_namespace($i)"
 !		}
 !	}
 !}
