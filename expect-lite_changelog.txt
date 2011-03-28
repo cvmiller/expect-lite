@@ -806,7 +806,7 @@ Released 21 Dec 2010 - 4.0.2
 		Only expect vars (timeout expect_out spawn_id) remain global
 		Passes regression		
 
-25 March 2011 -  4.0.4.d5-lib-ns
+25 March 2011 - 4.0.4.d5-lib-ns
 	Fixed IDE Step, when *FORK command is step, session didn't change
 		expect interact must be restarted when changing sessions
 		

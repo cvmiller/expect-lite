@@ -31,6 +31,8 @@ $pass=secret
 !source sudo.tcl
 >
 
+# run the ID command with sudo privilages
+
 !run_sudo id $pass
 +$mygid=gid=[0-9]+\(([a-z]+)\)
 <uid=0
