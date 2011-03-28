@@ -17,11 +17,12 @@
 # 	increments expect-lite var unless at $end, 
 #	then wraps to $start
 # 
-# show_all_vars <filter_str>
-#	Shows all defined expect-lite Vars using 'str' as filter
-#	use "*" to show all defined variables
 #
 ################################################################
+# 
+#	Updated 27 March 2011 for expectlite namespace
+#
+
 
 
 
@@ -75,25 +76,6 @@
 !	}
 !}
 >
-
-# Shows all defined expect-lite Vars using 'str' as filter
-!proc show_all_vars { str } {
-!	set var_list [array names ::expectlite::user_namespace]
-!	set var_list_sorted [lsort $var_list]
-!	puts "Displaying expect-lite Variables:"
-!	foreach i $var_list_sorted {
-!		if { $str != "*" } {
-!			if { [ regexp ".*$str.*" $i ] } {
-!				puts "Var:$i \t\t\Value:$::expectlite::user_namespace($i)"
-!			}
-!		} else {
-!	     	puts "Var:$i \t\t\Value:$::expectlite::user_namespace($i)"
-!		}
-!	}
-!}
->
-
-
 
 
 # set the default value of the random number gen (rng) seed to "none"

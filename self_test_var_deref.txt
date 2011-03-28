@@ -118,8 +118,6 @@ $count=8
 ; == show #3 items of parray: $port_in_10	$mac_da10
 >
 
-!show_all_vars mac_da
->
 
 # multiple var deref, will only deref var $gen$one if followed by non-var char
 ; === Multiple var dereference

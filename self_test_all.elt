@@ -54,15 +54,16 @@ $test_host=localhost
 ######## set defaults
 $count=0
 # number of tests to run
-$max_test_count=5
+$max_test_count=6
 $fail=0
 
 $self_test0=self_test_conditional.txt
 $self_test1=self_test_math.txt 
 $self_test2=self_test_var_deref.txt
 $self_test3=self_test_basics.txt
-$self_test4=self_test_fork.txt
-$self_test5=self_self_directive_test.txt
+$self_test4=self_self_ide_test.txt
+$self_test5=self_test_fork.txt
+$self_test6=self_self_directive_test.txt
 
 
 %START_LOOP

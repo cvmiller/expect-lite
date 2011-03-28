@@ -61,7 +61,7 @@ $junk2=$junk/some/path
 *INFINITE_LOOP abc
 
 >sleep 2
-*INTERACT
+#*INTERACT
 
 > echo hello
 ?if 1 == 1 ? %PAU
@@ -78,6 +78,7 @@ $junk2=$junk/some/path
 ~test_include.txt
 
 %PAU
+*~fail.inc
 >echo "Returned from include file"
 -<Return
 <file

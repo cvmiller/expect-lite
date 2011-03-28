@@ -38,10 +38,11 @@
 #
 #
 
+# Encapsulate expect-lite variables in a namespace to prevent collisions with other apps
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.0.4.d4-lib-ns"
+	variable version "4.0.4.d6-lib-ns"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -129,13 +130,13 @@ namespace eval expectlite {
 	proc _el_init_globals { } {
 
 		#set ::expectlite::_el_timeout to hold value of timeout (used to preserve value of timeout)
-		set ::expectlite::_el_timeout $::timeout
+		variable _el_timeout $::timeout
 
 		#set ::expectlite::the expect Match Buffer really large
 		match_max -d 10000
 
 		#Create Debug Log output == 1, no log ==0
-		set ::expectlite::DEBUG_LOG 0
+		variable DEBUG_LOG 0
 
 		# declare array user_namespace (for user vars)
 		set ::expectlite::user_namespace(0) 0
@@ -153,19 +154,19 @@ namespace eval expectlite {
 		set ::expectlite::_el(_el_lines) {}
 
 		# debugging aid: turn on to display match string and expect buffer
-		set ::expectlite::DEBUG 0
+		variable DEBUG 0
 
 		# timestamp on send: turn on to display timestamp when sending > or >>
-		set ::expectlite::TIMESTAMP 0
+		variable TIMESTAMP 0
 
 		# keep script running to end: turn on to never fail test
-		set ::expectlite::NOFAIL 0
+		variable NOFAIL 0
 
 		# global constant for timeout_multiplier mode
-		set ::expectlite::timeout_multiplier "timeout_multiplier"
+		variable timeout_multiplier "timeout_multiplier"
 
 		# global constant for script name aka arg0
-		set ::expectlite::arg0 "arg0"
+		variable arg0 "arg0"
 
 		# set ::expectlite::global fork count (for multiple sessions) to 0
 		set ::expectlite::_el(fork_count) 0
@@ -180,7 +181,7 @@ namespace eval expectlite {
 		set ::expectlite::_el(fork_current) "default"
 
 		# set ::expectlite::current FORK session
-		set ::expectlite::_el_current_session ""
+		variable _el_current_session ""
 
 		# set ::expectlite::default fork_context to default end-of-line-sequence (eols)
 		set ::expectlite::_el_fork(default,eols) $::expectlite::_el_eols
@@ -195,30 +196,30 @@ namespace eval expectlite {
 		set ::expectlite::_el_buf(0,ptr) "0"
 
 		# expect-lite key characters (first char in expect-lite script)
-		set ::expectlite::_out ">"
-		set ::expectlite::_out_nowait ">>"
-		set ::expectlite::_in "<"
-		set ::expectlite::_in_noregex "<<"
-		set ::expectlite::_not_in "-<"
-		set ::expectlite::_timeout "@"
-		set ::expectlite::_exec "!"
-		set ::expectlite::_stdout_comment ";"
-		set ::expectlite::_stdout_comment_nobuf ";;"
-		set ::expectlite::_include "~"
-		set ::expectlite::_include_fail "\\\*~"
-		set ::expectlite::_setvar "+"
-		set ::expectlite::_var "\$"
-		set ::expectlite::_cond_regex "\\\?"
-		set ::expectlite::_cond "?"
-		set ::expectlite::_cond_else "::"
-		set ::expectlite::_label "%"
-		set ::expectlite::_incr_var "\\\+\\\$"
-		set ::expectlite::_decr_var "\\-\\\$"
+		variable _out ">"
+		variable _out_nowait ">>"
+		variable _in "<"
+		variable _in_noregex "<<"
+		variable _not_in "-<"
+		variable _timeout "@"
+		variable _exec "!"
+		variable _stdout_comment ";"
+		variable _stdout_comment_nobuf ";;"
+		variable _include "~"
+		variable _include_fail "\\\*~"
+		variable _setvar "+"
+		variable _var "\$"
+		variable _cond_regex "\\\?"
+		variable _cond "?"
+		variable _cond_else "::"
+		variable _label "%"
+		variable _incr_var "\\\+\\\$"
+		variable _decr_var "\\-\\\$"
 
 		# cli Parameter Initialization
-		set ::expectlite::remote_host "none"
-		set ::expectlite::cmd_file ""
-		set ::expectlite::user_dir ""
+		variable remote_host "none"
+		variable cmd_file ""
+		variable user_dir ""
 
 		# set ::expectlite::the default user configurable prompt to something sane
 		set ::expectlite::_el(default_prompt) ".*\$ $"
@@ -239,15 +240,15 @@ namespace eval expectlite {
 		set ::expectlite::el_color(none) ""
 
 		# set ::expectlite::INFO color
-		set ::expectlite::_el_info_color green
+		variable _el_info_color green
 		# set ::expectlite::WARN color
-		set ::expectlite::_el_warn_color yellow
+		variable _el_warn_color yellow
 		# set ::expectlite::ERROR color
-		set ::expectlite::_el_err_color red
+		variable _el_err_color red
 
 		# el_exec vars
-		set ::expectlite::comment_line ""
-		set ::expectlite::timeout_line ""
+		variable comment_line ""
+		variable timeout_line ""
 		
 		# 
 		#	Expect Signal Handler, which checks for broken stdout pipe
@@ -393,6 +394,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_eols			_el_eols
 		upvar expectlite::_el_buf			_el_buf
 		upvar expectlite::_el_warn_color	_el_warn_color
+		upvar expectlite::_el_err_color	_el_err_color
 
 
 		# change user message depending on how the function is called
@@ -426,9 +428,9 @@ namespace eval expectlite {
 					exit 
 					}
 				-reset \005	{ # test
-					_el_script_exec "\|>> pwd"
-					_el_script_exec "\|+\$P=\n/home/(\[a-z\]+)"
-					#exit 
+					puts "Current Spawn ID---->$::spawn_id"
+					send "\n"
+					return 
 					}
 				-re {(^\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
 					# determine next or skip step
@@ -446,6 +448,18 @@ namespace eval expectlite {
 								# skip interact lines
 								cputs "$line"  $_el_info_color
 								protected_send "$_el_eols"
+							}
+						{^\*FORK}	{ 
+								# Allow interact to return, since it hangs onto old session
+								if { $param == "k" } {
+									cputs "Skipping:$line"  $_el_info_color
+									protected_send "$_el_eols"
+								} else {
+									cputs "$line" $_el_info_color
+									_el_script_exec "\|$line"  $_el_buf(stack)
+									# allow interact to return, for new/changed session
+									return
+								}
 							}
 						^\!	{	# Send prompt after native expect lines
 								if { $param == "k" } {
@@ -487,7 +501,6 @@ namespace eval expectlite {
 											# execute next step
 											cputs "$item"  $_el_info_color
 											_el_script_exec "\|$item" $_el_buf(stack)
-											#_el_script_exec "\|$item"
 										}
 									}
 								}
@@ -514,7 +527,10 @@ namespace eval expectlite {
 									protected_send "$_el_eols"
 								} else {
 									cputs "$line" $_el_info_color
+									#puts "---->$::spawn_id"
 									_el_script_exec "\|$line"  $_el_buf(stack)
+									
+									
 									if {$_el(test_failed) == 1 } {
 										# step failed? kick the prompt
 										protected_send "$_el_eols"
@@ -1296,9 +1312,10 @@ namespace eval expectlite {
 		upvar expectlite::DEBUG 			DEBUG
 		upvar expectlite::user_dir			user_dir
 		upvar expectlite::_el_info_color	_el_info_color
+		upvar expectlite::_el_warn_color	_el_warn_color
 		upvar expectlite::_el_eols			_el_eols
 
-
+		
 		if { $fork_id == "default" } {
 			# set fork session back to default if count > 0
 			if { $_el(fork_count) > 0 } {
@@ -1839,7 +1856,7 @@ namespace eval expectlite {
 		# don't print lines which are not in the buffer (have -1)
 		proc print_line { line } {
 			#global _el_info_color
-			upvar expectlite::_el_info_color		_el_info_color
+			upvar  expectlite::_el_info_color		_el_info_color
 			
 			if { $line != -1 } {
 				cputs "$line" $_el_info_color
@@ -2037,7 +2054,7 @@ namespace eval expectlite {
 			}
 			"\\*FORK*"	{	# Spawn/Switch to a new session
 				set fork_list [split $g_dir_str]
-
+				
 				if { [llength $fork_list] > 2 } {
 					if {$WARN} {
 						cputs "\n\nWarning: FORK: Too Many Names: $g_dir_str\n" $_el_warn_color
@@ -3022,12 +3039,12 @@ namespace eval expectlite {
 						}
 						if { $_one_line == 0 } {
 							if {$INFO} {
-								puts "\nFail Include Script: $_el_fail_script\n"
+								cputs "\nFail Include Script: $_el_fail_script\n" $_el_info_color
 							}
 						} else {
 							# we are inside a recursive call
 							if {$INFO} {
-								uplevel {puts "\nFail Include Script: $_el_fail_script\n"}
+								uplevel {cputs "\nFail Include Script: $_el_fail_script\n" $_el_info_color}
 							}
 						}
 
@@ -3109,11 +3126,13 @@ namespace eval expectlite {
 
 					# Make Recursive Call
 					_el_script_exec $include_path_file
-
 					# special short cut to allow main script to continue
 					if { [info exists _el(continue)] == 1 } {
 						if { $_el(continue) == 1 } { set _el(success) 1 }
 						set _el(continue) 0
+					} else {
+						# no backdoor to continue script, fail script
+						set _el(success) 0
 					}
 					#puts "success->$_el(success)"
 					#puts "FS>$_el_fail_script"	

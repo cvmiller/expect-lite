@@ -88,6 +88,8 @@ $fork_session2=MY_2nd_HOST
 >pwd
 </tmp/$fork_session
 
+#*INTERACT
+
 
 *FORK $fork_session2
 ; ======== "SESSION 2b"
@@ -104,6 +106,7 @@ $fork_session2=MY_2nd_HOST
 
 *FORK $fork_session
 ;========== "SESSION 1c"
+#/tmp/MY_HOST
 >pwd
 </tmp/$fork_session
 

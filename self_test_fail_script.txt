@@ -1,0 +1,4 @@
+# Self Test Fail Script
+; === In Fail Script
+$FAIL=1
+; === FAIL=$FAIL

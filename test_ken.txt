@@ -1,7 +1,7 @@
 #!/usr/bin/env expect-lite
 # make this puppy run
 
-@3 #junk
+@3
 >echo "hello ken"
 <ken
 
@@ -12,8 +12,10 @@ $EL_jtag=
 # get IP address of loopback interface
 <lo
 +$ip_addr=inet addr:([0-9.]+)
++$ip_addr2=inet addr:(\d+)
 
 >
+*SHOW VARS
 
 
 # ; === Sudo stuff

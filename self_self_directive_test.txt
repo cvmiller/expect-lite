@@ -40,7 +40,15 @@ $LOCALHOST=localhost
 <expect-lite directive: \*WARN
 <If: expr { "hello" != "hello" } |then   >echo FAIL|else  >echo Good|result0
 <expect-lite directive: \*EOLS CRLF 
-<expect-lite directive: \*EOLS LF 
+<expect-lite directive: \*EOLS LF
+<expect-lite directive: \*NOFAIL
+
+# test fail script
+<Fail Include Script: self_test_fail_script.txt
+<FAILED COMMAND:echo "hello"
+<Expect Failed:fail this
+<Including Fail Script: self_test_fail_script.txt
+
 <expect-lite directive: \*NOINFO
 -<If: expr
 <expect-lite directive: \*NOWARN

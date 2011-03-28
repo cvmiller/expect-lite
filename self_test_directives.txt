@@ -19,8 +19,11 @@
 *EOLS CRLF
 >
 *EOLS LF
+*NOFAIL
 >
-
+*~self_test_fail_script.txt
+>echo "hello"
+<fail this
 
 *NOINFO
 #; === Quiet check with NOINFO
@@ -39,6 +42,7 @@ $temp=fine
 >
 >
 *WARN
+>
 ; === See prompt timeout warning
 @1
 > sleep 2
