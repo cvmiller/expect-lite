@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.0.4.d6-lib-ns"
+	variable version "4.0.4.d8-lib-ns"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1395,7 +1395,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_err_color		_el_err_color
 		upvar expectlite::_el_eols			_el_eols
 
-		#puts  "SL>$session_list|[llength $session_list]"
+		puts  "SL>$session_list|[llength $session_list]"
 		if { [ catch { array set import_fork  $session_list} error ]} {
 			cputs "ERROR: Invalid array:$session_list:\n$error\n" $_el_err_color
 		}
@@ -1403,14 +1403,15 @@ namespace eval expectlite {
 		# set current fork_id to current spawn_id
 		foreach keyitem [array names import_fork] {
 			#filter out eols from keyitems
-			if { [string match "*session*" $keyitem] == 1 } {
-				# set current fork_id to current spawn_id
-				if { [info exists spawn_id ] && $import_fork($keyitem,session) == $spawn_id } {
-					set _el(fork_current) $keyitem
-				}
-				# set default eol context 
-				set _el_fork($keyitem,eols) $_el_eols
+			puts "SL>$keyitem"
+			# set current fork_id to current spawn_id
+			puts "SL2>$keyitem"
+			if { [info exists spawn_id ] && $import_fork($keyitem,session) == $spawn_id } {
+				set _el(fork_current) $keyitem
+				set _el_fork(fork_current,eols) $_el_eols
 			}
+			# set default eol context 
+			set _el_fork($keyitem,eols) $_el_eols
 		}
 		# set spawn_id to default, if not currently set
 		if { [info exists spawn_id ] != 1 && [ info exists import_fork(default)] } {
@@ -2046,11 +2047,14 @@ namespace eval expectlite {
 				show_vars
 			}
 			"\\*INTERACT"	{	# place into expect interact mode
-				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-				#TODO: Allow interact to switch sessions with basic el_shell
-				# using simple expect interact for now
+				# Skip interact if in Library mode
 				# Jump to interact
-				instant_interact_sig
+				if { [info exist ::EL_LIBRARY] == 0 } {
+					cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+					instant_interact_sig
+				} else {
+					cputs "\nSkipping expect-lite directive: $g_dir_str " $_el_info_color
+				}
 			}
 			"\\*FORK*"	{	# Spawn/Switch to a new session
 				set fork_list [split $g_dir_str]

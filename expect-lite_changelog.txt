@@ -816,6 +816,9 @@ Released 21 Dec 2010 - 4.0.2
 	Cleaned up name space, replace 'sets' with 'variable' where appropriate
 	Added self test for fail script 
 
+30 March 2011 - 4.0.4d8-lib-ns
+	Fixed bug in _el_session_import, where EOLS was not being set
+
 
 ------------ Future Versions --------------------------
 		
