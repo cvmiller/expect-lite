@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.0.4.d8-lib-ns"
+	variable version "4.0.4.d9-lib-ns"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1673,7 +1673,7 @@ namespace eval expectlite {
 	proc parse_var { var sep } {
 		# parses the string passed, separating out the Vars and passing them to resolve_var_sub to be resolved
 		# List of Chars which define the end of a Var
-		set sep_list { ! @ # % * / { } \\ ( ) . [ ] = ? \" : - , }
+		set sep_list { ! @ # % * / { } \\ ( ) . [ ] = ? \" : - , | }
 		#puts "v>$var|s>$sep"
 		set resolved_line ""
 
