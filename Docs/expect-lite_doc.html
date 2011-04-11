@@ -1,7 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
-
-
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -12,13 +10,14 @@
   <meta name="AUTHOR" content="Craig Miller">
 
   
-  <link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Doc</title>
-  
+  <link rel="stylesheet" type="text/css" href="el.css">
+  <title>expect-lite Doc</title>
 
   
   
-  <meta content="Craig Miller" name="author"></head>
-<body>
+  <meta content="Craig Miller" name="author">
+
+</head><body>
 <table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
 
   <tbody class="page">
@@ -29,91 +28,119 @@
       <br>
       <h2>Automation for the rest of us</h2>
       </div>
-      <script type="text/javascript" src="js-side-menu.js"></script>
-      <noscript><br>
+      <script type="text/javascript" src="js-side-menu.js"></script> <noscript><br>
 Please Enable Javascript
-to see Features, Downloads, and Docs </noscript>
-      </td>
-      <td style="vertical-align: middle; width: 1px;">
-      <img src="vbar.gif" style="width: 1px; height: 22000px;"></td>
+to see Features, Downloads, and Docs </noscript> </td>
+      <td style="vertical-align: middle; width: 1px;"> <img src="vbar.gif" style="width: 1px; height: 22000px;"></td>
       <td style="vertical-align: top; width: 5%;"><br>
       </td>
-      <td style="vertical-align: top;">
-<!--- Begin of Right Column Content ---><br>
-      <h2>Features</h2>
+      <td style="vertical-align: top;"><!--- Begin of Right Column Content ---><br>
+      <h2 style="text-align: center;"><big>List of Features</big><br>
+      </h2>
 Expect-lite has many features which make expect-style script writing
-easy. Such as:<br>
+easy. <br>
+      <br>
+      <span style="font-weight: bold;">Easy of Use</span><br>
       <ul>
-        <li><a href="#Automatic_Login_"><span style="font-weight: bold;">Automatic
-login</span></a> to remote
-host (supporting telnet, ssh with password, and ssh with keys)</li>
-        <li><a href="#special_characters"><span style="font-weight: bold;">Simplicity</span> </a>using
+        <li><a href="expect-lite_doc.html#special_characters"><span style="font-weight: bold;">Simplicity</span> </a>using
 one
 character for send and expect '&gt;' '&lt;' <br>
-This creates many lines of expect with minimal "code"<br>
+This creates many lines of expect with minimal "code" (<a href="#special_characters">table of interpreted characters</a>)<br>
         </li>
-        <li><a href="#regex_in_expect-lite"><span style="font-weight: bold;">Regular
-expression</span></a>
-(regex) evaluation in expected results</li>
-        <ul>
-          <li><a href="#expect_no_regex">Non-Regex
-evaluation</a> also available in expected results&nbsp;<span style="background-color: rgb(255, 255, 102);"></span></li>
-        </ul>
-        <li style="font-weight: bold;"><a href="#variables">Static
+        <li><a href="expect-lite_doc.html#executable_script"><span style="font-weight: bold;">Scripts
+can
+be executable</span></a>
+with the standard #!/usr/bin/env expect-lite line <span style="background-color: rgb(255, 255, 102);"></span></li>
+        <li><a href="expect-lite_doc.html#include_files"><span style="font-weight: bold;">Include
+mechanism</span></a> to read
+other script files (sourcing)</li>
+        <li><span style="background-color: rgb(255, 255, 102);"><span style="background-color: white;"><a style="font-weight: bold;" href="expect-lite_doc.html#directive_managing_logging">Color</a>
+enhances output, differentiates log messages</span></span></li>
+        <li><a href="expect-lite_doc.html#Automatic_Login_"><span style="font-weight: bold;">Automatic
+login</span></a> to remote
+host (supporting telnet, ssh with password, and ssh with keys)</li>
+        <li><a href="#examples"><span style="font-weight: bold;">Examples</span></a>&nbsp;
+showing complex actions easily scripted<br>
+        </li>
+      </ul>
+      <span style="font-weight: bold;">Variables<br>
+      </span>
+      <ul>
+        <li style="font-weight: bold;"><a href="expect-lite_doc.html#variables">Static
 and
 Dynamic
 Variables</a> <span style="font-weight: normal;">with
 math
 functions and pseudo arrays</span><br>
         </li>
-        <li><a href="#constants"><span style="font-weight: bold;">Constants</span></a>,
+        <li><a href="expect-lite_doc.html#constants"><span style="font-weight: bold;">Constants</span></a>,
 passed on the
 command line or set as environment variables, which override variables
 in the script</li>
-        <li style="font-weight: bold;"><a href="#bash_shell">Leverages
+        <li style="font-weight: bold;"><a href="expect-lite_doc.html#bash_shell">Leverages
 Bash
-shell</a></li>
-        <li><a href="#include_files"><span style="font-weight: bold;">Include
-mechanism</span></a> to read
-other script files (sourcing)</li>
-        <li><a href="#embedded_expect"><span style="font-weight: bold;">Embedded
-Expect</span></a> - using
-native expect embedded in an expect-lite script</li>
-        <li><a href="#not_expect"><span style="font-weight: bold;">Not
-Expect</span></a>
-- a feature to
-look for unexpected text/strings</li>
-        <li><a href="#conditional"><span style="font-weight: bold;">Conditional
+shell</a> <span style="font-weight: normal;">passing unknown variables
+to the shell</span><br>
+        </li>
+      </ul>
+      <span style="font-weight: bold;">Programmatic<br>
+      </span>
+      <ul>
+        <li><a href="expect-lite_doc.html#regex_in_expect-lite"><span style="font-weight: bold;">Regular
+expression</span></a>
+(regex) evaluation in expected results</li>
+        <ul>
+          <li><a href="expect-lite_doc.html#expect_no_regex">Non-Regex
+evaluation</a> also available in expected results&nbsp;<span style="background-color: rgb(255, 255, 102);"></span></li>
+        </ul>
+        <li><a href="expect-lite_doc.html#conditional"><span style="font-weight: bold;">Conditional
 Branching</span></a> a
 if/then/else with a c-like syntax</li>
-        <li><a href="#looping"><span style="font-weight: bold;">Simple
+        <li><a href="expect-lite_doc.html#looping"><span style="font-weight: bold;">Simple
 looping</span></a>
 using
 conditional branching, a repeat loop can be constructed with infinite
 loop protection</li>
-        <li><a href="#executable_script"><span style="font-weight: bold;">Scripts
-can
-be executable</span></a>
-with the standard #!/usr/bin/env expect-lite line &nbsp;<span style="background-color: rgb(255, 255, 102);">new in 4.0.1</span>&nbsp; <span style="background-color: rgb(255, 255, 102);"></span></li>
-        <li><a href="#user_defined_prompt"><span style="font-weight: bold;">User
+      </ul>
+      <span style="font-weight: bold;">Advanced</span><br>
+      <ul>
+        <li><a href="expect-lite_doc.html#executable_script"><span style="font-weight: bold;"></span></a><a href="expect-lite_doc.html#directive_fork"><span style="font-weight: bold;">Multiple
+Sessions</span></a>
+enabling interaction with a client and a server in one script <br>
+        </li>
+        <li><a href="expect-lite_doc.html#not_expect"><span style="font-weight: bold;">Not
+Expect</span></a>
+- a feature to
+look for unexpected text/strings</li>
+        <li><a href="expect-lite_doc.html#directives"><span style="font-weight: bold;">Directives</span></a> controls behaviour of
+expect-lite, enabling/disabling logging, shell, fail-script...</li>
+        <li><a href="expect-lite_doc.html#user_defined_prompt"><span style="font-weight: bold;">User
 defined
 prompt</span></a>
 allows interaction with a wider range of hosts (routers, switches, etc)
           <br>
         </li>
-        <li><a href="#directive_fork"><span style="font-weight: bold;">Multiple
-Sessions</span></a>
-enabling interaction with a client and a server in one script&nbsp;<span style="background-color: rgb(255, 255, 102);"></span></li>
-        <li><a href="#instant_interact"><span style="font-weight: bold;">Instant-Interact</span></a>
-empowers on the spot debugging&nbsp;<span style="background-color: rgb(255, 255, 102);"></span></li>
-        <li><span style="background-color: rgb(255, 255, 102);"><span style="background-color: white;"><a style="font-weight: bold;" href="#directive_managing_logging">Color</a>
-enhances output, differentiates log messages</span></span></li>
-        <li><span style="background-color: rgb(255, 255, 102);"><span style="background-color: white;"><a href="expect-lite_tips.html#ide"><span style="font-weight: bold;">Powerful Integrated Debugger</span></a> set
-breakpoints, step/skip, copy/paste lines into running script &nbsp;</span>new
-in 4.0.1<br>
-          </span></li>
+        <li><a href="expect-lite_doc.html#embedded_expect"><span style="font-weight: bold;">Embedded
+Expect</span></a> - using
+native expect embedded in an expect-lite script</li>
+        <li><a href="expect-lite_library.html"><span style="font-weight: bold;">Library mode</span></a> use expect-lite as
+a TCL package <span style="background-color: rgb(255, 255, 102);">new
+in 4.1.0</span> <br>
+        </li>
       </ul>
-      <br>
+      <span style="font-weight: bold;">Debugging<br>
+      </span>
+      <ul>
+        <li><a href="expect-lite_doc.html#instant_interact"><span style="font-weight: bold;">Instant-Interact</span></a>
+empowers on the spot debugging without having to set breakpoints<span style="background-color: rgb(255, 255, 102);"></span></li>
+        <li><span style="background-color: rgb(255, 255, 102);"><span style="background-color: white;"></span></span><span style="background-color: rgb(255, 255, 102);"><span style="background-color: white;"><a href="expect-lite_tips.html#ide"><span style="font-weight: bold;">Powerful Integrated Debugger</span></a> set
+breakpoints, step/skip, copy/paste lines into running script&nbsp; <br>
+          </span></span></li>
+      </ul>
+      <span style="font-weight: bold;"></span><br>
+      <hr style="width: 75%; height: 2px;"><br>
+      <h2 style="text-align: center;"><big><a name="intro"></a>Introduction</big></h2>
+
       <h2><a name="Automatic_Login_"></a>Automatic
 Login<br>
       </h2>
@@ -318,7 +345,7 @@ gray,&nbsp; ltgray,&nbsp; cyan,&nbsp; black, pink, purple, red, green,
 yellow<br>
                 </td>
               </tr>
-<tr>
+              <tr>
                 <td style="vertical-align: top;">;;<br>
                 </td>
                 <td style="vertical-align: top;">similar
@@ -444,7 +471,8 @@ Control characters must be the first two characters on the line
 (e.g.[^][A-Z]). The sequence of ^C anywhere else in the line will not
 be interpreted as a control-C, but rather the two characters '^' 'C'.<br>
       <br>
-Lastly, any line beginning with an asterisk '*' will be interpreted as
+      <a name="directives_table"></a>Lastly, any line beginning with an
+asterisk '*' will be interpreted as
 an expect-lite directive. Directives change the behaviour of
 expect-lite.<br>
       <dl>
@@ -549,23 +577,20 @@ script. Default is 5000<br>
 Directives</span></td>
               </tr>
               <tr>
-                <td align="undefined" valign="undefined">*INFO
-                <br>
+                <td align="undefined" valign="undefined">*INFO <br>
 *NOINFO</td>
                 <td align="undefined" valign="undefined">Enable/disable
 informational messages (see <a href="#directive_managing_logging">managing
 logging</a>)</td>
               </tr>
               <tr>
-                <td align="undefined" valign="undefined">*WARN
-                <br>
+                <td align="undefined" valign="undefined">*WARN <br>
 *NOWARN</td>
                 <td align="undefined" valign="undefined">Enable/disable
 warning messages</td>
               </tr>
               <tr>
-                <td align="undefined" valign="undefined">*DEBUG
-                <br>
+                <td align="undefined" valign="undefined">*DEBUG <br>
 *NODEBUG</td>
                 <td align="undefined" valign="undefined">Enable/disable
 debug
@@ -575,7 +600,16 @@ messages</td>
                 <td>*NOCOLOR</td>
                 <td>Disables color output, best when logging
 output</td>
-              </tr><tr><td>*TIMESTAMP &lt;ISO|YMD|DMY|MDY&gt;</td><td>Prints Date and Timestamp for each command sent, ISO is default</td></tr><tr><td>*NOTIMESTAMP</td><td>Disables timestamp printing</td></tr>
+              </tr>
+              <tr>
+                <td>*TIMESTAMP &lt;ISO|YMD|DMY|MDY&gt;</td>
+                <td>Prints Date and Timestamp for each command sent,
+ISO is default</td>
+              </tr>
+              <tr>
+                <td>*NOTIMESTAMP</td>
+                <td>Disables timestamp printing</td>
+              </tr>
             </tbody>
           </table>
         </dd>
@@ -654,6 +688,14 @@ See the <a href="expect-lite_tips.html">Tips and
 Techniques Guide</a>
 for additional expect-lite script debugging information.<br>
       <br>
+      <br>
+
+      
+      <hr style="width: 75%; height: 2px;"><br>
+
+      <h2 style="text-align: center;"><big><a name="reference"></a>Reference</big></h2>
+
+
       <h2><a name="regex_in_expect-lite"></a>Use
 of
 Regex in expect-lite</h2>
@@ -704,8 +746,7 @@ must be escaped with a backslash to convey their literal meaning:<br>
           <tr>
             <td style="vertical-align: top;">[abc] <br>
             </td>
-            <td style="vertical-align: top;">\[abc\]&nbsp;
-            <br>
+            <td style="vertical-align: top;">\[abc\]&nbsp; <br>
             </td>
             <td style="vertical-align: top;"> square
 brackets</td>
@@ -1056,7 +1097,8 @@ looping
 enhancement, there
 is <span style="font-style: italic;">infinite loop
 protection</span>.
-The maximum amount of looping is&nbsp;defined with the directive *INFINITE_LOOP N. This value is decremented with
+The maximum amount of looping is&nbsp;defined with the directive
+*INFINITE_LOOP N. This value is decremented with
 each iteration of all loops for the entire script. Typically this would
 be in the range of 1000 to 10000 to be safe. For example, if a complex
 expect-lite script had 4 loops each with 100 iterations, the
@@ -1136,8 +1178,7 @@ There are situations when expect-lite cannot provide a solution. Rather
 than force the user to abandon the simplicity of expect-lite, an
 embedded expect is supported. This functionality is provided to assist
 expect-lite rather than replace it. Lines beginning with '!' will be
-interpreted as native expect (see <a href="#limitations_of_embedded_expect">limitations below</a>).
-      <br>
+interpreted as native expect (see <a href="#limitations_of_embedded_expect">limitations below</a>). <br>
       <br>
 Embedded Expect requires the script writer to know&nbsp; native
 expect.
@@ -1505,17 +1546,16 @@ file with unique
 name including script name and date. The <a href="#predefined_variables">predefined variable</a>
 $arg0 is contains
 the expect-lite script name.<br>
-      <pre># date stamp of script run time<br>&gt;echo `date +_%Y_%m_%d_%H-%M-%S`<br>+$DATE=\n(_[0-9_-]+)<br><br>$temp_file=$arg0$DATE<br>; === Create a temp file using bash "here doc" method<br>&gt;cat &gt; $temp_file &lt;&lt;'+++'<br>&gt;line 1<br>&gt;line 2<br>&gt;+++<br>&gt;<br></pre><a name="script_help"></a>
-Creating script help. First, require a parameter be passed via the CLI, such as sw_build:<br>
+      <pre># date stamp of script run time<br>&gt;echo `date +_%Y_%m_%d_%H-%M-%S`<br>+$DATE=\n(_[0-9_-]+)<br><br>$temp_file=$arg0$DATE<br>; === Create a temp file using bash "here doc" method<br>&gt;cat &gt; $temp_file &lt;&lt;'+++'<br>&gt;line 1<br>&gt;line 2<br>&gt;+++<br>&gt;<br></pre>
+      <a name="script_help"></a>Creating script help. First, require a
+parameter be passed via the CLI, such as sw_build:<br>
       <pre>./upgrade_script.elt sw_build=0015<br></pre>
-
-Inside the script itself, default $sw_build to 0, the CLI constant will override. <br>
+Inside the script itself, default $sw_build to 0, the CLI constant will
+override. <br>
       <pre>$sw_build=0000<br>; === Check passed parameters<br>&gt;<br>*NOINFO<br>?if $sw_build != 0000 ? %CONTINUE<br>	;; ##############################<br>	;;	$arg0 Requires parameters: sw_build, IP<br>	;;	e.g. $arg0 sw_build=0015 IP=10.3.5.4<br>	;; ##############################<br>	# quit the script without continuing<br>	*FAIL<br>%CONTINUE<br>*INFO<br><br></pre>
-
-Now when just the script is executed, help will be displayed, and the script will terminate.<br>
+Now when just the script is executed, help will be displayed, and the
+script will terminate.<br>
       <pre>./upgrade_script.elt<br><br><span style="color: rgb(51, 102, 255);"> === Check passed parameters</span><br><br><span style="color: rgb(0, 153, 0);">expect-lite directive: *NOINFO </span><br><span style="color: rgb(51, 102, 255);"> ##############################</span><br style="color: rgb(51, 102, 255);"><span style="color: rgb(51, 102, 255);"> upgrade_script.elt Requires parameters: sw_build, IP</span><br style="color: rgb(51, 102, 255);"><span style="color: rgb(51, 102, 255);"> e.g. upgrade_script.elt sw_build=0015 IP=10.3.5.4</span><br style="color: rgb(51, 102, 255);"><span style="color: rgb(51, 102, 255);"> ##############################</span><br><br><span style="color: rgb(0, 153, 0);">expect-lite directive: *FAIL </span><br><br></pre>
-
-
       <h2><a name="test_failure"></a>Test
 Failure?!?</h2>
 When will expect-lite fail a test? It will only fail a test when an
@@ -1549,8 +1589,8 @@ Since the expect input buffer is not consumed, valid expects can still
 be performed. in the following example, ttyS2 will still be found.<br>
       <pre>&gt;ls -1 /dev/ttyS*<br>-&lt;ttyX<br>&lt;ttyS2<br></pre>
 It is recommended that <span style="font-style: italic;">Not
-Expect </span>lines<span style="font-style: italic;">
-      </span>be used before valid expect lines.<br>
+Expect </span>lines<span style="font-style: italic;"> </span>be used
+before valid expect lines.<br>
       <br>
       <h2>How can it help?</h2>
 Expect-lite can be used to quickly create automated tests. It can
@@ -1565,8 +1605,7 @@ Expect-lite is limited to what a person could do in one (1) terminal
 window (or xterm). It cannot start a program in one window and run a
 different program in a separate window. However it does
 support multiple sessions via <a href="#directive_fork">*FORK</a>
-which should meet the needs of most.&nbsp;&nbsp;
-      <br>
+which should meet the needs of most.&nbsp;&nbsp; <br>
       <br>
 Standard programming constructs such as looping and branching are
 supported as of version 3.0.0. Real Expect can do these things and
@@ -1776,13 +1815,13 @@ a quick way to write
 simple expect scripts using just the &gt; and &lt; characters.<br>
       <br>
       <br>
-<!--- End of Right Column Content --->
-      </td>
+<!--- End of Right Column Content ---> </td>
     </tr>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">22 February 2011<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">12
+April 2011<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
@@ -1792,7 +1831,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.0.3 and above</span><br style="font-style: italic;">
+document for version 4.1.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

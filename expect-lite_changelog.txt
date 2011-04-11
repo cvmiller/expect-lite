@@ -823,6 +823,8 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed bug in parse_var, added pipe (|) to "end of var" list
 		This was a problem with regex OR, e.g. <$this|$that
 
+10 April - 4.1.0 released
+
 
 ------------ Future Versions --------------------------
 		
