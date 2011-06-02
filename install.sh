@@ -204,7 +204,8 @@ if [ "$OS" == "" ]; then
 	if [ ! -e $SSH_HOME/id_rsa.pub ]; then
 		echo "==================="
 		echo "Creating ssh keys as user: $SUDO_USER"
-		su $SUDO_USER -c $TOOLS_DIR/setup_local_ssh.sh
+		#su $SUDO_USER -c $TOOLS_DIR/setup_local_ssh.sh
+		$TOOLS_DIR/setup_local_ssh.sh
 	fi
 fi
 

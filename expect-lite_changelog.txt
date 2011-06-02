@@ -825,16 +825,44 @@ Released 21 Dec 2010 - 4.0.2
 
 10 April - 4.1.0 released
 
+2 May 2011 - 4.1.1.d1
+	Implemented reverse search of labels, allowing non-unique labels for looping
+	Fixed *FAIL to work with *NOFAIL, rather than terminating immediately
+	
+17 May 2011 - 4.1.1d3
+	Fixed *FAIL now prints in RED (was green)
+	Fixed ; comments printing just before include files and directives
+	
+31 May 2011 - 4.1.1.d5
+	Fixed fail inside include file (was continuing main script)
+		*FAIL inside include file works correctly as well
+	Note: fail script is not global, but local to file
+	Added @n (n=number) to set timeout value from IDE (needs testing)
+	
+	
 
 ------------ Future Versions --------------------------
 		
 Future
 
-o	_el_global_directive should use el(fork_current) rather than _el_current_session
+o	Add code-line-blocks with [ ] (4.2.0 candidate)
+	[ <test>
+	]
+	
+o	instant_interact_sig proc, needs to check el_exec return code
+
+o	Add variables to Labels, e.g. %$LOOP
+
+x	add change timeout in IDE @n
+
+o	Check 4.1.0 on cygwin
+
+x	_el_global_directive should use el(fork_current) rather than _el_current_session
+	Not required
 
 o	Look at SIGPIPE and handle broken pipe better
 
-o	Place ::TCL and ::EL_LIBRARY in namespace 'expect-lite'
+x	Place ::TCL and ::EL_LIBRARY in namespace 'expect-lite'
 		x Clean up name space, replace 'sets' with 'variable' where appropriate
 
 x	Clean up fork _el_fork($fork_id) to _el_fork($fork_id,session)
@@ -854,9 +882,16 @@ x	Add deb and rpm to download files
 o	Add Conditional if, used right after > command. Eliminates need to capture var, and use the var in if statement
 	If [text] then - possible format ?if [text]? or ?if text?
 	
-o	Add if Var exists to conditional
-	If $VAR exists then...
-	if $VAR notexist then..
+z	Add $var exist to if statement processing
+	Look for unresolved variable $VAR ($ still in conditional)
+	Need to add var exist, and var not exist
+	Syntax of if statement
+		?if $var exist?
+		?if $var =% ?
+		?if $var ?		treat existance like a boolean
+		?if ==$var ?
+	Defer for now
+
 
 x	Creating el-lib: 
 		in EL add line: package provide expect-lite 4.0 

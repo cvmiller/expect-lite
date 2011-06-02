@@ -14,9 +14,12 @@ $EL_jtag=
 +$ip_addr=inet addr:([0-9.]+)
 +$ip_addr2=inet addr:(\d+)
 
+; === test var
+?if [ info exist $TEST ] ? ; === echo this :: ; === echo that
 >
 *SHOW VARS
-
+>
+*INTERACT
 
 # ; === Sudo stuff
 # # set user defined prompt line

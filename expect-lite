@@ -2,7 +2,7 @@
 
 ##################################################################################
 #
-#  Copyright (C) 2008-2010 Craig Miller
+#  Copyright (C) 2008-2011 Craig Miller
 #
 #  Copyright (C) 2005-2007 Freescale Semiconductor, Inc. 
 #
@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.1.0"
+	variable version "4.1.1d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -558,7 +558,7 @@ namespace eval expectlite {
 						interact_help
 						protected_send "$_el_eols"
 					}
-				-echo -re  {(^>[a-zA-Z0-9/$.]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z])(.+)\r} {
+				-echo -re  {(^>[a-zA-Z0-9/$.]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^@[0-9]|^\+\$|^=\$|%[A-Z])(.+)\r} {
 						#### Support for EL commands in Interact
 						#### Permits pasting of multiple commands into Interact session
 						# create list of multiple pasted commands
@@ -597,6 +597,7 @@ namespace eval expectlite {
 							if { $item != "" } {
 								# call _el_script_exe in 'one-line' mode 
 								# add buf_stack context to allow jumping to labels
+								#FIXME: check return code, fail if needed
 								_el_script_exec "\|$item" $_el_buf(stack)
 							}
 						}
@@ -1745,36 +1746,6 @@ namespace eval expectlite {
 	# end of parse_var
 
 
-	#
-	#	Proc available to Expect Commands (expect-lite commands which start with '!') to fail test
-	#	Called by *TERM & *FAIL
-	#	
-	proc _el_fail_test { {optional_exit ""}} {
-		global spawn_id timeout   
-		upvar expectlite::_el_info_color		_el_info_color
-		upvar expectlite::_el_err_color			_el_err_color
-		upvar expectlite::INFO					INFO
-		upvar expectlite::WARN					WARN
-		upvar expectlite::DEBUG					DEBUG
-		upvar expectlite::delay_wait_for_host	delay_wait_for_host
-
-		# delay to let terminal catch up before terminating script
-		after [expr $delay_wait_for_host *10]
-
-		# wait for additional text in session
-		set timeout 1
-		wait_for_prompt
-
-		if {($optional_exit == "")  || ($optional_exit == "FAIL") } {
-			after [expr $delay_wait_for_host *10]
-			if {$INFO} {cputs "\n\n##Overall Result: FAILED \n\n" $_el_err_color }
-			exit 1
-		} elseif { $optional_exit == "PASS" } {
-			if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $_el_info_color }
-			exit 0
-		}
-	}
-
 
 	#
 	#	Buffer management functions
@@ -1891,7 +1862,7 @@ namespace eval expectlite {
 	#	This allows duplicate search items in the buffer, finding the first succeding one
 	#		However search items used as looping labels should be unique!
 	#
-	proc _el_buffer_search {line_ptr line_search buf_stack} {
+	proc _el_buffer_search2 {line_ptr line_search buf_stack} {
 		upvar expectlite::_el_infinite_loop		_el_infinite_loop
 		upvar expectlite::el_color				el_color
 		upvar expectlite::INFO					INFO
@@ -1938,6 +1909,78 @@ namespace eval expectlite {
 			cputs ":$line_search\n" $_el_info_color
 		}
 		#puts "|$line_search|$line_ptr|$_ptr|[lindex $_el_buf($buf_stack) 209]|"
+		return $_ptr
+	}
+	#
+	#	End of Buffer management functions
+	#
+
+	#
+	#	Buffer Search
+	#	Searches buffer from line_ptr down to end of buffer
+	#	If search fails, search will 'wrap' and continue from beginning of buffer
+	#	This allows duplicate search items in the buffer, finding the first succeding one
+	#		However search items used as looping labels should be unique!
+	#
+	proc _el_buffer_search {line_ptr line_search buf_stack} {
+		upvar expectlite::_el_infinite_loop		_el_infinite_loop
+		upvar expectlite::el_color				el_color
+		upvar expectlite::INFO					INFO
+		upvar expectlite::WARN					WARN
+		upvar expectlite::DEBUG					DEBUG
+		upvar expectlite::EXP_INFO				EXP_INFO
+		upvar expectlite::_el_info_color		_el_info_color
+		upvar expectlite::_el_err_color			_el_err_color
+		upvar expectlite::_el_comment_color		_el_comment_color
+		upvar expectlite::_el_buf				_el_buf
+
+
+
+		# search down first
+		if {$INFO} {
+			# start INFO color
+			if {$_el_comment_color == "none"} {
+				puts  -nonewline $el_color($_el_info_color)
+			}
+			puts -nonewline "\nJumping to label"
+
+		}
+		# get a list of pointers which match search
+		set _ptr_list [lsearch -all $_el_buf($buf_stack) $line_search]
+		
+		if { $_ptr_list == {} } {
+			if {$WARN} {
+				puts -nonewline "\n\nWARNING: Label not found"
+			}
+			# signal label not found
+			set _ptr -1
+		} else {
+			# give preference to search backwards
+			set i -1
+			foreach ptr $_ptr_list {
+				if { $ptr < $line_ptr } { incr i }
+			}
+			if { $i == -1} {
+				# not found then search forwards
+				foreach ptr $_ptr_list {
+					if { $ptr > $line_ptr } { incr i ; break }
+				}
+			}
+			set _ptr [lindex $_ptr_list $i]
+			# decrement infinite loop detector 
+			incr _el_infinite_loop -1
+			if { $_el_infinite_loop < 1 } {
+				# return search not found
+				cputs ":$line_search\n\n\nERROR: Infinite Loop Detected!\n\n" $_el_err_color
+				return -2
+			}
+		}
+		
+		# put final field on info line
+		if {$INFO} {
+			cputs ":$line_search\n" $_el_info_color
+		}
+		#puts "|$line_search|$line_ptr|$_ptr_list|$_ptr|[lindex $_el_buf($buf_stack) 152]|"
 		return $_ptr
 	}
 	#
@@ -2026,13 +2069,20 @@ namespace eval expectlite {
 			}
 			"\\*TERM"	{	# Terminate but Pass Test
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-				_el_fail_test PASS
+				### Terminate the test with a pass
+				if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $_el_info_color }
+				exit 0
+				
 			}
 			"\\*FAIL"	{	# Terminate and Fail Test
-				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-				# set test to fail
-				set _el(success) 0
-				_el_fail_test
+				cputs "\nexpect-lite directive: $g_dir_str " $_el_err_color
+				if { $NOFAIL } {
+					# set test to fail
+					return 0
+				} else {
+					# NOFAIL not set, fail right now
+					return 2
+				}
 			}
 			"\\*EOLS LF"	{	# Set End of Line Sequence to LF
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
@@ -2064,7 +2114,7 @@ namespace eval expectlite {
 						cputs "\n\nWarning: FORK: Too Many Names: $g_dir_str\n" $_el_warn_color
 					}
 					# invalid *FORK command, exit this function
-					return
+					return 1
 				} elseif {[llength $fork_list] == 2 } {
 					# set the fork_id to the passed value
 					set fork_id [lindex $fork_list 1]
@@ -2122,7 +2172,7 @@ namespace eval expectlite {
 						cputs "\n\nWarning: TIMESTAMP: Too Many Parameters: $g_dir_str\n" $_el_warn_color
 					}
 					# invalid *TIMESTAMP command, exit this function
-					return
+					return 1
 				} elseif {[llength $ts_list] == 2 } {
 					# set timestamp on & format string
 					set TIMESTAMP 1
@@ -2149,6 +2199,7 @@ namespace eval expectlite {
 
 		}
 		# end switch regex
+		return 1
 	}
 
 	#
@@ -2706,14 +2757,13 @@ namespace eval expectlite {
 						set _cond_oper_list { == != <= >= < > }
 
 						# find conditional operator
-						set _cond_oper "."
+						set _cond_oper " "
 						foreach k $_cond_oper_list {
 							if { [regexp $k $_conditional] } {
 								set _cond_oper $k
 								break
 							}
 						}
-
 						 # parse around conditional operator
 						set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
 						set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
@@ -2745,8 +2795,15 @@ namespace eval expectlite {
 
 						# validate comparison and if true, send to _el_script_exec (recursive call)
 
-						# build test line
-						set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
+						# check for unresolved Var
+						if { [regexp {\$.+} $_conditional] } {
+							puts "Unresolved Var:$_conditional"
+							set _test " expr { $_cond_arg2 } "
+							
+						} else {
+							# build test line
+							set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
+						}
 						# check for syntax errors and evaluate result of test line
 						if {[catch { eval  $_test  } error ] } {
 							if {$WARN} {
@@ -2851,6 +2908,8 @@ namespace eval expectlite {
 						# execute expect lines if present
 						_el_exec_expect
 
+						print_comment_line
+
 						set _include_file [_el_strip_char $_el(line) $_include]
 						#puts "==========> $_include_file"
 						# don't include file if name is set to __NO_STRING_CAPTURED__ (which is a blank dynamic/capture variable)
@@ -2870,10 +2929,18 @@ namespace eval expectlite {
 							if { [info exist ::EL_LIBRARY] != 1 } {
 								set result [_el_script_exec $include_path_file]
 								# don't report false include failure, set test_failed
-								if { $result != 0 } {
-									set _el(success) 1
-									set _el(test_failed) 1
-								}
+								switch -- $result {
+									0 { # pass
+										}
+									1 { # fail
+										set _el(success) 1
+										set _el(test_failed) 1
+										}
+									2 { # fail right now!
+										# return result code to caller, stop now
+										return $result
+										}
+								}; #switch
 							} else {
 								cputs "\nWarning: Skipping include file:$_include_file\n" $_el_warn_color
 							}
@@ -3030,6 +3097,9 @@ namespace eval expectlite {
 
 						# execute expect lines if present
 						_el_exec_expect
+						
+						print_comment_line
+
 						if { $_one_line == 0 } {
 							set _el_fail_script [_el_strip_char $_el(line) $_include_fail]
 						} else {
@@ -3079,12 +3149,13 @@ namespace eval expectlite {
 				^\\*[a-zA-Z]	{	# Process expect-lite run-time directives
 								# expect-lite directives
 
+						print_comment_line
+
 						# execute expect lines if present
 						_el_exec_expect
 						print_comment_line
-						# Process the directive
-						_el_global_directive $_el(line)
-
+						# Process the directive - return 0 to fail
+						set _el(success) [_el_global_directive $_el(line)]
 
 					}
 				default {	# blank lines are allowed
@@ -3148,8 +3219,7 @@ namespace eval expectlite {
 				} 			
 				if { $_el(success) != 1 } {
 					# allow fail script to set success, and continue if need be
-					#if {$INFO} {cputs "\n\n##Overall Result: FAILED \n\n" $_el_err_color }
-					protected_send "quit$_el_eols"
+					#protected_send "quit$_el_eols"
 					#exit 1
 					# FATAL
 					return 2
@@ -3261,7 +3331,7 @@ namespace eval expectlite {
 		wait_for_prompt
 
 		# Print result of test
-		switch $_el_result {
+		switch -- $_el_result {
 			0 { # PASS
 				if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $_el_info_color }
 			}

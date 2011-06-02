@@ -14,6 +14,17 @@ proc run_sudo { cmd pass } {
 	if { $DEBUG } { 
 		puts "  in<<$expect_out(buffer)>>"
 		puts "\n"
-	}
-	
+	}	
+}
+
+proc sudo_pass { pass } {
+	global expect_out
+	upvar expectlite::DEBUG DEBUG
+	expect  -timeout 1 -notransfer -re {\[sudo\] password} {  send "$pass\n"; puts "sendpass\n"}
+	# wait for bash prompt	
+	#expect -re {.*\$ $} { } 
+	if { $DEBUG } { 
+		puts "  in<<$expect_out(buffer)>>"
+		puts "\n"
+	}	
 }

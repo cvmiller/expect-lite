@@ -236,7 +236,7 @@ $loop2=10
 ; ======== Decrementing YY Loop =============
 # do another loop!
 # Keep loop labels UNIQUE!
-%REPEAT_LOOP2
+%REPEAT_LOOP1
 
 	# decrement variable
 	-$loop2
@@ -247,13 +247,13 @@ $loop2=10
 	# self check, loop2 should never go to -1
 	-<-1
 
-?if $loop2 > 0 ?%REPEAT_LOOP2
+?if $loop2 > 0 ?%REPEAT_LOOP1
 
 
 ; ======== Incrementing Loop ========
 $max=10
 $count=3
-%REPEAT_INC_LOOP
+%REPEAT_LOOP2
 
 	# increment variable
 	+$count
@@ -262,7 +262,7 @@ $count=3
 	# self check, loop2 should never go to 12
 	-<12
 
-?if $count <= $max ?%REPEAT_INC_LOOP
+?if $count <= $max ?%REPEAT_LOOP2
 
 >
 ; ======= Test incrementing string ======

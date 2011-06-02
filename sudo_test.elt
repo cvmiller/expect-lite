@@ -33,7 +33,9 @@ $pass=secret
 
 # run the ID command with sudo privilages
 
-!run_sudo id $pass
+#!run_sudo id $pass
+>sudo id
+!sudo_pass $pass
 +$mygid=gid=[0-9]+\(([a-z]+)\)
 <uid=0
 >

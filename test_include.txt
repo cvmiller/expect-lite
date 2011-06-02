@@ -2,9 +2,14 @@
 !set user_namespace(el_script) $cmd_file
 >
 #*INTERACT
->sleep 3
+#>sleep 3
 >
+#*~fail.inc
 ; === Script: $el_script
+>
+#?if 1==1?*FAIL
 $HELLO=Hi There
 > echo $HELLO
+<where
+>echo $HELLO
 <There
