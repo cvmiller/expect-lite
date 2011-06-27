@@ -1,7 +1,34 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
-Released 21 Dec 2010 - v4.0.2
+
+Released 26 June 2011 v4.1.1
+	Implemented reverse search of labels, allowing non-unique labels for looping
+	Fixed *FAIL to work with *NOFAIL, rather than terminating immediately
+	Added @n (n=number) to set timeout value from IDE 
+
+Released 12 April v4.1.0
+	Bug fixes
+		Fixed *FORK default bug (wasn't switching back to default)
+		Fixed IDE Step, when *FORK command is step, session didn't change
+		Fixed bug in fail script handling, script would not fail
+		Fixed bug in parse_var, added pipe (|) to "end of var" list
+	Added new Library-mode: expect-lite now can be a TCL package
+		API now permits calling expect-lite interpreter from inside TCL
+		See Docs and example script test_el_lib.tcl
+
+Released 22 Feb 2011 v4.0.3
+	Bug fixes
+		Fixed *NOFAIL inside IDE, command didn't persist after continuing script
+		Fixed *FORK inside IDE, was not returning to correct session upon Continuing script (+++)
+		Fixed terminal-type to include xterm-color
+		Fixed bug in Bad Time Out Value (found by Tajas Petal)
+	Added new logging directive
+		Added *TIMESTAMP ISO|YMD|DMY|MDY  & *NOTIMESTAMP (idea from Kevin Broch )
+			ISO is default timestamp format
+	Added expect-lite-lib ground work, not ready for release yet
+
+Released 21 Dec 2010 v4.0.2
 	Minor change to debugger copy/paste to permit absolute paths
 	First release of tarball installer		
 

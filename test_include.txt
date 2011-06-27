@@ -9,7 +9,7 @@
 >
 #?if 1==1?*FAIL
 $HELLO=Hi There
-> echo $HELLO
-<where
+#> echo $HELLO
+#<where
 >echo $HELLO
 <There

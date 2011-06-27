@@ -15,9 +15,13 @@ $EL_jtag=
 +$ip_addr2=inet addr:(\d+)
 
 ; === test var
-?if [ info exist $TEST ] ? ; === echo this :: ; === echo that
+#?if [ info exist $TEST ] ? ; === echo this :: ; === echo that
 >
 *SHOW VARS
+$val=50
+>
+?if 40 < $val && $val < 60 ? ; it works :: ; NO GO
+?if 40 < $val < 60 ? ; it works :: ; NO GO
 >
 *INTERACT
 

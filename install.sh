@@ -5,6 +5,10 @@
 #
 # by Craig Miller	5 December 2010
 #
+#	6 May 2011 - fixed install non-privileged user
+#
+#
+#
 
 
 function usage {
@@ -22,7 +26,7 @@ function usage {
 
 # Script Defaults	   
 numopts=0
-VERSION=0.97
+VERSION=0.98
 SSH_HOME=$HOME/.ssh
 
 PREFIX=""

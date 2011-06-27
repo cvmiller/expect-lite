@@ -839,7 +839,16 @@ Released 21 Dec 2010 - 4.0.2
 	Note: fail script is not global, but local to file
 	Added @n (n=number) to set timeout value from IDE (needs testing)
 	
-	
+23 June 2011 - 4.1.1d6
+	Fixed if statement to evaluate strictly numbers and use &&
+		e.g. ?if 4 < 5 && 5 < 6? <then>	
+		Removed change. Need more general solution.
+		Reverted back to d5
+		
+26 June 2011 - 4.1.1d7
+	Tested @n in IDE, fixed info statement
+
+
 
 ------------ Future Versions --------------------------
 		
@@ -848,6 +857,10 @@ Future
 o	Add code-line-blocks with [ ] (4.2.0 candidate)
 	[ <test>
 	]
+
+o	Add && and || to if statements
+
+o	Test installer as non-privilaged user ## Fix in 4.1.11! ##
 	
 o	instant_interact_sig proc, needs to check el_exec return code
 

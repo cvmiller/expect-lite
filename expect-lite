@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.1.1d5"
+	variable version "4.1.1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -428,7 +428,7 @@ namespace eval expectlite {
 					exit 
 					}
 				-reset \005	{ # test
-					puts "Current Spawn ID---->$::spawn_id"
+					puts "Current Spawn ID---->$::spawn_id|timeout:$::timeout"
 					send "\n"
 					return 
 					}
@@ -2700,7 +2700,7 @@ namespace eval expectlite {
 
 					}
 				^\@ 	{ 	# Update the timeout value
-
+						
 						# validate that the timeout value is a number
 						print_comment_line
 						# execute expect lines if present
@@ -2723,6 +2723,10 @@ namespace eval expectlite {
 								set timeout_line "\nSetting Expect Timeout to: $t_timeout \n"
 								set timeout $t_timeout
 							}
+						}
+						# print new timeout value if one_line is set (e.g. from IDE)
+						if { $_one_line == 1 } {
+							cputs $timeout_line $_el_info_color
 						}
 					}
 				^\\\?[iI]?[fF]?	{	# Conditional processing - ?cond?action::else_action
