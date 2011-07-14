@@ -849,6 +849,18 @@ Released 21 Dec 2010 - 4.0.2
 	Tested @n in IDE, fixed info statement
 
 
+28 June 2011 - 4.1.1 released
+
+
+29 June 2011 - 4.1.2d1
+	Added if variable defined conditional
+		e.g. ?if $var undef?
+
+
+14 July 2011 - 4.1.2d2
+	Reverted variable undef - use a different tact
+	Fixed @n which caught user scp <file> user@10.1.1.1 as bad timeout
+
 
 ------------ Future Versions --------------------------
 		
@@ -860,7 +872,10 @@ o	Add code-line-blocks with [ ] (4.2.0 candidate)
 
 o	Add && and || to if statements
 
-o	Test installer as non-privilaged user ## Fix in 4.1.11! ##
+o	if undef var - treat undefined vars as ""
+		an test against $blank
+
+x	Test installer as non-privilaged user ## Fix in 4.1.11! ##
 	
 o	instant_interact_sig proc, needs to check el_exec return code
 
