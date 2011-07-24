@@ -862,6 +862,11 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed @n which caught user scp <file> user@10.1.1.1 as bad timeout
 
 
+23 July 2011 - 4.1.2d3
+	Added if undef var, treat var as ""
+		e.g. ?if $undef_var == $blank ? or ?if $undef_var == ?
+
+
 ------------ Future Versions --------------------------
 		
 Future
@@ -872,7 +877,7 @@ o	Add code-line-blocks with [ ] (4.2.0 candidate)
 
 o	Add && and || to if statements
 
-o	if undef var - treat undefined vars as ""
+x	if undef var - treat undefined vars as ""
 		an test against $blank
 
 x	Test installer as non-privilaged user ## Fix in 4.1.11! ##

@@ -15,7 +15,12 @@ $EL_jtag=
 +$ip_addr2=inet addr:(\d+)
 
 ; === test var
+$blank=
 #?if [ info exist $TEST ] ? ; === echo this :: ; === echo that
+?if $TEST ==  ? ; === echo this :: ; === echo that
+?if$TEST==? ; === echo this :: ; === echo that
+?if $TEST ==$blank? ; === echo this :: ; === echo that
+?if$JOE==$BLOW? ; === echo this :: ; === echo that
 >
 *SHOW VARS
 $val=50

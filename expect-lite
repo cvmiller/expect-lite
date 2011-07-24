@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.1.2d2"
+	variable version "4.1.2d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -2325,7 +2325,7 @@ namespace eval expectlite {
 						}
 						# place '+' back on front when needed
 						set _el(line) "$prepend$_el(line)"
-						#puts "l2>$_el_assignment"
+						#puts "l2>$_el_assignment|"
 						#puts "l2>$_el(line)"
 					} 
 					{^\-\$.*} {
@@ -2756,6 +2756,9 @@ namespace eval expectlite {
 							#puts "#2#>then$_action|else$_else_action|"
 						}
 						set _conditional [string range $_cond_line 0 [expr [string first $_cond $_cond_line] - [string length $_cond] ]]
+						# check for unresolved Var
+# 						# replace all unresolved vars with ""
+# 						regsub -all {\$[a-zA-Z0-9_]+} $_conditional {""} _conditional
 
 						# define list of supported conditional operators
 						set _cond_oper_list { == != <= >= < > }
@@ -2771,7 +2774,7 @@ namespace eval expectlite {
 						 # parse around conditional operator
 						set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
 						set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
-						#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2"
+						#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2|"
 
 						# remove leading and trailing spaces from conditional arguments
 						# count the number of non-space chars in condition
@@ -2780,16 +2783,17 @@ namespace eval expectlite {
 							regsub -all {([ ]*)([^ ].*[^ ])([ ]*)} $_cond_arg1 {\2} _cond_arg1
 						} else {
 							# condition only 1 byte in size
-							regsub -all {([ ]*)([^ ])([ ]*)} $_cond_arg1 {\2} _cond_arg1
+							regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg1 {\2} _cond_arg1
 						}
-
+						
 						if { [string length [regexp -inline {[^ ]+} $_cond_arg2]] > 1 } {
 							# condition larger then 1 byte
 							regsub -all {([ ]*)([^ ].*[^ ])([ ]*)} $_cond_arg2 {\2} _cond_arg2
 							#puts ">$_cond_arg2<"
 						} else {
 							# condition only 1 byte in size
-							regsub -all {([ ]*)([^ ])([ ]*)} $_cond_arg2 {\2} _cond_arg2
+							regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg2 {\2} _cond_arg2
+							#puts ">$_cond_arg2<"
 						}
 
 						# preserve buffer pointer - if not one_line
@@ -2801,13 +2805,13 @@ namespace eval expectlite {
 
 						# check for unresolved Var
 						if { [regexp {\$.+} $_conditional] } {
-							puts "Unresolved Var:$_conditional"
-							set _test " expr { $_cond_arg2 } "
-							
-						} else {
-							# build test line
-							set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
-						}
+							if {$DEBUG} { puts "EL:Unresolved Var:$_conditional"}
+							# replace all unresolved vars with ""
+							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
+							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
+						} 
+						# build test line
+						set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
 						# check for syntax errors and evaluate result of test line
 						if {[catch { eval  $_test  } error ] } {
 							if {$WARN} {
