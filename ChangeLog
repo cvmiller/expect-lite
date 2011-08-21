@@ -1,6 +1,13 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 23 August 2011 v4.1.2
+	Fixed @n (n=number) to set timeout value from IDE (problem with ssh user@192.168...)
+	Fixed *FORK display, when "session" is part of the session name
+	Added conditional test for undefined varibles
+		if undef var, treat var as ""
+		e.g. ?if $undef_var == $blank ? or ?if $undef_var == ?
+	Updated installer with "configure only" option, just configures user	
 
 Released 26 June 2011 v4.1.1
 	Implemented reverse search of labels, allowing non-unique labels for looping

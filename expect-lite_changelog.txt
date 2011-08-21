@@ -866,6 +866,17 @@ Released 21 Dec 2010 - 4.0.2
 	Added if undef var, treat var as ""
 		e.g. ?if $undef_var == $blank ? or ?if $undef_var == ?
 
+27 July 2011 - 4.1.2d4
+	Fixed undef var. Var must be in set [a-zA-Z0-9_]
+
+29 July 2011 - 4.1.2d5
+	Fixed *FORK display, when "session" is part of the session name
+
+21 August 2011 - 4.1.2
+	Released. same as d5.
+	Updated installer with "configure only" option, just configures user
+
+
 
 ------------ Future Versions --------------------------
 		
@@ -885,6 +896,8 @@ x	Test installer as non-privilaged user ## Fix in 4.1.11! ##
 o	instant_interact_sig proc, needs to check el_exec return code
 
 o	Add variables to Labels, e.g. %$LOOP
+
+o	Update installer for install user mode (do not install expect-lite, just config user)
 
 x	add change timeout in IDE @n
 

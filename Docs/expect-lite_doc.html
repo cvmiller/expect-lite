@@ -2,6 +2,10 @@
 <html><head>
 
 
+
+
+
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -96,6 +100,11 @@ evaluation</a> also available in expected results&nbsp;<span style="background-c
         <li><a href="expect-lite_doc.html#conditional"><span style="font-weight: bold;">Conditional
 Branching</span></a> a
 if/then/else with a c-like syntax</li>
+        <ul>
+          <li><a href="#undefined_var_conditional">Testing undefined variables</a> useful for setting default variable values <span style="background-color: yellow;">new in 4.1.2</span><br>
+          </li>
+        </ul>
+
         <li><a href="expect-lite_doc.html#looping"><span style="font-weight: bold;">Simple
 looping</span></a>
 using
@@ -124,8 +133,7 @@ allows interaction with a wider range of hosts (routers, switches, etc)
 Expect</span></a> - using
 native expect embedded in an expect-lite script</li>
         <li><a href="expect-lite_library.html"><span style="font-weight: bold;">Library mode</span></a> use expect-lite as
-a TCL package <span style="background-color: rgb(255, 255, 102);">new
-in 4.1.0</span> <br>
+a TCL package&nbsp;<span style="background-color: rgb(255, 255, 102);"></span> <br>
         </li>
       </ul>
       <span style="font-weight: bold;">Debugging<br>
@@ -990,6 +998,16 @@ It is possible to read a shell variable into an expect-lite variable by
 using the dynamic variable method:<br>
       <pre>&gt; echo $PWD<br>+$mypwd=\n(/[a-zA-Z0-9/\-_]+)<br></pre>
       <br>
+      <h3><a name="undefined_vars"></a>Undefined
+Variables</h3>
+Since expect-lite allows the use of shell variables, it is possible
+that a variable will not be known to expect-lite (but known to the
+shell). Expect-lite will attempt to dereference all variables, the ones
+which are not defined remain in variable form (perhaps it is a shell
+variable). However, it can be useful to test if a variable is an
+expect-lite variable. As of version 4.1.2, in a conditional (if
+statement) undefined variables will be automatically defined as blank (
+or ""). See <a href="#conditional">conditional</a> for more information.
       <h3><a name="env_vars"></a>Environment
 Variables starting with EL_</h3>
 When
@@ -1038,6 +1056,21 @@ The message prints: what was evaluated (expr { "ppc" == "i386"
 }),&nbsp; 'then', and 'else' actions, as well as a result (true or
 false)<br>
       <br>
+      <a name="undefined_var_conditional"></a><span style="font-weight: bold;">Undefined variables</span><br>
+
+      <br>
+Undefined variables can be tested in a conditional (as of version
+4.1.2). In and only in a conditional, variables unknown to expect-lite
+are dereferenced as blank. This allows testing if a variable has been
+defined such as:<br>
+      <pre>$blank=<br>?if $TEST ==$blank? ; === echo this :: ; === echo that<br>?if $TEST !=  ? ; === echo this :: ; === echo that<br></pre>
+
+      The first example, is setting a variable to blank and then
+testing for equality. The second example demonstrates testing
+inequality with blank. Either conditional will work, and it is a matter
+of style which one is preferred.<br>
+      <br>
+<br>
       <a name="label"></a><span style="font-weight: bold;">Labels</span><br>
       <br>
 Conditionals are limited to a single line. Sometimes this is too
@@ -1815,7 +1848,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">28 June 2011<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">23 August 2011<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
@@ -1825,7 +1858,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.1.1 and above</span><br style="font-style: italic;">
+document for version 4.1.2 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

@@ -26,6 +26,7 @@ $telephone=723-9161
 $var1=var1
 $var2=var2
 $age=25
+$blank=
 
 >
 ; === Conditional Equals	? $name == craig ?>echo "hello123"
@@ -273,6 +274,19 @@ $junk=test
 ?if $junk != test ? >echo FAIL :: >echo Good
 <\nGood
 >
+
+; === Test conditional undefined
+?$undef_var==$blank?>echo Good :: >echo FAIL
+<\nGood
+>
+?$undef_var!=$blank?>echo FAIL :: >echo Good
+<\nGood
+>
+?$undef_var==?>echo Good :: >echo FAIL
+<\nGood
+>
+
+*INTERACT
 
 ; ==== All Pau!
 >

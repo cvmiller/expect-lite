@@ -7,16 +7,17 @@
 #
 #	6 May 2011 - fixed install non-privileged user
 #
-#
+#	21 Aug 2011 - added configure only option, just configures user
 #
 
 
 function usage {
-	echo "usage:  $0 [-p install_location_prefix] [-R]"
+	echo "usage:  $0 [-p install_location_prefix] [-R] [-c]"
 	echo "	$0 - Used install expect-lite and configure ssh, and bashrc "
 	echo "	e.g. $0 "
 	echo "	"
 	echo "	-p installation prefix"
+	echo "	-c configure only, configures ssh, and bashrc"
 	echo "	-R Remove installation"
 	echo "	"
 	echo " By Craig Miller - Installer Version: $VERSION"
@@ -26,7 +27,7 @@ function usage {
 
 # Script Defaults	   
 numopts=0
-VERSION=0.98
+VERSION=0.99
 SSH_HOME=$HOME/.ssh
 
 PREFIX=""
@@ -41,7 +42,7 @@ ELRC=$HOME/.expect-literc
 OPTS=$*
 
 # Get options off of command line
-while getopts "vVhRp:" options; do
+while getopts "vVhRp:c" options; do
   case $options in
     V ) show_version=TRUE
     	let numopts+=1;;
@@ -51,6 +52,8 @@ while getopts "vVhRp:" options; do
     	let numopts+=2;;
     h ) usage;;
     R ) remove=TRUE
+     let numopts+=1;;
+    c ) configure_only=TRUE
      let numopts+=1;;
     \? ) usage	# show usage with flag and no value
          exit 1;;
@@ -77,7 +80,7 @@ fi
 OS=$(uname -s | grep CYGWIN)
 
 # do the following for non-CYGWIN OSs
-if [ "$OS" == "" ] && [ "$PREFIX" == "" ]; then
+if [ "$OS" == "" ] && [ "$PREFIX" == "" ] && [ ! $configure_only ]; then
 	MYUID=$(id -u)
 	if [  $MYUID -ne 0 ]; then
 		echo "==================="
@@ -159,24 +162,45 @@ if [ ! -e /usr/bin/expect ]; then
 	exit 1
 fi
 
-#check if expect-lite is installed
-if [ -e $PREFIX/usr/bin/expect-lite ]; then
-	existing_ver=$(grep "set version" $PREFIX$BIN_DIR/expect-lite | cut -d " " -f 3)
-	echo "0)	==================="
-	echo "	ACK! expect-lite already installed"
-	echo "	Preservering older version $existing_ver to expect-lite.old"
-	# back up older version
-	mv $PREFIX/usr/bin/expect-lite $PREFIX/usr/bin/expect-lite.old
+# don't move old version expect-lite if just configure only
+if [ $configure_only ]; then
+	#check if expect-lite is installed
+	if [ -e $PREFIX/usr/bin/expect-lite ]; then
+		existing_ver=$(grep "set version" $PREFIX$BIN_DIR/expect-lite | cut -d " " -f 3)
+		echo "0)	==================="
+		echo "	expect-lite already installed, good."
+	else
+		echo "0)	==================="
+		echo "	expect-lite NOT installed"
+		echo "	Please run installer with install option. Exiting..."
+		exit 1
+	fi
+else
+	#check if expect-lite is installed
+	if [ -e $PREFIX/usr/bin/expect-lite ]; then
+		existing_ver=$(grep "set version" $PREFIX$BIN_DIR/expect-lite | cut -d " " -f 3)
+		echo "0)	==================="
+		echo "	ACK! expect-lite already installed"
+		echo "	Preservering older version $existing_ver to expect-lite.old"
+		# back up older version
+		mv $PREFIX/usr/bin/expect-lite $PREFIX/usr/bin/expect-lite.old
+	fi
 fi
 
+# Actual Install. skip if configure only
+if [ $configure_only ]; then
+	echo "1,2,3)	==================="
+	echo "	Configuration Only selected, skipping install steps 1,2,3 "
 
+else
+	# start actual install - Steps 1,2,3
+	installit expect-lite $PREFIX$BIN_DIR "1"
+	installit Examples $PREFIX$DOC_DIR "2"
+	cd man
+	installit expect-lite.1.gz $PREFIX$MAN_DIR "3"
+	cd - > /dev/null
+fi
 
-# start actual install - Steps 1,2,3
-installit expect-lite $PREFIX$BIN_DIR "1"
-installit Examples $PREFIX$DOC_DIR "2"
-cd man
-installit expect-lite.1.gz $PREFIX$MAN_DIR "3"
-cd - > /dev/null
 
 # test if bashrc needs mod: Step 4
 mod_bash=$(grep expect-literc $BASHRC)

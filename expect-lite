@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.1.2d3"
+	variable version "4.1.2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1364,11 +1364,12 @@ namespace eval expectlite {
 		set _el(fork_count) 0
 		foreach keyitem [array names _el_fork] {
 			#filter out eols from session printout
-			if { [string match "*session*" $keyitem] } {
+			if { [string match "*,session" $keyitem] } {
 				# retrieve session name, drop ',session' from keyitem
 				set session_name [lindex [split $keyitem ,] 0]
 				lappend _el_fork_id_list $session_name
 				incr _el(fork_count)
+				#puts "=====>$keyitem|$session_name|$_el_fork_id_list|$_el(fork_count)"
 			}
 		}
 
@@ -2804,7 +2805,8 @@ namespace eval expectlite {
 						# validate comparison and if true, send to _el_script_exec (recursive call)
 
 						# check for unresolved Var
-						if { [regexp {\$.+} $_conditional] } {
+						# Var is defined as in the set [a-zA-Z0-9_]
+						if { [regexp {\$[a-zA-Z0-9_]+} $_conditional] } {
 							if {$DEBUG} { puts "EL:Unresolved Var:$_conditional"}
 							# replace all unresolved vars with ""
 							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
