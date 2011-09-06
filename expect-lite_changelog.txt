@@ -872,11 +872,18 @@ Released 21 Dec 2010 - 4.0.2
 29 July 2011 - 4.1.2d5
 	Fixed *FORK display, when "session" is part of the session name
 
-21 August 2011 - 4.1.2
+ 21 August 2011 - 4.1.2
 	Released. same as d5.
 	Updated installer with "configure only" option, just configures user
 
-
+5 September 2011 - 4.2.0d1
+	Added meta-data field to buffer (for each line)
+		Added push and pop of meta-data stack which allows nested while loops
+	Added while loops based on "blocks of lines"
+		e.g. [ this < that
+				do something...
+			]
+	
 
 ------------ Future Versions --------------------------
 		
@@ -918,6 +925,7 @@ x	Fix IDE '>' paste (added chars ./$)
 x	Fix MAN and man directory in tarball - MacOS X sees them as the same name
 
 o	User script help - next release
+	Lines which beging with """ can be integrated help
 
 o	cygwin issues:
 		Unable to detect shell start - add longer timeout for that expect line only

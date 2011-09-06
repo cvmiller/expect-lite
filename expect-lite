@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.1.2"
+	variable version "4.2.0d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -194,6 +194,8 @@ namespace eval expectlite {
 		set ::expectlite::_el_buf(stack) "0"
 		# buf pointer - contains line number of buffer
 		set ::expectlite::_el_buf(0,ptr) "0"
+		# block line stack. used when reading into buffer blocks of lines
+		set ::expectlite::_el_buf_block_stack {}
 
 		# expect-lite key characters (first char in expect-lite script)
 		variable _out ">"
@@ -1762,7 +1764,7 @@ namespace eval expectlite {
 	#
 	proc _el_buffer {cmd_file} {
 		upvar expectlite::_el_buf					_el_buf
-
+		
 		set line_buffer {}
 		# Protect against no file to read
 		if { [ catch { set infile [open $cmd_file r ] } error] } {
@@ -1770,6 +1772,10 @@ namespace eval expectlite {
 				exit 1
 		}
 		while { -1 != [gets $infile buf_line ]} {
+
+			# meta_line used to hold additional info about line, for line blocks 
+			set meta_line 0
+			
 			# remove leading white space on line (permitting indentation
 			regsub {^[ \t]+} $buf_line {} buf_line
 
@@ -1779,10 +1785,31 @@ namespace eval expectlite {
 				regsub {[ \t]+$} $buf_line {} buf_line
 			}
 
-			# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
-			if { [regexp {^[$-/:-@!~]} $buf_line ] } {
-				lappend line_buffer $buf_line
+			# process block lines ] pop
+			if { [regexp {^[\]]} $buf_line ] } {
+				set meta_line [_el_buffer_block_pop ]
+				# update meta-line of '[' line
+				# preserve line-data
+				set t_line_data [lindex $line_buffer $meta_line 0]
+				#puts "======>$meta_line|$t_line_data"
+				# update [ line meta-data
+				lset line_buffer $meta_line "{$t_line_data} {[llength $line_buffer]}"
 			}
+			
+			# process block lines [ push
+			if { [regexp {^[\[]} $buf_line ] } {
+				_el_buffer_block_push [llength $line_buffer]
+			}
+
+			# add line to buffer
+			# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
+			if { [regexp {^[$-/:-@!~\[\]]} $buf_line ] } {
+				# escape curly braces
+				regsub -all {([{}])} $buf_line {\\\1} buf_line
+				#puts "[llength $line_buffer] | {$buf_line} {$meta_line}"
+				lappend line_buffer  "{$buf_line} {$meta_line}"
+			}
+
 		}
 		close $infile
 		#puts "-> $line_buffer|[llength $line_buffer] "
@@ -1802,25 +1829,34 @@ namespace eval expectlite {
 	#	Reads buffer as if it were a file, returning a line from the buffer
 	#	
 	#
-	proc _el_buffer_read { line_no buf_stack} {
+	proc _el_buffer_read { line_no buf_stack {line_info_field 0}} {
 		upvar expectlite::_el_buf					_el_buf
-
-		#puts " $line_no | $buf_stack | $_el_buf($buf_stack,ptr) "
+		# line_info
+		#set line_info_field 0
+		
+		if { $line_info_field == 0 } {
+			#puts " $line_no | $buf_stack | $_el_buf($buf_stack,ptr) | [lindex $_el_buf($buf_stack) $line_no ] "
+		}
 
 		# Do not read past end of buffer
 		if { $line_no < [llength $_el_buf($buf_stack)] } {
-			return [lindex $_el_buf($buf_stack) $line_no]
+			# use lindex to return first field in line_no
+			set buf_line [lindex $_el_buf($buf_stack) $line_no $line_info_field]
+			# remove escaped braces
+			regsub -all {\\([{}])} $buf_line {\1} buf_line
+			return $buf_line
 		} else {
 			return -1
 		}
 	}
+
 
 	#
 	#	Reads buffer, prints n lines
 	#	
 	#
 	proc _el_buffer_show { num_of_lines buf_stack} {
-		upvar expectlite::_el_buf				_el_buf
+		upvar expectlite::_el_buf			_el_buf
 		upvar expectlite::_el_info_color		_el_info_color
 
 
@@ -1857,64 +1893,31 @@ namespace eval expectlite {
 	}
 
 	#
-	#	Buffer Search
-	#	Searches buffer from line_ptr down to end of buffer
-	#	If search fails, search will 'wrap' and continue from beginning of buffer
-	#	This allows duplicate search items in the buffer, finding the first succeding one
-	#		However search items used as looping labels should be unique!
+	#	Pushes '[' line in buffer 
+	#	
 	#
-	proc _el_buffer_search2 {line_ptr line_search buf_stack} {
-		upvar expectlite::_el_infinite_loop		_el_infinite_loop
-		upvar expectlite::el_color				el_color
-		upvar expectlite::INFO					INFO
-		upvar expectlite::WARN					WARN
-		upvar expectlite::DEBUG					DEBUG
-		upvar expectlite::EXP_INFO				EXP_INFO
-		upvar expectlite::_el_info_color		_el_info_color
-		upvar expectlite::_el_err_color			_el_err_color
-		upvar expectlite::_el_comment_color		_el_comment_color
-		upvar expectlite::_el_buf				_el_buf
+	proc _el_buffer_block_push { line_no} {
+		upvar expectlite::_el_buf_block_stack		stack
 
-
-
-		# search down first
-		if {$INFO} {
-			# start INFO color
-			if {$_el_comment_color == "none"} {
-				puts  -nonewline $el_color($_el_info_color)
-			}
-			puts -nonewline "\nJumping to label"
-
-		}
-		set _ptr [lsearch -start $line_ptr $_el_buf($buf_stack) $line_search]
-		if { $_ptr == -1 } {
-			# wrap search starting at beginning of buffer
-			if {$INFO} {
-				puts -nonewline ", Wrapping search"
-			}
-			set _ptr [lsearch  $_el_buf($buf_stack) $line_search]
-			if {$WARN && $_ptr < 0} {
-				puts -nonewline "\n\nWARNING: Label not found"
-			}
-
-			# decrement infinite loop detector 
-			incr _el_infinite_loop -1
-			if { $_el_infinite_loop < 1 } {
-				# return search not found
-				cputs ":$line_search\n\n\nERROR: Infinite Loop Detected!\n\n" $_el_err_color
-				return -2
-			}
-		}
-		# put final field on info line
-		if {$INFO} {
-			cputs ":$line_search\n" $_el_info_color
-		}
-		#puts "|$line_search|$line_ptr|$_ptr|[lindex $_el_buf($buf_stack) 209]|"
-		return $_ptr
+		#puts "=====>$line_no | $stack "
+		lappend stack $line_no
 	}
+
 	#
-	#	End of Buffer management functions
+	#	pops '[' line in buffer and returns line number
+	#	
 	#
+	proc _el_buffer_block_pop { } {
+		upvar expectlite::_el_buf_block_stack		stack
+
+		if { [llength $stack ] != 0 } {
+			set line_no [lindex $stack end]
+			set stack [lrange $stack 0 end-1]
+			return $line_no
+		} else {
+			return -1
+		}
+	}
 
 	#
 	#	Buffer Search
@@ -1931,6 +1934,7 @@ namespace eval expectlite {
 		upvar expectlite::DEBUG					DEBUG
 		upvar expectlite::EXP_INFO				EXP_INFO
 		upvar expectlite::_el_info_color		_el_info_color
+		upvar expectlite::_el_warn_color			_el_warn_color
 		upvar expectlite::_el_err_color			_el_err_color
 		upvar expectlite::_el_comment_color		_el_comment_color
 		upvar expectlite::_el_buf				_el_buf
@@ -1946,12 +1950,12 @@ namespace eval expectlite {
 			puts -nonewline "\nJumping to label"
 
 		}
-		# get a list of pointers which match search
-		set _ptr_list [lsearch -all $_el_buf($buf_stack) $line_search]
+		# get a list of pointers which match search of first field (line-data)
+		set _ptr_list [lsearch -all -index 0 $_el_buf($buf_stack) "$line_search"]
 		
 		if { $_ptr_list == {} } {
 			if {$WARN} {
-				puts -nonewline "\n\nWARNING: Label not found"
+				puts -nonewline "\n\nWARNING: Label not found" 
 			}
 			# signal label not found
 			set _ptr -1
@@ -1968,6 +1972,7 @@ namespace eval expectlite {
 				}
 			}
 			set _ptr [lindex $_ptr_list $i]
+			
 			# decrement infinite loop detector 
 			incr _el_infinite_loop -1
 			if { $_el_infinite_loop < 1 } {
@@ -1987,6 +1992,26 @@ namespace eval expectlite {
 	#
 	#	End of Buffer management functions
 	#
+	
+	#
+	#	Infinite loop detection
+	#	
+	#
+	proc _el_check_infinite_loop { } {
+		upvar expectlite::_el_infinite_loop		_el_infinite_loop
+		upvar expectlite::_el_err_color			_el_err_color
+		
+		# decrement infinite loop detector 
+		incr _el_infinite_loop -1
+		if { $_el_infinite_loop < 1 } {
+			# return search not found
+			cputs "\n\nERROR: Infinite Loop Detected!\n\n" $_el_err_color
+			return -2
+		}
+		return 0
+		
+	}
+
 
 	#
 	#	Set Global expect-lite Directives
@@ -2487,6 +2512,8 @@ namespace eval expectlite {
 
 			# get first line of cmd_file from buffer
 			set _el(line) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack]
+			# get meta-data for line
+			set _el(line_meta) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack 1]
 			# remove leading white space on line (permitting indentation
 			regsub {^[ \t]+} $_el(line) {} _el(line)
 			set _one_line 0
@@ -2503,6 +2530,7 @@ namespace eval expectlite {
 			_el_deref_line
 
 
+			
 			#puts "el(line):$_el(line)"
 
 
@@ -2757,9 +2785,6 @@ namespace eval expectlite {
 							#puts "#2#>then$_action|else$_else_action|"
 						}
 						set _conditional [string range $_cond_line 0 [expr [string first $_cond $_cond_line] - [string length $_cond] ]]
-						# check for unresolved Var
-# 						# replace all unresolved vars with ""
-# 						regsub -all {\$[a-zA-Z0-9_]+} $_conditional {""} _conditional
 
 						# define list of supported conditional operators
 						set _cond_oper_list { == != <= >= < > }
@@ -3168,6 +3193,91 @@ namespace eval expectlite {
 						set _el(success) [_el_global_directive $_el(line)]
 
 					}
+				^\\\[	{	# start block of lines
+
+						# execute expect lines if present
+						_el_exec_expect
+
+						print_comment_line
+
+						set _cond_line [string trimleft $_el(line) '\[']
+						#puts "====>start block lines|$_cond_line|$_el(line_meta)"
+						
+						set _conditional [string trimright $_cond_line]
+												
+						# define list of supported conditional operators
+						set _cond_oper_list { == != <= >= < > }
+
+						# find conditional operator
+						set _cond_oper " "
+						foreach k $_cond_oper_list {
+							if { [regexp $k $_conditional] } {
+								set _cond_oper $k
+								break
+							}
+						}
+
+						 # parse around conditional operator
+						set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
+						set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
+						#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2|"
+						# build test line
+						set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
+						# check for syntax errors and evaluate result of test line
+						if {[catch { eval  $_test  } error ] } {
+							if {$WARN} {
+								cputs "\nWarning: Expect-lite: $error: Unable to detect conditional operator\n" $_el_warn_color
+								cputs "	Evaluating line:$_test" $_el_warn_color
+							}
+							#skip block lines
+							set _el_buf($buf_stack,ptr) [expr $_el(line_meta) + 1]
+							
+						} else {
+							# Show user the if statement, action and result
+
+							if {$INFO} {
+								set _test_result [eval  $_test ]
+								if {$_test_result} {
+									set _test_result "TRUE"
+									cputs "\nWhile:$_test|result=$_test_result\n" $_el_info_color
+								} else {
+									set _test_result "FALSE"
+									cputs "\nWhile:$_test|result=$_test_result\n" $_el_info_color
+								}
+							};#if INFO
+								
+							# no syntax error, go ahead and eval the conditional action or else action
+							# skip to label if present in action or else_action
+							if { [eval  $_test ] } {
+								# continue loop
+							} else {
+								# stop loop, jump to bottom of loop + 1
+								set _el_buf($buf_stack,ptr) [expr $_el(line_meta) ]
+							}
+						};#if Catch
+
+					}
+				^\\\]	{	# end block of lines
+
+						# execute expect lines if present
+						_el_exec_expect
+
+						print_comment_line
+
+						#puts "====>end block lines|$_el(line_meta)"
+						# test for infinite loop
+						set retcode [_el_check_infinite_loop]
+						if { $retcode == -2 } {
+							# infinite loop failed (-2)
+							# signal to fail script - something is wrong
+							set _el(success) 0
+							# tell the user why this failed
+							set prev_line "Infinite Loop Detected!"
+						} else {
+							# jump back to top of block lines
+							set _el_buf($buf_stack,ptr) [expr $_el(line_meta) - 1]
+						}
+					}
 				default {	# blank lines are allowed
 
 			 		}
@@ -3254,6 +3364,8 @@ namespace eval expectlite {
 				# read next line from buffer
 				incr _el_buf($buf_stack,ptr)
 				set _el(line) [_el_buffer_read $_el_buf($buf_stack,ptr) $buf_stack]
+				# read meta-data for line
+				set _el(line_meta) [_el_buffer_read $_el_buf($buf_stack,ptr) $buf_stack 1]
 				# remove leading white space on line (permitting indentation)
 				regsub {^[ \t]+} $_el(line) {} _el(line)
 			} else {

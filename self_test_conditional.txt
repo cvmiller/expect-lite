@@ -16,7 +16,6 @@
 # Turn on warnings
 !set ::WARN 1
 
-
 ; ==== Set Timeout ====
 @4
 
@@ -107,13 +106,20 @@ $age=35
 ?$age>=55?>echo "Freedom at $age"::>echo "Keep on working"
 <Freedom at $age
 
+; === Test conditional jump
+?$age==55?%SKIP2_AGE55
+>echo " Skipper"
+>echo "2"
+>echo "3"
+%SKIP2_AGE55
+
 ; === Test conditional jump with label with spaces, and space at end of label
 ?$age==55?%move along, nothing to see
 >echo " Skipper"
 >echo "2"
 >echo "3"
 *FAIL
-%move along, nothing to see	
+%move along, nothing to see  
 
 
 ; === Test conditional jump with indentation
@@ -129,15 +135,11 @@ $age=35
 ; === Test conditional include
 ?$age==55?~test_include.txt
 
-; === Test conditional jump
-?$age==55?%SKIP2_AGE55
->echo " Skipper"
->echo "2"
->echo "3"
-%SKIP2_AGE55
 >
 >echo "Pau"
 <Pau
+
+
 
 $empty=0
 >

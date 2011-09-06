@@ -2,8 +2,10 @@
 # make this puppy run
 
 @3
+
 >echo "hello ken"
 <ken
+
 
 $EL_jtag=
 ?if $EL_jtag == ? $jtag=192.168.1.100 :: $jtag=$EL_jtag
@@ -27,6 +29,26 @@ $val=50
 >
 ?if 40 < $val && $val < 60 ? ; it works :: ; NO GO
 ?if 40 < $val < 60 ? ; it works :: ; NO GO
+>
+$i=0
+[ $i < 3
+	>echo "hello ken"
+	<ken
+	$j=0
+	[ $j < 2 
+		>echo "bye now"
+		>
+		+$j
+	]
+	+$i
+]
+*INFINITE_LOOP 5
+; == blank condition
+[ < 3
+>echo "blank"
+]
+
+
 >
 *INTERACT
 

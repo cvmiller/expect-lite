@@ -18,7 +18,7 @@
 # Turn on warnings
 *WARN
 
-@3
+@6
 
 # quick regression check of the old style vars
 $first=this is a regression test line
