@@ -883,7 +883,21 @@ Released 21 Dec 2010 - 4.0.2
 		e.g. [ this < that
 				do something...
 			]
+
+6 September 2011 - 4.2.0d2
+	Fixed incorrect while loop test e.g. [ 3 >
+		Now warning will be printed, and block of lines will be skipped
+		
+8 September 2011 - 4.2.0d3
+	Added IDE stepping through while loop
+	Added handling unbalanced square brackets [ ]
 	
+
+11 Sept 2011 - 4.2.0.d4
+	Added IDE Paste of while loop
+		Need to fix: infinite loop protection does not stop loop
+
+		
 
 ------------ Future Versions --------------------------
 		
@@ -892,6 +906,11 @@ Future
 o	Add code-line-blocks with [ ] (4.2.0 candidate)
 	[ <test>
 	]
+	Check IDE interaction - need to make special case for [ ] blocks
+		x Use return codes from [ ] processing to signal IDE of [ <test> resultflag success/fail
+		x Paste - create small pasted buffer of lines with meta data & process meta data with jumps
+		x Handle unbalanced [ ]
+		
 
 o	Add && and || to if statements
 
