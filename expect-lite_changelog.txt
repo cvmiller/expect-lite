@@ -872,7 +872,7 @@ Released 21 Dec 2010 - 4.0.2
 29 July 2011 - 4.1.2d5
 	Fixed *FORK display, when "session" is part of the session name
 
- 21 August 2011 - 4.1.2
+21 August 2011 - 4.1.2
 	Released. same as d5.
 	Updated installer with "configure only" option, just configures user
 
@@ -897,7 +897,14 @@ Released 21 Dec 2010 - 4.0.2
 	Added IDE Paste of while loop
 		Need to fix: infinite loop protection does not stop loop
 
-		
+18 Sept 2011 - 4.2.0d5
+	Fixed IDE Paste while loop infinite loop
+	Allow spaces on constants e.g. my="this or that" from Michel Desjardins	madesjardins@rogers.com
+		el_lib e.g. expectlite::_el_import_const " {my=this or that}"
+	Added support for while loop test of blank e.g. [ 3 == $blank
+	Added support for if then else code blocks e.g. ?if 1==1?[	
+	Need to optimize while and if then code block code
+
 
 ------------ Future Versions --------------------------
 		
@@ -910,7 +917,20 @@ o	Add code-line-blocks with [ ] (4.2.0 candidate)
 		x Use return codes from [ ] processing to signal IDE of [ <test> resultflag success/fail
 		x Paste - create small pasted buffer of lines with meta data & process meta data with jumps
 		x Handle unbalanced [ ]
+		o Handle if then [ else [  (not supported)
+		o while loop break? how?
+	Optimizations
+		o Paste use public buffer, and transfer entire buffer to _exec_script, rather than 1 line
+		o Pull out List manipulation code out of _el_buffer
+			Call from Paste code
+		o Change _exec_script to run range of lines rather than one-line, this will allow step to run in same buffer space as script
+		o Create proc _el_buffer_goto, rather than setting buf pointer directly
 		
+o	fix cygwin and old expect version with paste - test for expect version
+
+x	allow spaces for constants e.g. var="this or that" from Michel Desjardins	madesjardins@rogers.com
+
+o	list processing - foreach loop [[ $x=item1 item2 item3		 ]]
 
 o	Add && and || to if statements
 
@@ -923,7 +943,7 @@ o	instant_interact_sig proc, needs to check el_exec return code
 
 o	Add variables to Labels, e.g. %$LOOP
 
-o	Update installer for install user mode (do not install expect-lite, just config user)
+x	Update installer for install user mode (do not install expect-lite, just config user) v4.1.1
 
 x	add change timeout in IDE @n
 
@@ -955,7 +975,7 @@ x	Add deb and rpm to download files
 o	Add Conditional if, used right after > command. Eliminates need to capture var, and use the var in if statement
 	If [text] then - possible format ?if [text]? or ?if text?
 	
-z	Add $var exist to if statement processing
+x	Add $var exist to if statement processing (added in 4.1.2)
 	Look for unresolved variable $VAR ($ still in conditional)
 	Need to add var exist, and var not exist
 	Syntax of if statement

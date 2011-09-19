@@ -51,7 +51,7 @@ expectlite::_el_import_session_ids [array get session]
 #
 #	Import more vars into EL (as constants)
 #
-expectlite::_el_import_const "DUT=mydut *NOFAIL"
+expectlite::_el_import_const "DUT=mydut *NOFAIL {my=this or that}"
 
 expectlite::_el_import_const "DUT2=thatdut "
 

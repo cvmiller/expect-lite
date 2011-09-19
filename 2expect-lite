@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.0d4"
+	variable version "4.2.0d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -416,10 +416,7 @@ namespace eval expectlite {
 		# restart interact if *FORK is called to set to new spawn_id
 		while {$restart_interact} {
 			# Interact session connects user to remote session, and also:
-			#	interprets *FORK, *SHOW commands
-			#	Experimental: also interprets subset of expect-lite script commands
-			#		Lines starting with >,?,$,~,;,* 
-			#			send, if, var assignment, include file, comment, directives respectively
+			#	Interprets expect-lite commands and directives (as of 4.0)
 			if { [catch { interact {
 				-re {\+\+\+|^\x1b\x63|^`c} { #DEBUGGER '+++' or .c to exit interact session, continue script
 					set restart_interact 0 
@@ -444,7 +441,7 @@ namespace eval expectlite {
 					# read line from buffer
 					set line  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) ]
 					set line_meta  [ _el_buffer_read  $_el_buf($_el_buf(stack),ptr) $_el_buf(stack) 1]
-					puts "==BUF====>$_el_buf($_el_buf(stack),ptr)|$line|$line_meta\n"
+					#puts "==BUF====>$_el_buf($_el_buf(stack),ptr)|$line|$line_meta\n"
 
 					switch -regexp -- $line { 
 						{^\*INT}	{ 
@@ -520,6 +517,35 @@ namespace eval expectlite {
 									protected_send "$_el_eols"
 									_el_script_exec "\|$line"
 								}
+							}
+						{^\?.+\?}	{  # if with code block
+								#{^\?.+\?.+\[}
+								if { $param == "k" } {
+									cputs "Skipping:$line"  $_el_info_color
+									protected_send "$_el_eols"
+								} else {
+									cputs "$line"  $_el_info_color
+									# kick the prompt
+									protected_send "$_el_eols"
+									set retcode [ _el_script_exec "\|$line" ]
+									#puts "=====>$retcode|$line|$line_meta"
+									# retcode 1 = result true, 0 = result false
+									# jump past code block
+									if {$retcode == 1 } {
+										# else action
+										if {[regexp {^\?.+\?.+::[ ]*\[} $line ]} {
+											set _el_buf($_el_buf(stack),ptr) [expr $line_meta ]
+										}
+									} else {
+										# action
+										if {[regexp {^\?.+\?[^:]*\[} $line ]} {
+											set _el_buf($_el_buf(stack),ptr) [expr $line_meta ]
+										}
+									}
+									# kick the prompt
+									protected_send "$_el_eols"
+								}
+							
 							}
 						^\\\[	{	# begining while block
 								if { $param == "k" } {
@@ -598,6 +624,7 @@ namespace eval expectlite {
 				-echo -re  {(^>[a-zA-Z0-9/$.]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z]|\[)(.+)\r|(^@[0-9]+\r)|(\]\r)} {
 						#### Support for EL commands in Interact
 						#### Permits pasting of multiple commands into Interact session
+						#### test for expect version - 5.26 does not paste
 						# create list of multiple pasted commands
 						set cli_list [split $interact_out(0,string) "\r"]
 
@@ -635,7 +662,7 @@ namespace eval expectlite {
 						# meta_line used to hold additional info about line, for line blocks 
 						set meta_line -1
 						foreach  item $cli_list {
-							send_user "===I$i==>$item\n"
+							#send_user "===I$i==>$item\n"
 							if { $item != "" } {
 								set buf_line $item
 								# remove leading white space on line (permitting indentation
@@ -658,10 +685,20 @@ namespace eval expectlite {
 									if { $meta_line > 0 } {
 										lset cli_list $meta_line "{$t_line_data} {$i}"
 									}
+									# is the popped line an if statement?
+									if { [regexp {^\?.+\?[ ]*\[} $t_line_data ] || [regexp {^\?.+\?.+::[ ]*\[} $t_line_data ]} {
+										set meta_line [expr $i + 1]
+									}
+									
 								}
 
 								# process block lines [ push
 								if { [regexp {^[\[]} $buf_line ] } {
+									_el_buffer_block_push $i
+								}
+
+								# process ?if block lines [ push
+								if { [regexp {^\?.+\?[ ]*\[} $buf_line ] ||[regexp {^\?.+\?.*::[ ]*\[} $buf_line ]} {
 									_el_buffer_block_push $i
 								}
 
@@ -692,16 +729,43 @@ namespace eval expectlite {
 								#FIXME: check return code, only returns value of test_result
 								
 								set retcode [_el_script_exec "\|$item" $_el_buf(stack)]
-								#puts "=====$retcode"
-								if {$retcode == 1 } {
-									# continue the EL while loop
-								} elseif {[regexp {^\[} $item] } {
-									# make the jump passed while loop
-									set i [expr $item_meta ]
+								#puts "=====>>$retcode"
+								switch -- $retcode {
+								1	{ # true
+										# continue the EL while loop
+										# if else action
+										if {[regexp {^\?.+\?.+::[ ]*\[} $item ]} {
+											set i [expr $item_meta ]
+										}
+									}
+								0	{ # false
+										if {[regexp {^\[} $item] } {
+											# make the jump passed while loop
+											set i [expr $item_meta ]
+										}
+										# if action
+										if {[regexp {^\?.+\?[^:]*\[} $item ]} {
+											set i [expr $item_meta ]
+										}
+										
+									}
+								-2	{ # infinte loop
+										#stop infinte loop at bottom of EL while loop
+										if { $item == "\]" } {
+											set i $end
+										}
+									}
+								default {
+									puts "\nAck!\n"; exit 2;
+									}
 								}
 								# jump if at bottom of EL while loop
 								if { $item == "\]" && $item_meta != -1  } {
 									set i [expr $item_meta -1 ]
+								}
+								# stop infinte loop at bottom of EL while loop
+								if { $item == "\]" && $retcode == -2  } {
+									set i $end
 								}
 							}
 							incr i
@@ -937,10 +1001,10 @@ namespace eval expectlite {
 		if { [info exists env(EL_DELAY_WAIT_FOR_HOST)] } { catch { set delay_wait_for_host $env(EL_DELAY_WAIT_FOR_HOST)} }
 		if { $delay_wait_for_host == "" } { set delay_wait_for_host "100" }
 
-		# ensure arg list is separated by spaces
-		set argvstr [ join $argv ]
-		set argv [split $argvstr ]
-		set argc [ llength $argv ]
+		# ensure arg list is separated by spaces - removed in 4.2.0
+# 		set argvstr [ join $argv ]
+# 		set argv [split $argvstr ]
+# 		set argc [ llength $argv ]
 
 		if { $argc >= 1 ||  $cmd_file!="" }  {
 			# Walk thru additional args (should be cli constants)
@@ -1899,10 +1963,18 @@ namespace eval expectlite {
 				if { $meta_line > 0 } {
 					lset line_buffer $meta_line "{$t_line_data} {[llength $line_buffer]}"
 				}
+				# is the popped line an if statement?
+				if { [regexp {^\?.+\?[ ]*\[} $t_line_data ] || [regexp {^\?.+\?.+::[ ]*\[} $t_line_data ]} {
+					set meta_line [expr [llength $line_buffer] + 1]
+				}
 			}
 			
 			# process block lines [ push
 			if { [regexp {^[\[]} $buf_line ] } {
+				_el_buffer_block_push [llength $line_buffer]
+			}
+			# process ?if block lines [ push
+			if { [regexp {^\?.+\?[ ]*\[} $buf_line ] ||[regexp {^\?.+\?.*::[ ]*\[} $buf_line ]} {
 				_el_buffer_block_push [llength $line_buffer]
 			}
 
@@ -1928,7 +2000,7 @@ namespace eval expectlite {
 
 		# clear the block stack
 		_el_buffer_block_clear
-
+		
 		# return the stack ID of this buffer
 		return $_el_buf(stack)
 	}
@@ -2971,8 +3043,17 @@ namespace eval expectlite {
 							set _test_result [eval  $_test ]
 							if {$_test_result} {
 								set _test_result "TRUE"
+								# code block, else_action is false
+								if { [ regexp {^[ \t]*\[} $_else_action ] && $_one_line != 1 } {
+									set _el_buf($buf_stack,ptr) $_el(line_meta)
+								}
 							} else {
 								set _test_result "FALSE"
+								
+								# code block, action is false
+								if { [ regexp {^[ \t]*\[} $_action ] && $_one_line != 1  } {
+									set _el_buf($buf_stack,ptr) $_el(line_meta)
+								}
 							}
 							if {$INFO} {
 								if { $_else_action == ""} {
@@ -2991,6 +3072,8 @@ namespace eval expectlite {
 								# Is there a jump to a label in action?
 								if { [ regexp "^$_label" $_action ] } {
 									set _el_buf($buf_stack,ptr) [_el_buffer_search $_el_buf($buf_stack,ptr) $_action $buf_stack]
+								} elseif { [ regexp {^[ \t]*\[} $_action ] } {
+									# code block NOP
 								} else {
 									# Interpret action with recursive call to _el_script_exec
 									_el_script_exec "\|$_action" $buf_stack
@@ -3002,6 +3085,8 @@ namespace eval expectlite {
 								# Is there a jump to a label in else_action?
 								if { [ regexp "^$_label" $_else_action ] } {
 									set _el_buf($buf_stack,ptr)  [_el_buffer_search $_el_buf($buf_stack,ptr) $_else_action $buf_stack]
+								} elseif { [ regexp {^[ \t]*\[} $_else_action ] } {
+									# code block NOP
 								} else {
 									# Interpret else_action with recursive call to _el_script_exec
 									_el_script_exec "\|$_else_action" 
@@ -3347,12 +3432,18 @@ namespace eval expectlite {
 						
 						#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2|"
 						
-						# build test line
-						if { $_cond_arg1 == "" || $_cond_arg2 == "" } {
-							# something is wrong, one of the conditions is blank break the eval
-							set _test " expr { $_cond_arg1 $_cond_oper $_cond_arg2 } "
+						# allow _cond_arg2 to be blank, test against blank
+						if {( $_cond_oper == "==" || $_cond_oper == "!=" ) && ($_cond_arg2 == "" ) } {
+							# build special test line against blank arg2
+							set _test " expr { \"$_cond_arg1\" $_cond_oper \"\" } "
 						} else {
-							set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
+							# build test line
+							if { $_cond_arg1 == "" || $_cond_arg2 == "" } {
+								# something is wrong, one of the conditions is blank break the eval
+								set _test " expr { $_cond_arg1 $_cond_oper $_cond_arg2 } "
+							} else {
+								set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
+							}
 						}
 						# check for syntax errors and evaluate result of test line
 						if {[catch { eval  $_test  } error ] } {
@@ -3404,6 +3495,7 @@ namespace eval expectlite {
 							set _el(success) 0
 							# tell the user why this failed
 							set prev_line "Infinite Loop Detected!"
+							set _test_result -2
 						} else {
 							if { $_one_line == 0 } {
 								# jump back to top of block lines
@@ -3506,12 +3598,11 @@ namespace eval expectlite {
 				# 	or invoked from IDE
 				# Done processing one line, and handling failures
 				# so just return from this recursive call
-				if { $_test_result == "TRUE" } {
-					#test result true
-					return 1
-				} else {
-					# test result false
-					return 0
+				switch -regex -- $_test_result {
+					"TRUE"	{ return 1 }
+					"FALSE"	{ return 0 }
+					[-0-9]+	{ return $_test_result }
+					default	{ return "test_result_error" }
 				}
 			}
 
