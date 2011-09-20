@@ -906,7 +906,7 @@ Released 21 Dec 2010 - 4.0.2
 	Need to optimize while and if then code block code
 
 
-18 Sept 2011 - 4.2.0d6
+19 Sept 2011 - 4.2.0d6
 	Added warning for if then [ else [  (not supported)
 	Optimized code internals, Paste now uses _el_buffer (with a list)
 		Created proc _el_buffer_goto, rather than setting buf pointer directly
@@ -914,7 +914,11 @@ Released 21 Dec 2010 - 4.0.2
 	Added longer timeout for connection method none & Cygwin
 	
 
-
+20 Sept 2011 - 4.2.0.d7
+	Fixed stack pop after IDE paste
+	Fixed _el_buffer read list with empty lines (part of IDE paste)
+	Fixed IDE up-arrow (any arrow esc[A ) segfault
+		IDE paste must be '[ ' space must follow to paste while loop
 
 
 ------------ Future Versions --------------------------
@@ -936,6 +940,9 @@ x	Add code-line-blocks with [ ] (4.2.0 candidate)
 			Call from Paste code
 		o Change _exec_script to run range of lines rather than one-line, this will allow step to run in same buffer space as script
 		x Create proc _el_buffer_goto, rather than setting buf pointer directly
+		o Don't return test_result in one_line mode, only return success/fail
+		o Handle arrow keys better - It may be possible to negate the escape like [^\x1B]\[
+		
 		
 o	fix cygwin and old expect version with paste - test for expect version
 

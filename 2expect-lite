@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.0d6"
+	variable version "4.2.0d7"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -427,7 +427,8 @@ namespace eval expectlite {
 					exit 
 					}
 				-reset \005	{ # test
-					puts "Current Spawn ID---->$::spawn_id|timeout:$::timeout"
+					puts "Current Stack---->$_el_buf(stack)"
+					_el_buffer_show 9 $_el_buf(stack)
 					send "\n"
 					return 
 					}
@@ -621,7 +622,7 @@ namespace eval expectlite {
 						interact_help
 						protected_send "$_el_eols"
 					}
-				-echo -re  {(^>[a-zA-Z0-9/$.]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z]|\[)(.+)\r|(^@[0-9]+\r)|(\]\r)} {
+				-echo -re  {(^>[a-zA-Z0-9/$.]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z]|\[ )(.+)\r|(^@[0-9]+\r)|(\]\r)} {
 						#### Support for EL commands in Interact
 						#### Permits pasting of multiple commands into Interact session
 						#### test for expect version - 5.26 does not paste
@@ -666,7 +667,7 @@ namespace eval expectlite {
 						# call el script exec
 						set rtncode [ _el_script_exec "" $paste_buf_ptr ]
 						
-						# clear list in buffer stack
+						# clear list in buffer stack and pop stack number
 						_el_buffer_stack_clear $expectlite::_el_buf(stack)
 						
 						protected_send "$_el_eols"
@@ -1850,12 +1851,13 @@ namespace eval expectlite {
 				return $rtncode
 			}
 			if {$in_list != ""} {
-				set buf_line [ lindex $in_list $listptr ]
-				incr listptr
-				if { $buf_line == "" } {
-					set rtncode -1
-				} else {
+				if { $listptr <= [llength $in_list] } {
+					# read line off of in_list
+					set buf_line [ lindex $in_list $listptr ]
+					incr listptr
 					set rtncode 1
+				} else {
+					set rtncode -1
 				}
 				return $rtncode
 			}
@@ -1955,6 +1957,9 @@ namespace eval expectlite {
 		# set buffer to empty list
 		if { [info exists _el_buf($stack_number) ] } {
 			set _el_buf($stack_number) {}
+			# pop  buffer stack
+			incr _el_buf(stack) -1
+			
 		}
 	}
 	
