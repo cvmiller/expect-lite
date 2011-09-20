@@ -906,25 +906,36 @@ Released 21 Dec 2010 - 4.0.2
 	Need to optimize while and if then code block code
 
 
+18 Sept 2011 - 4.2.0d6
+	Added warning for if then [ else [  (not supported)
+	Optimized code internals, Paste now uses _el_buffer (with a list)
+		Created proc _el_buffer_goto, rather than setting buf pointer directly
+		Updated _el_buffer to process file or list
+	Added longer timeout for connection method none & Cygwin
+	
+
+
+
+
 ------------ Future Versions --------------------------
 		
 Future
 
-o	Add code-line-blocks with [ ] (4.2.0 candidate)
+x	Add code-line-blocks with [ ] (4.2.0 candidate)
 	[ <test>
 	]
 	Check IDE interaction - need to make special case for [ ] blocks
 		x Use return codes from [ ] processing to signal IDE of [ <test> resultflag success/fail
 		x Paste - create small pasted buffer of lines with meta data & process meta data with jumps
 		x Handle unbalanced [ ]
-		o Handle if then [ else [  (not supported)
+		x Handle if then [ else [  (not supported)
 		o while loop break? how?
 	Optimizations
-		o Paste use public buffer, and transfer entire buffer to _exec_script, rather than 1 line
-		o Pull out List manipulation code out of _el_buffer
+		x Paste use public buffer, and transfer entire buffer to _exec_script, rather than 1 line
+		x Pull out List manipulation code out of _el_buffer
 			Call from Paste code
 		o Change _exec_script to run range of lines rather than one-line, this will allow step to run in same buffer space as script
-		o Create proc _el_buffer_goto, rather than setting buf pointer directly
+		x Create proc _el_buffer_goto, rather than setting buf pointer directly
 		
 o	fix cygwin and old expect version with paste - test for expect version
 

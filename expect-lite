@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.0d5"
+	variable version "4.2.0d6"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -416,10 +416,7 @@ namespace eval expectlite {
 		# restart interact if *FORK is called to set to new spawn_id
 		while {$restart_interact} {
 			# Interact session connects user to remote session, and also:
-			#	interprets *FORK, *SHOW commands
-			#	Experimental: also interprets subset of expect-lite script commands
-			#		Lines starting with >,?,$,~,;,* 
-			#			send, if, var assignment, include file, comment, directives respectively
+			#	Interprets expect-lite commands and directives (as of 4.0)
 			if { [catch { interact {
 				-re {\+\+\+|^\x1b\x63|^`c} { #DEBUGGER '+++' or .c to exit interact session, continue script
 					set restart_interact 0 
@@ -521,6 +518,35 @@ namespace eval expectlite {
 									_el_script_exec "\|$line"
 								}
 							}
+						{^\?.+\?}	{  # if with code block
+								#{^\?.+\?.+\[}
+								if { $param == "k" } {
+									cputs "Skipping:$line"  $_el_info_color
+									protected_send "$_el_eols"
+								} else {
+									cputs "$line"  $_el_info_color
+									# kick the prompt
+									protected_send "$_el_eols"
+									set retcode [ _el_script_exec "\|$line" ]
+									#puts "=====>$retcode|$line|$line_meta"
+									# retcode 1 = result true, 0 = result false
+									# jump past code block
+									if {$retcode == 1 } {
+										# else action
+										if {[regexp {^\?.+\?.+::[ ]*\[} $line ]} {
+											_el_buffer_goto [expr $line_meta ] $_el_buf(stack)
+										}
+									} else {
+										# action
+										if {[regexp {^\?.+\?[^:]*\[} $line ]} {
+											_el_buffer_goto [expr $line_meta ] $_el_buf(stack)
+										}
+									}
+									# kick the prompt
+									protected_send "$_el_eols"
+								}
+							
+							}
 						^\\\[	{	# begining while block
 								if { $param == "k" } {
 									cputs "Skipping:$line"  $_el_info_color
@@ -536,7 +562,7 @@ namespace eval expectlite {
 										#set _el_buf($_el_buf(stack),ptr) [expr $line_meta - 1]
 									} else {
 										# make the jump passed while loop
-										set _el_buf($_el_buf(stack),ptr) [expr $line_meta ]
+										_el_buffer_goto [expr $line_meta ] $_el_buf(stack)
 									
 									}
 									# kick the prompt
@@ -550,7 +576,7 @@ namespace eval expectlite {
 								} else {
 									cputs "$line"  $_el_info_color
 									# make the jump
-									set _el_buf($_el_buf(stack),ptr) [expr $line_meta - 1]
+									_el_buffer_goto [expr $line_meta - 1 ] $_el_buf(stack)
 									# kick the prompt
 									protected_send "$_el_eols"
 								}
@@ -633,84 +659,16 @@ namespace eval expectlite {
 						# clear the block stack
 						_el_buffer_block_clear
 
-						# meta_line used to hold additional info about line, for line blocks 
-						set meta_line -1
-						foreach  item $cli_list {
-							#send_user "===I$i==>$item\n"
-							if { $item != "" } {
-								set buf_line $item
-								# remove leading white space on line (permitting indentation
-								regsub {^[ \t]+} $buf_line {} buf_line
-
-								#trim white space at end of labels
-								if { [ regexp {^%} $buf_line ] } {
-									# remove leading white space on line (permitting indentation
-									regsub {[ \t]+$} $buf_line {} buf_line
-								}
-
-								# process block lines ] pop
-								if { [regexp {^[\]]} $buf_line ] } {
-									set meta_line [_el_buffer_block_pop ]
-									# update meta-line of '[' line
-									# preserve line-data
-									set t_line_data [lindex $cli_list $meta_line 0]
-									#puts "======>$meta_line|$t_line_data"
-									# update [ line meta-data with valid line number (read: not -1)
-									if { $meta_line > 0 } {
-										lset cli_list $meta_line "{$t_line_data} {$i}"
-									}
-								}
-
-								# process block lines [ push
-								if { [regexp {^[\[]} $buf_line ] } {
-									_el_buffer_block_push $i
-								}
-
-								# add line to buffer
-								# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
-								if { [regexp {^[$-/:-@!~\[\]]} $buf_line ] } {
-									# escape curly braces
-									regsub -all {([{}])} $buf_line {\\\1} buf_line
-									#puts "==add line==>$i | {$buf_line} {$meta_line}"
-									lset cli_list $i "{$buf_line} {$meta_line}"
-								}
-							}; #endif Item
-							
-							incr i
-						}; #end foreach
-
-
 						#send_user "\n=====>$cli_list\n"
-						set i 0
-						set end [llength $cli_list]
-						while { $i <= $end } {
-							set item [lindex $cli_list $i 0]
-							set item_meta [lindex $cli_list $i 1]
-							#send_user "===I$i==>$item|$item_meta\n"
-							if { $item != "" } {
-								# call _el_script_exe in 'one-line' mode 
-								# add buf_stack context to allow jumping to labels
-								#FIXME: check return code, only returns value of test_result
-								
-								set retcode [_el_script_exec "\|$item" $_el_buf(stack)]
-								#puts "=====>>$retcode"
-								if {$retcode == 1 } {
-									# continue the EL while loop
-								} elseif {[regexp {^\[} $item] } {
-									# make the jump passed while loop
-									set i [expr $item_meta ]
-								}
-								# jump if at bottom of EL while loop
-								if { $item == "\]" && $item_meta != -1  } {
-									set i [expr $item_meta -1 ]
-								}
-								# stop infinte loop at bottom of EL while loop
-								if { $item == "\]" && $retcode == -2  } {
-									set i $end
-								}
-							}
-							incr i
-						}; #end while
+						set paste_buf_ptr [ _el_buffer "" $cli_list ]
+						
+						protected_send "$_el_eols"
+						# call el script exec
+						set rtncode [ _el_script_exec "" $paste_buf_ptr ]
+						
+						# clear list in buffer stack
+						_el_buffer_stack_clear $expectlite::_el_buf(stack)
+						
 						protected_send "$_el_eols"
 						return
 					}
@@ -1284,10 +1242,15 @@ namespace eval expectlite {
 		# this proc just spawns a connection to a shell
 		# all other functions are handled by remote_host_init
 
-		global  spawn_id 
+		global  spawn_id timeout
 		upvar expectlite::remote_shell			remote_shell
 		upvar expectlite::_el_eols				_el_eols
 		
+		# OS identification - .dll or "" = Cygwin, .so=Linux, .dylib=MacOS X
+		set os_id [info sharedlibextension]
+		if { $os_id == ".dll" || $os_id == "" } {
+			set timeout 30
+		}
 		
 		# protect against empty remote_shell
 		if { $remote_shell == "" } { set remote_shell "bash" }
@@ -1298,7 +1261,7 @@ namespace eval expectlite {
 			exit 1
 		}
 		send " $_el_eols"
-
+		set timeout 10
 	}
 
 	#
@@ -1870,16 +1833,50 @@ namespace eval expectlite {
 	#	Opens command script and reads into buffer (tcl list)
 	#	Returns buffer
 	#
-	proc _el_buffer {cmd_file} {
+	proc _el_buffer {{cmd_file ""} {in_list ""}} {
 		upvar expectlite::_el_buf					_el_buf
+
+		
+		# generic get next proc to get from file or list
+		proc get_next_line {} {
+			upvar cmd_file cmd_file
+			upvar infile 	infile
+			upvar in_list	in_list
+			upvar listptr	listptr
+			upvar buf_line	buf_line
+			
+			if {$cmd_file != ""} {
+				set rtncode [gets $infile buf_line]
+				return $rtncode
+			}
+			if {$in_list != ""} {
+				set buf_line [ lindex $in_list $listptr ]
+				incr listptr
+				if { $buf_line == "" } {
+					set rtncode -1
+				} else {
+					set rtncode 1
+				}
+				return $rtncode
+			}
+			# should not make it here, but if so, stop
+			return -1
+		
+		}; #end proc
 		
 		set line_buffer {}
-		# Protect against no file to read
-		if { [ catch { set infile [open $cmd_file r ] } error] } {
-			puts stderr "Unable to open cmd/include_file \n   $error"
-				exit 1
+		set listptr 0
+		
+		if {$cmd_file != ""} {
+			# Protect against no file to read
+			if { [ catch { set infile [open $cmd_file r ] } error] } {
+				puts stderr "Unable to open cmd/include_file \n   $error"
+					exit 1
+			}
 		}
-		while { -1 != [gets $infile buf_line ]} {
+		
+		
+		while { -1 != [ get_next_line ]} {
 
 			# meta_line used to hold additional info about line, for line blocks 
 			set meta_line -1
@@ -1904,10 +1901,18 @@ namespace eval expectlite {
 				if { $meta_line > 0 } {
 					lset line_buffer $meta_line "{$t_line_data} {[llength $line_buffer]}"
 				}
+				# is the popped line an if statement?
+				if { [regexp {^\?.+\?[ ]*\[} $t_line_data ] || [regexp {^\?.+\?.+::[ ]*\[} $t_line_data ]} {
+					set meta_line [expr [llength $line_buffer] + 1]
+				}
 			}
 			
 			# process block lines [ push
 			if { [regexp {^[\[]} $buf_line ] } {
+				_el_buffer_block_push [llength $line_buffer]
+			}
+			# process ?if block lines [ push
+			if { [regexp {^\?.+\?[ ]*\[} $buf_line ] ||[regexp {^\?.+\?.*::[ ]*\[} $buf_line ]} {
 				_el_buffer_block_push [llength $line_buffer]
 			}
 
@@ -1921,7 +1926,9 @@ namespace eval expectlite {
 			}
 
 		}
-		close $infile
+		if {$cmd_file != "" } {
+			close $infile
+		}
 		#puts "-> $line_buffer|[llength $line_buffer] "
 
 		# push new buffer stack
@@ -1933,11 +1940,24 @@ namespace eval expectlite {
 
 		# clear the block stack
 		_el_buffer_block_clear
-
+		
 		# return the stack ID of this buffer
 		return $_el_buf(stack)
 	}
+	
+	#
+	#	Clears buffer but retains stack pointer
+	#	
+	#
+	proc _el_buffer_stack_clear { stack_number } {
+		upvar expectlite::_el_buf					_el_buf
 
+		# set buffer to empty list
+		if { [info exists _el_buf($stack_number) ] } {
+			set _el_buf($stack_number) {}
+		}
+	}
+	
 	#
 	#	Reads buffer as if it were a file, returning a line from the buffer
 	#	
@@ -2004,7 +2024,19 @@ namespace eval expectlite {
 
 		}
 	}
-
+	
+	#
+	#	Goto buffer line number
+	#	
+	#
+	proc _el_buffer_goto { line_no buf_stack } {
+		upvar expectlite::_el_buf					_el_buf
+		
+		# Do not set past end of buffer
+		if { $line_no >= 0 && $line_no < [llength $_el_buf($buf_stack)] } {
+			set _el_buf($_el_buf(stack),ptr) $line_no
+		}
+	}
 	#
 	#	clears block stack 
 	#	
@@ -2358,9 +2390,7 @@ namespace eval expectlite {
 	proc _el_script_exec {{cmd_file ""} {buf_stack ""}} {
 		# default parameters: cmd_file is "" in library mode
 		#	buf_stack is used when el_script is called recursively (e.g. include)
-		#global remote_host _out _out_nowait _in _in_noregex _not_in _timeout _var _cond _cond_regex _cond_else _label  _el expect_out timeout _exec _stdout_comment _stdout_comment_nobuf _include _include_fail comment_line timeout_line timeout_multiplier _el_lines WARN delay_wait_for_host
-		#global cli_namespace user_namespace timeout remote_host user_dir _el_infinite_loop _incr_var _decr_var _math_var connect_method send_slow _el_fork spawn_id DEBUG INFO arg0 _el_comment_color _el_info_color _el_warn_color _el_err_color _el_eols _el_fork_context _el_buf EXP_INFO
-		#global _el_current_session NOFAIL TIMESTAMP
+
 		global expect_out timeout spawn_id
 
 		upvar expectlite::remote_host				remote_host
@@ -2916,7 +2946,7 @@ namespace eval expectlite {
 						set _cond_oper_list { == != <= >= < > }
 
 						# find conditional operator
-						set _cond_oper " "
+						set _cond_oper "@"
 						foreach k $_cond_oper_list {
 							if { [regexp $k $_conditional] } {
 								set _cond_oper $k
@@ -2976,8 +3006,19 @@ namespace eval expectlite {
 							set _test_result [eval  $_test ]
 							if {$_test_result} {
 								set _test_result "TRUE"
+								# code block, else_action is false
+								if { [ regexp {^[ \t]*\[} $_else_action ] && $_one_line != 1 } {
+									#set _el_buf($buf_stack,ptr) $_el(line_meta)
+									_el_buffer_goto [expr $_el(line_meta) ] $_el_buf(stack)
+								}
 							} else {
 								set _test_result "FALSE"
+								
+								# code block, action is false
+								if { [ regexp {^[ \t]*\[} $_action ] && $_one_line != 1  } {
+									#set _el_buf($buf_stack,ptr) $_el(line_meta)
+									_el_buffer_goto [expr $_el(line_meta) ] $_el_buf(stack)
+								}
 							}
 							if {$INFO} {
 								if { $_else_action == ""} {
@@ -2986,6 +3027,12 @@ namespace eval expectlite {
 									cputs "\nIf:$_test|then$_action|else$_else_action|result=$_test_result\n" $_el_info_color
 								}
 							};#if INFO
+							# issue warning if both then & else actions are code blocks
+							if { [regexp {^[ \t]*\[} $_action ] && [regexp {^[ \t]*\[} $_else_action ] } {
+								if { $WARN } {
+									cputs "\nWarning: Expect-lite: Code Blocks not supported in both then & else actions\n" $_el_warn_color
+								}
+							}
 								
 							# no syntax error, go ahead and eval the conditional action or else action
 							# skip to label if present in action or else_action
@@ -2995,7 +3042,9 @@ namespace eval expectlite {
 								regsub {[ \t]+$} $_action {} _action
 								# Is there a jump to a label in action?
 								if { [ regexp "^$_label" $_action ] } {
-									set _el_buf($buf_stack,ptr) [_el_buffer_search $_el_buf($buf_stack,ptr) $_action $buf_stack]
+									_el_buffer_goto [_el_buffer_search $_el_buf($buf_stack,ptr) $_action $buf_stack] $_el_buf(stack)
+								} elseif { [ regexp {^[ \t]*\[} $_action ] } {
+									# code block NOP
 								} else {
 									# Interpret action with recursive call to _el_script_exec
 									_el_script_exec "\|$_action" $buf_stack
@@ -3006,7 +3055,9 @@ namespace eval expectlite {
 								regsub {[ \t]+$} $_else_action {} _else_action
 								# Is there a jump to a label in else_action?
 								if { [ regexp "^$_label" $_else_action ] } {
-									set _el_buf($buf_stack,ptr)  [_el_buffer_search $_el_buf($buf_stack,ptr) $_else_action $buf_stack]
+									_el_buffer_goto [_el_buffer_search $_el_buf($buf_stack,ptr) $_else_action $buf_stack] $_el_buf(stack)
+								} elseif { [ regexp {^[ \t]*\[} $_else_action ] } {
+									# code block NOP
 								} else {
 									# Interpret else_action with recursive call to _el_script_exec
 									_el_script_exec "\|$_else_action" 
@@ -3017,13 +3068,15 @@ namespace eval expectlite {
 							# label not found
 							if { $_el_buf($buf_stack,ptr) == -1 } {
 								# label search failed (-1), restore buf_ptr, allow script to continue
-								set _el_buf($buf_stack,ptr) $_tmp_buf_ptr
+								#set _el_buf($buf_stack,ptr) $_tmp_buf_ptr
+								_el_buffer_goto $_tmp_buf_ptr $_el_buf(stack)
 							}
 
 							# infinite loop detected!
 							if { $_el_buf($buf_stack,ptr) == -2 } {
 								# label search failed (-2), restore buf_ptr, allow script to continue
-								set _el_buf($buf_stack,ptr) $_tmp_buf_ptr
+								#set _el_buf($buf_stack,ptr) $_tmp_buf_ptr
+								_el_buffer_goto $_tmp_buf_ptr $_el_buf(stack)
 								# signal to fail script - something is wrong
 								set _el(success) 0
 								# tell the user why this failed
@@ -3373,7 +3426,8 @@ namespace eval expectlite {
 							}
 							#skip block lines, don't jump if bad line-meta value
 							if { $_el(line_meta) != -1 } {
-								set _el_buf($buf_stack,ptr) [expr $_el(line_meta) + 1]
+								#set _el_buf($buf_stack,ptr) [expr $_el(line_meta) + 1]
+								_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
 							}
 							
 						} else {
@@ -3394,7 +3448,7 @@ namespace eval expectlite {
 								# continue loop
 							} elseif { $_el(line_meta) != -1 } {
 								# stop loop, jump to bottom of loop + 1
-								set _el_buf($buf_stack,ptr) [expr $_el(line_meta) ]
+								_el_buffer_goto [expr $_el(line_meta)] $_el_buf(stack)
 							}
 						};#if Catch
 
@@ -3419,7 +3473,7 @@ namespace eval expectlite {
 						} else {
 							if { $_one_line == 0 } {
 								# jump back to top of block lines
-								set _el_buf($buf_stack,ptr) [expr $_el(line_meta) - 1]
+								_el_buffer_goto [expr $_el(line_meta) - 1 ] $_el_buf(stack)
 							}
 						}
 					}

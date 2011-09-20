@@ -288,7 +288,7 @@ $junk=test
 <\nGood
 >
 
-*INTERACT
+#*INTERACT
 
 ; ==== All Pau!
 >
