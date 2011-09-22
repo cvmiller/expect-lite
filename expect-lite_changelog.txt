@@ -921,6 +921,14 @@ Released 21 Dec 2010 - 4.0.2
 		IDE paste must be '[ ' space must follow to paste while loop
 
 
+21 Sept 2011 - 4.2.0d8
+	Improved nested Ifs with code blocks
+		Still need more work e.g. IDE single step
+	Created show line and meta-data with ^G in IDE
+	Fixed single if-then-jump in IDE paste (special case)
+		e.g. ?if 1==1?%LABEL
+		
+
 ------------ Future Versions --------------------------
 		
 Future
@@ -934,6 +942,7 @@ x	Add code-line-blocks with [ ] (4.2.0 candidate)
 		x Handle unbalanced [ ]
 		x Handle if then [ else [  (not supported)
 		o while loop break? how?
+		o Nested Ifs in single step - change _exec_script to run 1 line by passing line
 	Optimizations
 		x Paste use public buffer, and transfer entire buffer to _exec_script, rather than 1 line
 		x Pull out List manipulation code out of _el_buffer
