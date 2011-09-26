@@ -929,6 +929,15 @@ Released 21 Dec 2010 - 4.0.2
 		e.g. ?if 1==1?%LABEL
 		
 
+22 Sept 2011 - 4.2.0d9
+	Fixed var increment with spaces at end of var e.g. +$var 
+
+23 Sept 2011 - 4.2.0d10
+	Added expect version checking in IDE, prints warning if not 5.42 or greater
+		This is to inform user of old expect version in Cygwin
+
+
+
 ------------ Future Versions --------------------------
 		
 Future

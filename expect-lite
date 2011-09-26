@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.0d7"
+	variable version "4.2.0d10"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -414,6 +414,14 @@ namespace eval expectlite {
 		push_session_id $_el(fork_current)
 		set restart_interact 1
 		# restart interact if *FORK is called to set to new spawn_id
+
+		# Check that expect version is supported, if not issue warning
+		if { [exp_version] < "5.42.0" } {
+			cputs "\nWarning: Paste feature requires Expect version 5.42 or later (but using [exp_version])" $_el_err_color
+			cputs "  See Cygwin documentation on http://expect-lite.sf.net/ on upgrading expect\n" $_el_err_color
+			protected_send "$_el_eols"
+		}
+
 		while {$restart_interact} {
 			# Interact session connects user to remote session, and also:
 			#	Interprets expect-lite commands and directives (as of 4.0)
@@ -426,9 +434,9 @@ namespace eval expectlite {
 					puts "\nExiting interact & expect-lite.\n"
 					exit 
 					}
-				-reset \005	{ # test
+				-reset \007	{ # ^G show lines with meta-data
 					puts "Current Stack---->$_el_buf(stack)"
-					_el_buffer_show 9 $_el_buf(stack)
+					_el_buffer_show 20 $_el_buf(stack) 1
 					send "\n"
 					return 
 					}
@@ -628,7 +636,7 @@ namespace eval expectlite {
 						#### test for expect version - 5.26 does not paste
 						# create list of multiple pasted commands
 						set cli_list [split $interact_out(0,string) "\r"]
-
+						
 						# OS identification - .dll or "" = Cygwin, .so=Linux, .dylib=MacOS X
 						set os_id [info sharedlibextension]
 						if { $os_id == ".dll" || $os_id == "" } {
@@ -655,21 +663,33 @@ namespace eval expectlite {
 								send_user "\t$d_item\n"
 							}
 						}
-						# assign meta-data to list
-						set i 0
-						# clear the block stack
-						_el_buffer_block_clear
-
 						#send_user "\n=====>$cli_list\n"
-						set paste_buf_ptr [ _el_buffer "" $cli_list ]
 						
-						protected_send "$_el_eols"
-						# call el script exec
-						set rtncode [ _el_script_exec "" $paste_buf_ptr ]
-						
-						# clear list in buffer stack and pop stack number
-						_el_buffer_stack_clear $expectlite::_el_buf(stack)
-						
+						# special case of one line: if jump to label
+						set _buf_ptr [lsearch -regexp $cli_list {\?.+\?.*%} ]
+						if { $_buf_ptr == 0} {
+							# get line from paste input, and execute if-jump-to-label in main script
+							set _line [lindex $cli_list $_buf_ptr]
+							_el_script_exec "\|$_line"  $_el_buf(stack)
+						} else {
+							# multiple lines pasted, treat as small script
+							# pasted lines operate in own paste buffer, 
+							# and can not access lines (via jumping) in main script
+							
+							# assign meta-data to list
+							set i 0
+							# clear the block stack
+							_el_buffer_block_clear
+
+							set paste_buf_ptr [ _el_buffer "" $cli_list ]
+
+							protected_send "$_el_eols"
+							# call el script exec
+							set rtncode [ _el_script_exec "" $paste_buf_ptr ]
+
+							# clear list in buffer stack and pop stack number
+							_el_buffer_stack_clear $expectlite::_el_buf(stack)
+						}; #endif
 						protected_send "$_el_eols"
 						return
 					}
@@ -1967,7 +1987,7 @@ namespace eval expectlite {
 	#	Reads buffer as if it were a file, returning a line from the buffer
 	#	
 	#
-	proc _el_buffer_read { line_no buf_stack {line_info_field 0}} {
+	proc _el_buffer_read { line_no buf_stack {line_info_field 0} {debug 0}} {
 		upvar expectlite::_el_buf					_el_buf
 		# line_info
 		#set line_info_field 0
@@ -1982,6 +2002,10 @@ namespace eval expectlite {
 			set buf_line [lindex $_el_buf($buf_stack) $line_no $line_info_field]
 			# remove escaped braces
 			regsub -all {\\([{}])} $buf_line {\1} buf_line
+			if {$debug} {
+				# show debug info, line number, line & meta-data
+				set buf_line "$line_no | $buf_stack | [lindex $_el_buf($buf_stack) $line_no ] "
+			}
 			return $buf_line
 		} else {
 			return -1
@@ -1993,7 +2017,7 @@ namespace eval expectlite {
 	#	Reads buffer, prints n lines
 	#	
 	#
-	proc _el_buffer_show { num_of_lines buf_stack} {
+	proc _el_buffer_show { num_of_lines buf_stack {debug 0}} {
 		upvar expectlite::_el_buf			_el_buf
 		upvar expectlite::_el_info_color		_el_info_color
 
@@ -2015,12 +2039,12 @@ namespace eval expectlite {
 			cputs "Printing next $num_of_lines line(s) of script:" $_el_info_color
 			set num_of_lines [expr $num_of_lines + 1 ]
 			for {set n [expr $_el_buf($buf_stack,ptr) +1]} {$n<[expr $num_of_lines + $_el_buf($buf_stack,ptr)]} {incr n} {
-				print_line [ _el_buffer_read $n $buf_stack ]
+				print_line [ _el_buffer_read $n $buf_stack 0 $debug ]
 			}
 		} elseif {$num_of_lines < 0} {
 			cputs "Printing last [expr {abs($num_of_lines)}] line(s) of script:" $_el_info_color
 			for {set n [expr  $_el_buf($buf_stack,ptr) + $num_of_lines]  } {$n <  $_el_buf($buf_stack,ptr)} {incr n } {
-				print_line [ _el_buffer_read $n $buf_stack ]
+				print_line [ _el_buffer_read $n $buf_stack 0 $debug ]
 			}
 		} else {
 			# print current line
@@ -3012,22 +3036,23 @@ namespace eval expectlite {
 							if {$_test_result} {
 								set _test_result "TRUE"
 								# code block, else_action is false
-								if { [ regexp {^[ \t]*\[} $_else_action ] && $_one_line != 1 } {
-									#set _el_buf($buf_stack,ptr) $_el(line_meta)
+								if { [ regexp {^[ \t]*\[} $_else_action ] } {
+									#puts "=====going to>$_el(line_meta)|$_el_buf(stack)"
 									_el_buffer_goto [expr $_el(line_meta) ] $_el_buf(stack)
 								}
 							} else {
 								set _test_result "FALSE"
 								
 								# code block, action is false
-								if { [ regexp {^[ \t]*\[} $_action ] && $_one_line != 1  } {
-									#set _el_buf($buf_stack,ptr) $_el(line_meta)
+								if { [ regexp {^[ \t]*\[} $_action ] || [ regexp {\?.+\?.*\[} $_action ] } {
+									#puts "=====going to>$_action|$_el(line_meta)|$_el_buf(stack)"
 									_el_buffer_goto [expr $_el(line_meta) ] $_el_buf(stack)
 								}
 							}
 							if {$INFO} {
 								if { $_else_action == ""} {
 									cputs "\nIf:$_test|then$_action|result=$_test_result\n" $_el_info_color
+									#puts "======buf stack>$_el_buf(stack)"
 								} else {
 									cputs "\nIf:$_test|then$_action|else$_else_action|result=$_test_result\n" $_el_info_color
 								}
@@ -3048,7 +3073,7 @@ namespace eval expectlite {
 								# Is there a jump to a label in action?
 								if { [ regexp "^$_label" $_action ] } {
 									_el_buffer_goto [_el_buffer_search $_el_buf($buf_stack,ptr) $_action $buf_stack] $_el_buf(stack)
-								} elseif { [ regexp {^[ \t]*\[} $_action ] } {
+								} elseif { [ regexp {^\[} $_action ] } {
 									# code block NOP
 								} else {
 									# Interpret action with recursive call to _el_script_exec
@@ -3061,11 +3086,11 @@ namespace eval expectlite {
 								# Is there a jump to a label in else_action?
 								if { [ regexp "^$_label" $_else_action ] } {
 									_el_buffer_goto [_el_buffer_search $_el_buf($buf_stack,ptr) $_else_action $buf_stack] $_el_buf(stack)
-								} elseif { [ regexp {^[ \t]*\[} $_else_action ] } {
+								} elseif { [ regexp {^\[} $_else_action ] } {
 									# code block NOP
 								} else {
 									# Interpret else_action with recursive call to _el_script_exec
-									_el_script_exec "\|$_else_action" 
+									_el_script_exec "\|$_else_action" $buf_stack
 								}
 							}
 						}
@@ -3258,6 +3283,8 @@ namespace eval expectlite {
 						print_comment_line
 
 						set _tmp_var [_el_strip_char $_el(line) $_incr_var]
+						#remove traling space
+						regsub {[ \t]+$} $_tmp_var {} _tmp_var
 						#increment decimal number if possible
 						catch { incr user_namespace($_tmp_var)}
 
@@ -3269,6 +3296,9 @@ namespace eval expectlite {
 						print_comment_line
 
 						set _tmp_var [_el_strip_char $_el(line) $_decr_var]
+						#remove traling space
+						regsub {[ \t]+$} $_tmp_var {} _tmp_var
+
 						# decrement variable
 						catch { incr user_namespace($_tmp_var) -1 }
 						#puts "->$_el(line) $_decr_var $_tmp_var"
@@ -3583,7 +3613,7 @@ namespace eval expectlite {
 					[-0-9]+	{ return $_test_result }
 					default	{ return "test_result_error" }
 				}
-			}
+			}; #endif not one_line
 
 		}
 		# set result code

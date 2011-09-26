@@ -1,34 +1,43 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
+  
+  <meta content="text/html; charset=ISO-8859-1">
 
+  
+  <meta name="AUTHOR" content="Craig Miller">
 
-<meta content="text/html; charset=ISO-8859-1">
-<meta name="AUTHOR" content="Craig Miller">
-<link rel="stylesheet" type="text/css" href="el.css"><title>expect-lite Tips</title></head><body>
+  
+  <link rel="stylesheet" type="text/css" href="el.css">
+  <title>expect-lite Tips</title>
+
+  
+</head><body>
 <table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
-<tbody class="page">
-<tr>
-<td style="vertical-align: top; width: 35%;"><br>
-<div style="text-align: center;"><a href="index.html"><img style="border: 0px none ; font-weight: bold; width: 200px; height: 213px;" alt="greater than" src="keycap_200.jpg"></a><br>
-<h1>expect-lite</h1>
-<br>
-<h2>Automation for the rest of us</h2>
-<h2>Tips and
+
+  <tbody class="page">
+    <tr>
+      <td style="vertical-align: top; width: 35%;"><br>
+      <div style="text-align: center;"><a href="index.html"><img style="border: 0px none ; font-weight: bold; width: 200px; height: 213px;" alt="greater than" src="keycap_200.jpg"></a><br>
+      <h1>expect-lite</h1>
+      <br>
+      <h2>Automation for the rest of us</h2>
+      <h2>Tips and
 Techniques: Simplifying the Debugging
 of expect-lite scripts
-</h2>
-</div>
-<script type="text/javascript" src="js-side-menu.js"></script>
-<noscript><br>Please Enable Javascript
+      </h2>
+      </div>
+      <script type="text/javascript" src="js-side-menu.js"></script>
+      <noscript><br>
+Please Enable Javascript
 to see Features, Downloads, and Docs </noscript>
-</td>
-<td style="vertical-align: middle; width: 1px;" vertical-align="" top="" 5=""><img src="vbar.gif" style="width: 1px; height: 4400px;">
-</td>
-<td style="vertical-align: top; width: 5%;"><br>
-</td>
-<td style="vertical-align: top;">
+      </td>
+      <td style="vertical-align: middle; width: 1px;" vertical-align="" top="" 5=""><img src="vbar.gif" style="width: 1px; height: 4400px;">
+      </td>
+      <td style="vertical-align: top; width: 5%;"><br>
+      </td>
+      <td style="vertical-align: top;">
 <!---start of right column --><br>
-<h2>Introduction</h2>
+      <h2>Introduction</h2>
 Over the years of using and improving expect-lite, a few debugging
 techniques have proven quite useful. The purpose of the document is to
 provide some additional information to assist the user of expect-lite
@@ -36,41 +45,49 @@ in debugging scripts, and tips to make expect-lite script writing even
 easier. Familiarity with expect-lite is assumed, if not, please refer
 to the <a href="./expect-lite_doc.html">expect-lite
 documentation</a>.<br>
-<br>
-<h2>Contents</h2>
+      <br>
+      <h2>Contents</h2>
 Some Tips and Techniques for expect-lite:<br>
-<ul>
-<li><a href="#interact"><span style="font-weight: bold;">Interact</span></a>
-Setting a breakpoint, the easiest debugging aid to use</li><li><a style="font-weight: bold;" href="#ide">IDE</a> Integrated Debugger Environment <span style="background-color: rgb(255, 255, 102);">new in 4.0.1</span>&nbsp;</li>
-
-<li><a style="font-weight: bold;" href="#finding_in">Finding
+      <ul>
+        <li><a href="#interact"><span style="font-weight: bold;">Interact</span></a>
+Setting a breakpoint, the easiest debugging aid to use</li>
+        <li><a style="font-weight: bold;" href="#ide">IDE</a>
+Integrated Debugger Environment <span style="background-color: rgb(255, 255, 102);">new in 4.0.1</span>&nbsp;</li>
+        <li><a style="font-weight: bold;" href="#finding_in">Finding
 In...</a>
 --verbose, a debugging aid that displays what expect-lite '&lt;'
 statements are finding <br>
-</li>
-<li><a style="font-weight: bold;" href="#variables_values">Showing
+        </li>
+        <li><a style="font-weight: bold;" href="#variables_values">Showing
 Variable Values</a> Displaying expect-lite variables &amp;
-values</li><li><a href="#nofail"><span style="font-weight: bold;">Running the script to completion</span></a> Good for debugging <span style="background-color: rgb(255, 255, 102);">new in 4.0.1</span> </li>
-<li style="font-weight: bold;"><a href="#define_narrowly">Define
+values</li>
+        <li><a href="#nofail"><span style="font-weight: bold;">Running
+the script to completion</span></a> Good for debugging <span style="background-color: rgb(255, 255, 102);">new in 4.0.1</span> </li>
+        <li style="font-weight: bold;"><a href="#define_narrowly">Define
 '&lt;' narrowly</a> <span style="font-weight: normal;">Avoid
-mis-matches by being specific on what is expected</span></li><li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#decreasing_log_chatter"><span style="font-weight: bold;">Decreasing</span></a> log chatter<br></span></li><li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#removing_color"><span style="font-weight: bold;">Removing colour</span></a> from output<br></span></li>
-<li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#tips"><span style="font-weight: bold;">General Tips</span></a>
+mis-matches by being specific on what is expected</span></li>
+        <li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#decreasing_log_chatter"><span style="font-weight: bold;">Decreasing</span></a> log chatter<br>
+          </span></li>
+        <li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#removing_color"><span style="font-weight: bold;">Removing colour</span></a> from output<br>
+          </span></li>
+        <li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#tips"><span style="font-weight: bold;">General Tips</span></a>
 Some rules of thumb when writing expect-lite scripts<br>
-</span></li>
-</ul>
-<br>
-<h2><a name="interact"></a>Interact - setting breakpoints<br>
-</h2>
+          </span></li>
+      </ul>
+      <br>
+      <h2><a name="interact"></a>Interact - setting breakpoints<br>
+      </h2>
 Interact may be the
-quickest, easiest, and overall best debugging aid. It is equivalent to setting a breakpoint in the script. Interact is a mode
+quickest, easiest, and overall best debugging aid. It is equivalent to
+setting a breakpoint in the script. Interact is a mode
 which turns control of the keyboard over to the user, so
 that one may type directly to the process on the remote host With
 version 3.5.0 there are two methods to invoke Interact: programmatic,
 and instant-interact. <br>
-<br>
+      <br>
 Programmatic Interact is called in the script with the following
 command:<br>
-<pre>*INTERACT<br></pre>
+      <pre>*INTERACT<br></pre>
 Expect-lite will pause at this point in the script, and connect the
 keyboard to the remote session (which may be at a prompt). Any command
 may be entered and responses observed.
@@ -78,81 +95,146 @@ Typing '+++' (3 pluses) will return control to the script, and it will
 continue. This is very helpful for automation assist, allowing the
 script to perform complicated setup commands, before turning control
 over to the user for an interactive session.<br>
-<br>
-<a name="instant_interact"></a>The other
+      <br>
+      <a name="instant_interact"></a>The other
 method is <span style="font-weight: bold;">instant-interact</span>.
-This feature no longer requires the tcl package Tclx to be installed. The user can press '^\' (control+backslash) at anytime
+This feature no longer requires the tcl package Tclx to be installed.
+The user can press '^\' (control+backslash) at anytime
 creating a breakpoint on the fly. This is the easiest, and fastest way
 to debug a script, dropping the user into the IDE.<br>
-<br>
-<h2><a name="ide"></a>Debugging
+      <br>
+      <h2><a name="ide"></a>Debugging
 with the IDE</h2>
 To make debugging of scripts even easier, both methods of <span style="font-weight: bold;">interact</span>
 support the new and powerful expect-lite Integrated Debugger
-Environment (IDE). Inside the IDE, it is possible to do many things:<br><ol><li>Type command directly to the remote host (router, embedded system, Linux box)</li><li>Step or sKip line by line through the expect-lite script</li><li>Show all expect-lite variables and constants</li><li>Show the most recently executed lines, or the next few lines of the script</li><li>Paste
+Environment (IDE). Inside the IDE, it is possible to do many things:<br>
+      <ol>
+        <li>Type command directly to the remote host (router, embedded
+system, Linux box)</li>
+        <li>Step or sKip line by line through the expect-lite script</li>
+        <li>Show all expect-lite variables and constants</li>
+        <li>Show the most recently executed lines, or the next few
+lines of the script</li>
+        <li>Paste
 expect-lite script line(s) into the IDE and have them execute. This is
 really cool, since it will dereference any variables in the pasted
-text, or allow you to run just a few lines of script over and over</li><li>The IDE can't die, since *NOFAIL automatically enabled while in the IDE.</li>
-        <li>Type expect-lite command directly while in the IDE, including &gt;, &lt;, $var, +$var,@n (set timeout).<br>
+text, or allow you to run just a few lines of script over and over</li>
+        <li>The IDE can't die, since *NOFAIL automatically enabled
+while in the IDE.</li>
+        <li>Type expect-lite command directly while in the IDE,
+including &gt;, &lt;, $var, +$var,@n (set timeout).<br>
         </li>
-</ol><span style="font-weight: bold;"><a name="stepping_skipping_showing"></a>Stepping, sKipping and Showing</span><br>In
+      </ol>
+      <span style="font-weight: bold;"><a name="stepping_skipping_showing"></a>Stepping, sKipping and Showing</span><br>
+In
 the above list, #1 is the same as previous versions of expect-lite.
 Stepping, sKipping, and Showing are new in the IDE (#2, #3, #4). These
 commands are all two-keystroke commands. The first key is the escape
 key (or esc) followed by s, k, c, v, h and 0 through 9. These keys are
 not echoed to the screen, nor are they received by the remote host. To
 represent the key presses&nbsp;[type &lt;esc&gt;h] has been added to
-the text for completeness.<br><pre>[type &lt;esc&gt;h]<br>IDE: Help<br>  Key          Action<br>  ----        ------<br>  &lt;esc&gt;s      Step<br>  &lt;esc&gt;k      sKip next step<br>  &lt;esc&gt;c      Continue<br>  &lt;esc&gt;v      show Vars<br>  &lt;esc&gt;0to9   Show N next lines of script<br>  &lt;esc&gt;-1to-9 Show N previous lines of script<br>  ctrl+D      Quit &amp; Exit expect-lite<br>  &lt;esc&gt;h      this Help</pre>Showing
+the text for completeness.<br>
+      <pre>[type &lt;esc&gt;h]<br>IDE: Help<br>  Key          Action<br>  ----        ------<br>  &lt;esc&gt;s      Step<br>  &lt;esc&gt;k      sKip next step<br>  &lt;esc&gt;c      Continue<br>  &lt;esc&gt;v      show Vars<br>  &lt;esc&gt;0to9   Show N next lines of script<br>  &lt;esc&gt;-1to-9 Show N previous lines of script<br>  ctrl+D      Quit &amp; Exit expect-lite<br>  &lt;esc&gt;h      this Help</pre>
+Showing
 the lines of the script running up to the breakpoint, the current line,
 or the next few lines of the script can all be displayed by typing
 &lt;esc&gt; and a number. If the number is negative, say -3, then the
 last 3 lines will be displayed. The following example is displaying the
-next 5 lines of the script:<br><pre>[type &lt;esc&gt;5]<br>$ Printing next 5 line(s) of script:<br>&gt; echo hello<br>?if 1 == 1 ? %PAU<br>&gt;&gt; pwd<br>+$P=\n/home/([a-z]+)<br>&gt;echo "test_include.txt"<br></pre>Typing &lt;esc&gt;0 will display the current line in the script:<br><pre>[type &lt;esc&gt;0]<br>$ Printing current line of script:<br>*INTERACT</pre><br>To exit the IDE and continue the execution of the script type &lt;esc&gt;c &nbsp;This is the same as typing &nbsp;'+++'<br><br><span style="font-weight: bold;"><a name="typing_into_the_ide"></a>Typing commands directly into the IDE</span><br>In the IDE, expect-lite
-script commands can be typed directly into the terminal, even assigning variables and displaying them, inside the
+next 5 lines of the script:<br>
+      <pre>[type &lt;esc&gt;5]<br>$ Printing next 5 line(s) of script:<br>&gt; echo hello<br>?if 1 == 1 ? %PAU<br>&gt;&gt; pwd<br>+$P=\n/home/([a-z]+)<br>&gt;echo "test_include.txt"<br></pre>
+Typing &lt;esc&gt;0 will display the current line in the script:<br>
+      <pre>[type &lt;esc&gt;0]<br>$ Printing current line of script:<br>*INTERACT</pre>
+      <br>
+To exit the IDE and continue the execution of the script type
+&lt;esc&gt;c &nbsp;This is the same as typing &nbsp;'+++'<br>
+      <br>
+      <span style="font-weight: bold;"><a name="typing_into_the_ide"></a>Typing
+commands directly into the IDE</span><br>
+In the IDE, expect-lite
+script commands can be typed directly into the terminal, even assigning
+variables and displaying them, inside the
 paused script, for example:<br>
-<pre>$MYVAR=today<br>[type &lt;esc&gt;v]<br>$ DEBUG Info: Printing all expect-lite variables<br>Var:MYVAR                 Value:today<br>Var:junk                  Value:orbit-root<br>Var:manarch               Value:i386                   Const:ppc<br><br>&gt;&gt;pwd<br>pwd<br>/home/user<br></pre>
-Note that variables are printed with any overriding constants.<br><br><span style="font-weight: bold;"><a name="pasting"></a>Pasting into the IDE</span><br>Of
+      <pre>$MYVAR=today<br>[type &lt;esc&gt;v]<br>$ DEBUG Info: Printing all expect-lite variables<br>Var:MYVAR                 Value:today<br>Var:junk                  Value:orbit-root<br>Var:manarch               Value:i386                   Const:ppc<br><br>&gt;&gt;pwd<br>pwd<br>/home/user<br></pre>
+Note that variables are printed with any overriding constants.<br>
+      <br>
+      <span style="font-weight: bold;"><a name="pasting"></a>Pasting
+into the IDE</span><br>
+Of
 course, typing is useful, but copy and paste is much easier. Pasting
 lines into the IDE can be really helpful in debugging a script. For
 example, you may want to debug a dynamic variable assignment. The
-script may have the following lines:<br><pre>&gt;ifconfig<br># get IP address of loopback interface<br>&lt;lo<br>+$ip_addr=inet addr:([0-9.]+)<br></pre>This
+script may have the following lines:<br>
+      <pre>&gt;ifconfig<br># get IP address of loopback interface<br>&lt;lo<br>+$ip_addr=inet addr:([0-9.]+)<br></pre>
+This
 code snippet displays all the interfaces on this machine, expecting lo
 will clear the capture buffer above 'lo', thus removing the info from
 the eth0 interface. The dynamic variable will capture any numbers and
-periods after the words 'inet addr:'<br><br>By copying the lines from the script and pasting them into the IDE the terminall will display following:<br><pre>$ ifconfig<br>eth0      Link encap:Ethernet  HWaddr 00:30:65:98:e5:4a  <br>          inet addr:10.1.1.125  Bcast:10.1.1.255  Mask:255.255.255.0<br>          inet6 addr: fe80::230:65ff:fe98:e54a/64 Scope:Link<br>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1<br>          ...<br>          Interrupt:41 Base address:0x6c00 <br><br>lo        Link encap:Local Loopback  <br>          inet addr:127.0.0.1  Mask:255.0.0.0<br>          inet6 addr: ::1/128 Scope:Host<br>          UP LOOPBACK RUNNING  MTU:16436  Metric:1<br>          ...<br><span style="color: rgb(0, 153, 0);">Assigned Var:ip_addr=127.0.0.1</span><br>$</pre><span style="font-weight: bold;"><a name="ide_cant_die"></a>IDE, It lives!</span><br>It
+periods after the words 'inet addr:'<br>
+      <br>
+By copying the lines from the script and pasting them into the IDE the
+terminall will display following:<br>
+      <pre>$ ifconfig<br>eth0      Link encap:Ethernet  HWaddr 00:30:65:98:e5:4a  <br>          inet addr:10.1.1.125  Bcast:10.1.1.255  Mask:255.255.255.0<br>          inet6 addr: fe80::230:65ff:fe98:e54a/64 Scope:Link<br>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1<br>          ...<br>          Interrupt:41 Base address:0x6c00 <br><br>lo        Link encap:Local Loopback  <br>          inet addr:127.0.0.1  Mask:255.0.0.0<br>          inet6 addr: ::1/128 Scope:Host<br>          UP LOOPBACK RUNNING  MTU:16436  Metric:1<br>          ...<br><span style="color: rgb(0, 153, 0);">Assigned Var:ip_addr=127.0.0.1</span><br>$</pre>
+
+And of course, code blocks can be pasted into the IDE as well. Take
+care to paste the entire code block to get the desired result.
+
+
+Pasting the $i=0 is important, since it initializes the counter in the while loop.<br>
+      
+      <pre>; === while loop<br>$i=0<br>[ $i &lt; 3<br>	&gt;echo "hello $i"<br>	&lt;hello $i<br>	+$i<br>]<br></pre>
+
+      <span style="font-weight: bold;"><br>
+      <br>
+      <a name="ide_cant_die"></a>IDE, It lives!</span><br>
+It
 is possible to paste in lines which would normally fail the script.
 However getting kicked out of the script while one is debugging is not
 only irritating but not all that useful. For example, using similar
-script lines to above:<br><pre>&gt;ifconfig<br>&lt;eth2<br></pre>Since
+script lines to above:<br>
+      <pre>&gt;ifconfig<br>&lt;eth2<br></pre>
+Since
 there is no eth2 interface on this machine the script snippet will
 fail. However, the *NOFAIL directive is automatically enabled inside
-the IDE, there pasting the snippet results in:<br><pre>$ ifconfig<br>eth0      Link encap:Ethernet  HWaddr 00:30:65:98:e5:4a  <br>          inet addr:10.1.1.125  Bcast:10.1.1.255  Mask:255.255.255.0<br>          ...<br> <span style="color: red;">FAILED COMMAND: </span><br style="color: red;"><span style="color: red;">    Expect Failed:eth2</span><br>$<br></pre><br>Instead of the expect-lite exiting, and declaring the script has
-failed, it remains in the IDE (at the *INTERACT, or breakpoint), ready to
-receive another command.<br><br><h2><a name="nofail"></a>Running to Completion</h2>The
+the IDE, there pasting the snippet results in:<br>
+      <pre>$ ifconfig<br>eth0      Link encap:Ethernet  HWaddr 00:30:65:98:e5:4a  <br>          inet addr:10.1.1.125  Bcast:10.1.1.255  Mask:255.255.255.0<br>          ...<br> <span style="color: red;">FAILED COMMAND: </span><br style="color: red;"><span style="color: red;">    Expect Failed:eth2</span><br>$<br></pre>
+      <br>
+Instead of the expect-lite exiting, and declaring the script has
+failed, it remains in the IDE (at the *INTERACT, or breakpoint), ready
+to
+receive another command.<br>
+      <br>
+      <h2><a name="nofail"></a>Running to Completion</h2>
+The
 normal operation of expect-lite is to stop with any failure. However,
 this may not always be the desired behaviour. Using the *NOFAIL
 directive, will prevent the expect-lite script from stopping prior to
 completion. The directive *NOFAIL can be placed in the script, or on
-the command line (as well as any other directive).<br><br>expect-lite will still detect failures and report them at the end with the message:<br><pre style="color: red;">##Overall Result: FAILED (*NOFAIL on)</pre>Once
+the command line (as well as any other directive).<br>
+      <br>
+expect-lite will still detect failures and report them at the end with
+the message:<br>
+      <pre style="color: red;">##Overall Result: FAILED (*NOFAIL on)</pre>
+Once
 *NOFAIL has been directed, it remains on for the rest of the script.
 Conceptually it is the opposite of *FAIL, which fails the script
-immediately (if *NOFAIL isn't set).<br><br>
-<h2><a name="finding_in"></a>Finding
+immediately (if *NOFAIL isn't set).<br>
+      <br>
+      <h2><a name="finding_in"></a>Finding
 In...
 Verbose<br>
-</h2>
+      </h2>
 Since most expect-lite scripts are composed of &gt; and &lt;
 lines, it
 can be difficult to understand why expect-lite isn't finding the
 desired text. Using the -vv or --verbose option (in version 3.1.4 or
 later) will display the string that is to be matched (find) and the
 entire string that is being searched (in).<br>
-<br>
+      <br>
 For example, for the given expect-lite code:<br>
-<pre>&gt;cat $tmp_file<br>&lt;Proto \[LAN\]Addr:Port =&gt; Addr:Port \[WAN\]Addr:Port &lt;= Addr:Port<br>&lt;6[ \t]+[0-9a-f:]{11,14}[ \t]+[0-9a-f]{8}:22<br></pre>
+      <pre>&gt;cat $tmp_file<br>&lt;Proto \[LAN\]Addr:Port =&gt; Addr:Port \[WAN\]Addr:Port &lt;= Addr:Port<br>&lt;6[ \t]+[0-9a-f:]{11,14}[ \t]+[0-9a-f]{8}:22<br></pre>
 With the --verbose option, the output will appear with the
 additional lines:<br>
-<pre>cat /proj/regression/tmp/junk<br>Dec 31 1969 19:43:12:025952:INFO :CLI :cli.c:2945:_cli_handle_short_cmd:<br> Execute command: "fwdstat".<br>Proto [LAN]Addr:Port =&gt; Addr:Port [WAN]Addr:Port &lt;= Addr:Port<br> 6 c0a85001:41696 c0a81401:22 c0a81401:22 c0a81402:32770<br><br>find&lt;&lt;Proto \[LAN\]Addr:Port =&gt; Addr:Port \[WAN\]Addr:Port &lt;= Addr:Port&gt;&gt;<br> in&lt;&lt;cat /proj/regression/tmp/junk<br>Dec 31 1969 19:43:12:025952:INFO :CLI :cli.c:2945:_cli_handle_short_cmd:<br> Execute command: "fwdstat".<br>Proto [LAN]Addr:Port =&gt; Addr:Port [WAN]Addr:Port &lt;= Addr:Port&gt;&gt;<br><br>find&lt;&lt;6[ \t]+[0-9a-f:]{11,14}[ \t]+[0-9a-f]{8}:22&gt;&gt;<br> in&lt;&lt;<br> 6 c0a85001:41696 c0a81401:22&gt;&gt;<br></pre>
+      <pre>cat /proj/regression/tmp/junk<br>Dec 31 1969 19:43:12:025952:INFO :CLI :cli.c:2945:_cli_handle_short_cmd:<br> Execute command: "fwdstat".<br>Proto [LAN]Addr:Port =&gt; Addr:Port [WAN]Addr:Port &lt;= Addr:Port<br> 6 c0a85001:41696 c0a81401:22 c0a81401:22 c0a81402:32770<br><br>find&lt;&lt;Proto \[LAN\]Addr:Port =&gt; Addr:Port \[WAN\]Addr:Port &lt;= Addr:Port&gt;&gt;<br> in&lt;&lt;cat /proj/regression/tmp/junk<br>Dec 31 1969 19:43:12:025952:INFO :CLI :cli.c:2945:_cli_handle_short_cmd:<br> Execute command: "fwdstat".<br>Proto [LAN]Addr:Port =&gt; Addr:Port [WAN]Addr:Port &lt;= Addr:Port&gt;&gt;<br><br>find&lt;&lt;6[ \t]+[0-9a-f:]{11,14}[ \t]+[0-9a-f]{8}:22&gt;&gt;<br> in&lt;&lt;<br> 6 c0a85001:41696 c0a81401:22&gt;&gt;<br></pre>
 Both the 'find' and 'in' text are wrapped in &lt;&lt;
 &gt;&gt; to show
 any line feeds. The 'find', if successful,
@@ -160,132 +242,148 @@ will almost always be at the bottom of the 'in' text. Often when
 there is a unexpected failure, the&nbsp; '&lt;' is defined too
 broadly, and expect-lite has matched an unexpected piece of 'in' text.
 (see <a href="#define_narrowly">Define '&lt;' narrowly</a>)<br>
-<br>
+      <br>
 As of expect-lite version 3.1.4, -vv or --verbose will also display
 'find and 'in' for dynamic variable capture, thus providing a bit more
 information to assist in debugging this feature as well.<br>
-<br>
+      <br>
 As of expect-lite version 3.5.0, -vv or --verbose will display all
 warnings and debug information (including user defined prompt debug
 info)<br>
-<br>
-<h2><a name="variables_values"></a>Showing
+      <br>
+      <h2><a name="variables_values"></a>Showing
 Variables, Values &amp; Constants with *SHOW VARS<br>
-</h2>
+      </h2>
 Sometimes when troubleshooting a script, it is really useful to display
 the value of an expect-lite variable. The easiest method to display a
 variable is to use the printable comment ';'&nbsp; For example,
 there
 is a variable named '$max', by adding the following line to the script,
 $max will be dereferenced and displayed:<br>
-<pre>; The value of max is:$max<br></pre>
+      <pre>; The value of max is:$max<br></pre>
 The above method works well for a few variables, but it may be
 neccessary to view all the expect-lite variables. In previous versions
 of expect-lite, a script (show_vars.inc) was required to view all
 variable values. As of version 4.0.x, the expect-lite directive: *SHOW
 VARS now displays variables, values, and any overriding constants.<br>
-<br>
+      <br>
 All variables can now be displayed by using the line:<br>
-<pre>*SHOW VARS<br></pre>
+      <pre>*SHOW VARS<br></pre>
 The include script is written in embedded expect and will walk the
 array of expect-lite variables, and print their respective values. The
 output will appear like the following:<br>
-<pre>expect-lite directive: *SHOW VARS <br>DEBUG Info: Printing all expect-lite variables<br>Var:count                 Value:14<br>Var:mac_da10              Value:00:7F:DE:6A:FF:FA     Const:00:30:65:98:e5:4a<br>Var:mac_da11              Value:88:45:3D:2A:95:63<br>Var:mac_da12 Value:38:8B:50:49:AE:0D<br>Var:mac_da13 Value:38:E4:EB:0C:DE:4B<br></pre>
-<br>
+      <pre>expect-lite directive: *SHOW VARS <br>DEBUG Info: Printing all expect-lite variables<br>Var:count                 Value:14<br>Var:mac_da10              Value:00:7F:DE:6A:FF:FA     Const:00:30:65:98:e5:4a<br>Var:mac_da11              Value:88:45:3D:2A:95:63<br>Var:mac_da12 Value:38:8B:50:49:AE:0D<br>Var:mac_da13 Value:38:E4:EB:0C:DE:4B<br></pre>
+      <br>
 *SHOW VARS can also be used with *INTERACT and instant-interact to view
-the values all assigned variables, however, &lt;esc&gt;v performs the same action and is less typing.<br>
-<br>
-<h2><a name="define_narrowly"></a>Define
+the values all assigned variables, however, &lt;esc&gt;v performs the
+same action and is less typing.<br>
+      <br>
+      <h2><a name="define_narrowly"></a>Define
 '&lt;' narrowly</h2>
 Do not define '&lt;' too broadly. For example, DO NOT use the
 following:<br>
-<pre>&lt;\n.*<br></pre>
+      <pre>&lt;\n.*<br></pre>
 The above defines 0 or more of any character after a newline. This will
 match just about anything, and more than likely not what is intended.<br>
-<br>
+      <br>
 Instead use a more specific '&lt;'. If the expected string is only
 composed of numbers at the beginning of a line, use:<br>
-<pre>&lt;\n[0-9]+<br></pre>
+      <pre>&lt;\n[0-9]+<br></pre>
 Use with the <a href="#finding_in">--verbose option</a>
 to see what is
 being matched, and to
 assist in refining the '&lt;' statements.<br>
-<br>
-<h2><a name="decreasing_log_chatter"></a>Decreasing the
+      <br>
+      <h2><a name="decreasing_log_chatter"></a>Decreasing the
 log
 chatter<br>
-</h2>
+      </h2>
 After one's scripts are succesfully debugged, it may not be desireable
 to see all the log chatter which expect-lite produces, such as
 warnings, conditional reports, dynamic variable assignments. This
 chatter can be reduced by using the expect-lite logging directives at
 or
 near the beginning of the script, such as:<br>
-<pre>*NOWARN<br></pre>
+      <pre>*NOWARN<br></pre>
 If while debugging the script, it is desirable to see the additional
 logging info (chatter), it can be turned on via the command line with
 the -v parameter:<br>
-<pre>expect-lite -v r=myhost c=myscript<br></pre>
-<br><h2><a name="removing_color"></a>Removing Colour from output</h2>In
+      <pre>expect-lite -v r=myhost c=myscript<br></pre>
+      <br>
+      <h2><a name="removing_color"></a>Removing Colour from output</h2>
+In
 an automated environment, it is probably not desirable to have ANSI
 color sequences embedded in the logs. Although it is possible to use
 the expect-lite directive *NOCOLOUR in each script to turn off colour,
 there is an easier way. Define the terminal type to a dumb terminal,
-such as tty.<br><pre>export TERM=tty</pre>expect-lite will detect the dumb terminal type and turn off colour output automatically.<br><br>Or
+such as tty.<br>
+      <pre>export TERM=tty</pre>
+expect-lite will detect the dumb terminal type and turn off colour
+output automatically.<br>
+      <br>
+Or
 as of version 4.0.x, *DIRECTIVES can be placed on on the command line,
-therefore it is possible to turn off colour on the command line:<br><pre>expect-lite -r myhost -c myscript *NOCOLOUR</pre><br>
-<h2><a name="tips"></a>General Tips</h2>
+therefore it is possible to turn off colour on the command line:<br>
+      <pre>expect-lite -r myhost -c myscript *NOCOLOUR</pre>
+      <br>
+      <h2><a name="tips"></a>General Tips</h2>
 Here are some simple tips when script writing:<br>
-<ul>
-<li>Use reasonable timeouts, if 30 seconds is needed to
+      <ul>
+        <li>Use reasonable timeouts, if 30 seconds is needed to
 get a
 response, set the timeout at 45 or 60 seconds, not 600.</li>
-<ul>
-<li>There is no cost to changing the timeout, timeout
+        <ul>
+          <li>There is no cost to changing the timeout, timeout
 values
 can
 also be variables<br>
-</li>
-</ul>
-<li>Beware of expect-lite using regex, when creating
+          </li>
+        </ul>
+        <li>Beware of expect-lite using regex, when creating
 lines
 like:
 &lt;0.005 secs (5 micro secs)</li>
-<ul>
-<li>The parentheses is used by the regex engine,
+        <ul>
+          <li>The parentheses is used by the regex engine,
 instead
 escape
 these characters: &lt;0.005 secs \(5 micro secs\)</li>
-<li>or use '&lt;&lt;' which does not use regex,
+          <li>or use '&lt;&lt;' which does not use regex,
 and
 does not require escaping: &lt;&lt;0.005 secs (5 micro secs)</li>
-</ul>
-<li>Use the expect character '&lt;' or
+        </ul>
+        <li>Use the expect character '&lt;' or
 '&lt;&lt;'
 often. Check for valid results
 when possible. A script which expects nothing will never fail!</li>
-<li>Use printable comments ';'&nbsp; and ';;' often. Think of it as
+        <li>Use printable comments ';'&nbsp; and ';;' often. Think of
+it as
 writing a note to oneself, it will make reading log files much easier.
-As of version 3.7.0 printable comments will be coloured <span style="color: rgb(51, 51, 255);">blue</span> (this is user configurable).</li>
-</ul>
-<h2><a name="summary"></a>Summary</h2>
+As of version 3.7.0 printable comments will be coloured <span style="color: rgb(51, 51, 255);">blue</span> (this is user
+configurable).</li>
+      </ul>
+      <h2><a name="summary"></a>Summary</h2>
 By using these troubleshooting aids, it should be even easier to write
 and debug expect-lite scripts. Feel free to send me any tips. <a href="mailto:cvmiller@gmail.com">cvmiller at gmail dot com</a><br>
-<br>
-<h2>Why Expect-lite</h2>
+      <br>
+      <h2>Why Expect-lite</h2>
 Expect-lite was written to create quick and easy automation of
 repetitive tasks.<br>
-<br>
-<br>
-</td>
-</tr>
-</tbody>
+      <br>
+      <br>
+      </td>
+    </tr>
+  </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">1 August 2011<br>
+
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">1
+August 2011<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
+
 <small><span style="font-style: italic;">this
 document for version 4.1.2 or later</span><br style="font-style: italic;">
 </small>
 <br>
+
 </body></html>

@@ -6,6 +6,8 @@
 
 
 
+
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -101,7 +103,7 @@ evaluation</a> also available in expected results&nbsp;<span style="background-c
 Branching</span></a> a
 if/then/else with a c-like syntax</li>
         <ul>
-          <li><a href="#undefined_var_conditional">Testing undefined variables</a> useful for setting default variable values <span style="background-color: yellow;">new in 4.1.2</span><br>
+          <li><a href="#undefined_var_conditional">Testing undefined variables</a> useful for setting default variable values <span style="background-color: yellow;"></span><br>
           </li>
         </ul>
 
@@ -110,6 +112,8 @@ looping</span></a>
 using
 conditional branching, a repeat loop can be constructed with infinite
 loop protection</li>
+        <li><a style="font-weight: bold;" href="#code_blocks">Code Blocks</a> group lines of script for conditionals and while loops <span style="background-color: yellow;">new in 4.2.0</span></li>
+
       </ul>
       <span style="font-weight: bold;">Advanced</span><br>
       <ul>
@@ -425,10 +429,17 @@ expect</a>)</td>
                 </td>
                 <td style="vertical-align: top;">c-style
 if/then/else in the
-format ?cond?action::else_action (see <a href="#conditional">conditionals</a>)<br>
+format ?cond?action::else_action (see <a href="#conditional">conditionals</a> and <a href="#code_block_conditional">code blocks</a>)<br>
                 </td>
               </tr>
               <tr>
+                <td style="vertical-align: top;">[ &lt;test&gt;<br>
+]<br>
+                </td>
+                <td style="vertical-align: top;">while loop (see <a href="#while_loop">code blocks</a>)<br>
+                </td>
+              </tr>
+<tr>
                 <td style="vertical-align: top;">%<br>
                 </td>
                 <td style="vertical-align: top;">label -
@@ -1132,6 +1143,49 @@ be in the range of 1000 to 10000 to be safe. For example, if a complex
 expect-lite script had 4 loops each with 100 iterations, the
 _el_infinite_loop should be set larger than 400.<br>
       <br>
+      <h2><a name="code_blocks"></a>Using
+Code Blocks with Conditionals and While Loops<br>
+      </h2>
+expect-lite is a line oriented scripting language, but there are times
+when it is convenient to group lines together. As of version 4.2.0, the
+grouping of lines can be achieved through code blocks. A quick example
+using a code block and a conditional:<br>
+      <pre>; === Conditional using code block<br>? $case == true ? [<br>	&gt;echo "1"<br>	&gt;echo "2"<br>	&gt;echo "3"<br>]</pre>
+      <a name="code_block_conditional"></a><span style="font-weight: bold;">Conditionals</span><br>
+      <br>
+A code block begins with a <span style="font-weight: bold;">[ </span>(left square bracket) and ends with a <span style="font-weight: bold;">] </span>(right
+square bracket). When used with an if statement, it allows more than
+one "line" to be executed based on the evaluation of the if statement.<br>
+      <br>
+Conditionals with code blocks still support the else construct, such as:<br>
+      <pre>; === Conditional using code block as else statement<br>? $case == true ? &gt;echo "true" :: [<br>	&gt;echo "false 1"<br>	&gt;echo "false 2"<br>	&gt;echo "false 3"<br>]<br>      </pre>
+Code blocks are <span style="font-weight: bold;">not</span> supported in both the then <span style="font-style: italic;">and</span> the else statements, since it appears ambiguous:<br>
+      <pre>; === NOT SUPPORTED Conditional using code block then and else statement<br>? $case == true ? [ :: [<br>	&gt;echo " 1"<br>	&gt;echo " 2"<br>	&gt;echo " 3"<br>] <br></pre>
+Nested code blocks can also be used. In the following example each if
+statement is using a code block for the then statement, and a non-code
+block for the else statement:<br>
+      <pre>$test=3<br>; === nested ifs using code blocks<br>?if 1 &lt; $test ? [ :: &gt;echo "else 1"<br>	?if 2 &lt; $test ? [ :: &gt;echo "else 2"<br>		&gt;echo "if 2"<br>	]<br>]<br><br></pre>
+      <br>
+      <span style="font-weight: bold;"><a name="while_loop"></a>While Loops</span><br>
+      <br>
+Code blocks can also be used for quick looping using an implied while
+loop construct. In the following example, the expression at the
+beginning of the code block will be evaluated, if true, the lines
+inside the code block will be executed. At the end (bottom) of the code
+block, the script will jump to the top of the code block, and the
+expression will be evaluated again, thus forming a loop. Once the
+expression evaluates false (in the example $i is equal to 3), the
+script will jump to the line after the bottom of the code block.<br>
+      <pre>; === while loop<br>$i=0<br>[ $i &lt; 3<br>	&gt;echo "hello $i"<br>	&lt;hello $i<br>	+$i<br>]     </pre>
+Nesting of while loops are also supported:<br>
+      <pre>;; == Nested while loops, should repeat "hello ken" 3 times<br>;; == with 2 "bye now's inside each outer loop<br>&gt;<br>$i=0<br>[ $i &lt; 3<br>	&gt;echo "hello ken"<br>	&lt;ken<br>	$j=0<br>	[ $j &lt; 2 <br>		&gt;echo "bye now"<br>		&gt;<br>		+$j<br>	]<br>	+$i<br>]<br></pre>
+Infinite loop protection applies both the "jump-to-label" method as
+well as to the "while-loop" method, each iteration of the loop
+decrements the infinite loop counter (which defaults to 5000). It may
+be a good idea to set the infinite loop value to something low, when
+first writing while loops, just in case:<br>
+      <pre>*INFINITE_LOOP 20<br></pre>
+<br>
       <h2><a name="bash_shell"></a>Expect-lite
 &amp; Bash</h2>
 Although not limited to working with bash, bash is invoked upon logging
@@ -1848,7 +1902,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">23 August 2011<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">1 October 2011<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
@@ -1858,7 +1912,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.1.2 and above</span><br style="font-style: italic;">
+document for version 4.2.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
 
