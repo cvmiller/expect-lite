@@ -936,6 +936,10 @@ Released 21 Dec 2010 - 4.0.2
 	Added expect version checking in IDE, prints warning if not 5.42 or greater
 		This is to inform user of old expect version in Cygwin
 
+30 Sept 2011 - 4.2.0.d11
+	Fix trailing spaces on directive *FORK
+
+
 
 
 ------------ Future Versions --------------------------
@@ -961,8 +965,17 @@ x	Add code-line-blocks with [ ] (4.2.0 candidate)
 		o Don't return test_result in one_line mode, only return success/fail
 		o Handle arrow keys better - It may be possible to negate the escape like [^\x1B]\[
 		
+o	pass vars/constants to include files
+	Separate level of var between user_namespace and const_namespace, which is deleted at end of include?
 		
-o	fix cygwin and old expect version with paste - test for expect version
+o	Check 4.2.0 on cygwin
+
+o	cygwin issues:
+		Unable to detect shell start - add longer timeout for that expect line only
+			Perhaps do a OS detect and lengthen the timeout for that function - remote host init
+		extended timeout, need to test
+		
+x	fix cygwin and old expect version with paste - test for expect version
 
 x	allow spaces for constants e.g. var="this or that" from Michel Desjardins	madesjardins@rogers.com
 
@@ -983,8 +996,6 @@ x	Update installer for install user mode (do not install expect-lite, just confi
 
 x	add change timeout in IDE @n
 
-o	Check 4.1.0 on cygwin
-
 x	_el_global_directive should use el(fork_current) rather than _el_current_session
 	Not required
 
@@ -1001,10 +1012,6 @@ x	Fix MAN and man directory in tarball - MacOS X sees them as the same name
 
 o	User script help - next release
 	Lines which beging with """ can be integrated help
-
-o	cygwin issues:
-		Unable to detect shell start - add longer timeout for that expect line only
-			Perhaps do a OS detect and lengthen the timeout for that function - remote host init
 
 x	Add deb and rpm to download files
 
@@ -1173,18 +1180,14 @@ $sw_build=0000
 
 x	change env vars to something like EL_SYS_PASS
 
-o	cygwin issues:
-		Unable to detect shell start - add longer timeout for that expect line only
-			Perhaps do a OS detect and lengthen the timeout for that function - remote host init
-
 x	update man page with new env Var names EL_CONNECT_USER/PASS
 
 
 ------------ Windows Cygwin Expect --------------------------
 Known Issues
 	No ssh loopback mode
-	No Instant-Interactive, tclx not available on cygwin
-	el_shell (IDE) does not work in *INTERACTIVE
+	No Instant-Interactive, tclx not available on cygwin - fixed in 4.x
+	el_shell (IDE) does not work in *INTERACTIVE - no paste
 	
 	
 ActiveTCL Expect problems - unusable

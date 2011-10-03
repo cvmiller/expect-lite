@@ -8,6 +8,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -1157,31 +1158,31 @@ A code block begins with a <span style="font-weight: bold;">[ </span>(left squar
 square bracket). When used with an if statement, it allows more than
 one "line" to be executed based on the evaluation of the if statement.<br>
       <br>
-Conditionals with code blocks still support the else construct, such as:<br>
+Conditionals with code blocks also support the else construct, such as:<br>
       <pre>; === Conditional using code block as else statement<br>? $case == true ? &gt;echo "true" :: [<br>	&gt;echo "false 1"<br>	&gt;echo "false 2"<br>	&gt;echo "false 3"<br>]<br>      </pre>
 Code blocks are <span style="font-weight: bold;">not</span> supported in both the then <span style="font-style: italic;">and</span> the else statements, since it appears ambiguous:<br>
       <pre>; === NOT SUPPORTED Conditional using code block then and else statement<br>? $case == true ? [ :: [<br>	&gt;echo " 1"<br>	&gt;echo " 2"<br>	&gt;echo " 3"<br>] <br></pre>
 Nested code blocks can also be used. In the following example each if
 statement is using a code block for the then statement, and a non-code
 block for the else statement:<br>
-      <pre>$test=3<br>; === nested ifs using code blocks<br>?if 1 &lt; $test ? [ :: &gt;echo "else 1"<br>	?if 2 &lt; $test ? [ :: &gt;echo "else 2"<br>		&gt;echo "if 2"<br>	]<br>]<br><br></pre>
+      <pre>$test=3<br>; === nested ifs using code blocks<br>?if 1 &lt; $test ? [ :: &gt;echo "else 1"<br>	?if 2 &lt; $test ? [ :: &gt;echo "else 2"<br>		&gt;echo "if 2"<br>	]<br>]<br></pre>
       <br>
       <span style="font-weight: bold;"><a name="while_loop"></a>While Loops</span><br>
       <br>
 Code blocks can also be used for quick looping using an implied while
 loop construct. In the following example, the expression at the
 beginning of the code block will be evaluated, if true, the lines
-inside the code block will be executed. At the end (bottom) of the code
-block, the script will jump to the top of the code block, and the
-expression will be evaluated again, thus forming a loop. Once the
+inside the code block will be executed. The expression (e.g. $i &lt; 3)
+will be evaluated each time the code block has completed execution.
+Once the
 expression evaluates false (in the example $i is equal to 3), the
-script will jump to the line after the bottom of the code block.<br>
+script will continue on the line after the bottom of the code block.<br>
       <pre>; === while loop<br>$i=0<br>[ $i &lt; 3<br>	&gt;echo "hello $i"<br>	&lt;hello $i<br>	+$i<br>]     </pre>
 Nesting of while loops are also supported:<br>
       <pre>;; == Nested while loops, should repeat "hello ken" 3 times<br>;; == with 2 "bye now's inside each outer loop<br>&gt;<br>$i=0<br>[ $i &lt; 3<br>	&gt;echo "hello ken"<br>	&lt;ken<br>	$j=0<br>	[ $j &lt; 2 <br>		&gt;echo "bye now"<br>		&gt;<br>		+$j<br>	]<br>	+$i<br>]<br></pre>
 Infinite loop protection applies both the "jump-to-label" method as
 well as to the "while-loop" method, each iteration of the loop
-decrements the infinite loop counter (which defaults to 5000). It may
+decrements the infinite loop counter (default is 5000). It may
 be a good idea to set the infinite loop value to something low, when
 first writing while loops, just in case:<br>
       <pre>*INFINITE_LOOP 20<br></pre>
@@ -1692,7 +1693,7 @@ which should meet the needs of most.&nbsp;&nbsp; <br>
 Standard programming constructs such as looping and branching are
 supported as of version 3.0.0. Real Expect can do these things and
 more. That said, looping
-is limited to a repeat loop and branching can be accomplished with
+is limited to a repeat loop and while loop and branching can be accomplished with
 Labels. <br>
       <br>
 Expect-lite has been purposely limited to keep scripts simple, easy

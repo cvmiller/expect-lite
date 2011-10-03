@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.0d10"
+	variable version "4.2.0d11"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3403,6 +3403,9 @@ namespace eval expectlite {
 						# execute expect lines if present
 						_el_exec_expect
 						print_comment_line
+						# trim off white space
+						set _el(line) [string trimright $_el(line)]
+						#regsub -all {([ ]*)([^ ]*)([ ]*)} $_el(line) {\2} _el(line)
 						# Process the directive - return 0 to fail
 						set _el(success) [_el_global_directive $_el(line)]
 
