@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.0d11"
+	variable version "4.2.0"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -153,6 +153,9 @@ namespace eval expectlite {
 		# clear native expect lines list
 		set ::expectlite::_el(_el_lines) {}
 
+		# clear ide paste lines flag
+		set ::expectlite::_el(ide_paste_lines) 0
+
 		# debugging aid: turn on to display match string and expect buffer
 		variable DEBUG 0
 
@@ -261,12 +264,35 @@ namespace eval expectlite {
 			catch { puts stderr "\nERROR:Broken Pipe\n" }
 			exit 2
 		} SIGPIPE
+
+
+		# 
+		#	Expect Signal Handler, checks ^C and exits except inside an IDE paste
+		#	Default signal is SIGINT
+		#
+		#
+		trap {
+			if { $expectlite::_el(ide_paste_lines) } {
+				catch { puts stderr "\nPress ^\\ to interupt... returning to instant-interact\n" }
+				# flush the paste buffer
+				catch { expectlite::_el_buffer_stack_clear $expectlite::_el_buf(stack) } error
+				expectlite::instant_interact_sig
+			} else {
+				catch { puts stderr "\nexpect-lite: Interrupt received, exiting...\n" }
+				exit 2
+			}
+		} SIGINT
 		# 
 		#	Expect Signal Handler, which places user into instant-interactive(tm) session
 		#	Default signal is SIGQUIT or ^\
 		#
 		#
 		trap {
+			if { $expectlite::_el(ide_paste_lines) } {
+				catch { puts stderr "\nreturning to instant-interact...\n" }
+				# flush the paste buffer
+				catch { expectlite::_el_buffer_stack_clear $expectlite::_el_buf(stack) } error
+			}
 			expectlite::instant_interact_sig
 		} SIGQUIT
 
@@ -399,6 +425,11 @@ namespace eval expectlite {
 		upvar expectlite::_el_err_color	_el_err_color
 
 
+		# return if called during a IDE paste
+		if {$_el(ide_paste_lines)} {
+			return
+		}
+
 		# change user message depending on how the function is called
 		if { $_el(line) != "*INTERACT" } {
 			# called by user 
@@ -417,7 +448,7 @@ namespace eval expectlite {
 
 		# Check that expect version is supported, if not issue warning
 		if { [exp_version] < "5.42.0" } {
-			cputs "\nWarning: Paste feature requires Expect version 5.42 or later (but using [exp_version])" $_el_err_color
+			cputs "Warning: Paste feature requires Expect version 5.42 or later (but using [exp_version])" $_el_err_color
 			cputs "  See Cygwin documentation on http://expect-lite.sf.net/ on upgrading expect\n" $_el_err_color
 			protected_send "$_el_eols"
 		}
@@ -425,9 +456,12 @@ namespace eval expectlite {
 		while {$restart_interact} {
 			# Interact session connects user to remote session, and also:
 			#	Interprets expect-lite commands and directives (as of 4.0)
+			# reset paste lines flag
+			set _el(ide_paste_lines) 0
 			if { [catch { interact {
 				-re {\+\+\+|^\x1b\x63|^`c} { #DEBUGGER '+++' or .c to exit interact session, continue script
-					set restart_interact 0 
+					set restart_interact 0
+					set _el(ide_paste_lines) 0
 					return 
 					}
 				\004	{ # ^D exit interact and expect-lite
@@ -657,40 +691,8 @@ namespace eval expectlite {
 						#end if os_id
 						# clear line of pasted text
 						send_user "                                                                      \r"
-						if {$DEBUG} {
-							send_user "\nDEBUG: Evaluating:\n"
-							foreach d_item $cli_list {
-								send_user "\t$d_item\n"
-							}
-						}
-						#send_user "\n=====>$cli_list\n"
-						
-						# special case of one line: if jump to label
-						set _buf_ptr [lsearch -regexp $cli_list {\?.+\?.*%} ]
-						if { $_buf_ptr == 0} {
-							# get line from paste input, and execute if-jump-to-label in main script
-							set _line [lindex $cli_list $_buf_ptr]
-							_el_script_exec "\|$_line"  $_el_buf(stack)
-						} else {
-							# multiple lines pasted, treat as small script
-							# pasted lines operate in own paste buffer, 
-							# and can not access lines (via jumping) in main script
-							
-							# assign meta-data to list
-							set i 0
-							# clear the block stack
-							_el_buffer_block_clear
-
-							set paste_buf_ptr [ _el_buffer "" $cli_list ]
-
-							protected_send "$_el_eols"
-							# call el script exec
-							set rtncode [ _el_script_exec "" $paste_buf_ptr ]
-
-							# clear list in buffer stack and pop stack number
-							_el_buffer_stack_clear $expectlite::_el_buf(stack)
-						}; #endif
-						protected_send "$_el_eols"
+						# signal to paste lines outside of interact loop
+						set _el(ide_paste_lines) 1
 						return
 					}
 				} }  \
@@ -699,8 +701,47 @@ namespace eval expectlite {
 				# Fail script?
 				exit 1
 			}
+			if {$_el(ide_paste_lines)} {
+				if {$DEBUG} {
+					send_user "\nDEBUG: Evaluating:\n"
+					foreach d_item $cli_list {
+						send_user "\t$d_item\n"
+					}
+				}
+				#send_user "\n=====>$cli_list\n"
+
+				# special case of one line: if jump to label
+				set _buf_ptr [lsearch -regexp $cli_list {\?.+\?.*%} ]
+				if { $_buf_ptr == 0} {
+					# get line from paste input, and execute if-jump-to-label in main script
+					set _line [lindex $cli_list $_buf_ptr]
+					_el_script_exec "\|$_line"  $_el_buf(stack)
+				} else {
+					# multiple lines pasted, treat as small script
+					# pasted lines operate in own paste buffer, 
+					# and can not access lines (via jumping) in main script
+
+					# assign meta-data to list
+					set i 0
+					# clear the block stack
+					_el_buffer_block_clear
+
+					set paste_buf_ptr [ _el_buffer "" $cli_list ]
+
+					protected_send "$_el_eols"
+					# call el script exec
+					set rtncode [ _el_script_exec "" $paste_buf_ptr ]
+					
+					if { $paste_buf_ptr == $_el_buf(stack) } {
+						# clear list in buffer stack and pop stack number if not popped
+						_el_buffer_stack_clear $expectlite::_el_buf(stack)
+					}
+				}; #endif
+			
+			}; #endif paste lines
 			protected_send "$_el_eols"
-		}
+		}; #end while
+		
 		# restore script session
 		session_id_manager [ pop_session_id ]
 		set _el(success) 1
@@ -1298,8 +1339,8 @@ namespace eval expectlite {
 		set _search "^\\\*\*SHELL=.*"
 
 		# search buffer _el_buf($buf_stack) with $_search  
-		set _buf_ptr [lsearch -regexp $_el_buf($buf_stack) $_search ]
-
+		set _buf_ptr [lsearch -regexp -index 0 $_el_buf($buf_stack) "$_search"]
+		
 		set _line [_el_buffer_read $_buf_ptr $buf_stack]	
 		#puts "shell_line-------->$_line|$_buf_ptr"
 		if { $_buf_ptr != -1 } {
@@ -2062,7 +2103,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_buf					_el_buf
 		
 		# Do not set past end of buffer
-		if { $line_no >= 0 && $line_no < [llength $_el_buf($buf_stack)] } {
+		if { $line_no >= 0 && $line_no <= [llength $_el_buf($buf_stack)] } {
 			set _el_buf($_el_buf(stack),ptr) $line_no
 		}
 	}

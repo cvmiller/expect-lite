@@ -939,12 +939,25 @@ Released 21 Dec 2010 - 4.0.2
 30 Sept 2011 - 4.2.0.d11
 	Fix trailing spaces on directive *FORK
 
+7 Oct 2011 - 4.2.0d12
+	Fixed ^\ inside an IDE pasted loop
+		^C will also work
+	Tested on Cygwin expect 5.26 and 5.45
 
-
+10 Oct 2011 - 4.2.0d13
+	Fixed **SHELL directive
+	Created self_test_code_block.txt to regress feature
+	
+11 October 2011 - 4.2.0
+	Released same as d13
+		
 
 ------------ Future Versions --------------------------
 		
 Future
+
+
+o	fix build script to pull all data from Expect-lite, and build *proj directory
 
 x	Add code-line-blocks with [ ] (4.2.0 candidate)
 	[ <test>
@@ -968,9 +981,9 @@ x	Add code-line-blocks with [ ] (4.2.0 candidate)
 o	pass vars/constants to include files
 	Separate level of var between user_namespace and const_namespace, which is deleted at end of include?
 		
-o	Check 4.2.0 on cygwin
+x	Check 4.2.0 on cygwin
 
-o	cygwin issues:
+x	cygwin issues:
 		Unable to detect shell start - add longer timeout for that expect line only
 			Perhaps do a OS detect and lengthen the timeout for that function - remote host init
 		extended timeout, need to test
@@ -1194,6 +1207,7 @@ ActiveTCL Expect problems - unusable
 	No support for Interact
 	No support of SIGQUIT (used by instant-interact)
 	
+Cygwin Packages - http://mirror.csclub.uwaterloo.ca/cygwin/release/expect/
 
 
 

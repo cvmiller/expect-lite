@@ -9,6 +9,8 @@
 
 
 
+
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -674,6 +676,10 @@ writing
 a note to oneself, it will make reading log files much easier. As of
 version 3.7.0 printable comments will be coloured <span style="color: rgb(51, 51, 255);">blue</span> (this is
 user configurable).</li>
+        <li>Variable assignments use no spaces e.g. $var=value. Note no spaces
+around the equals sign, this permits leading spaces in the value such
+as $var=&nbsp; myvalue</li>
+
       </ul>
       <h2><a name="debugging"></a>Debugging
 Expect-lite Scripts</h2>
@@ -725,10 +731,7 @@ Support of regular expressions in expect-lite are limited by:<br>
 anchors,
 char-classes and repeats)<br>
         </li>
-        <li>Support of regex meta characters (e.g. \t \n are
-supported,
-\d
-is not)</li>
+        <li>Support of regex meta characters (e.g. \t \n \d)</li>
         <li>Expect-lite only evaluates lines using regex which
 begin
 with
@@ -738,10 +741,10 @@ with
 As an example, a range of numbers is valid for an IP address.
 The following would permit the last octet of the IP address to be 2
 digits, but not 3.<br>
-      <pre>&gt; /sbin/ifconfig eth0<br>&lt;inet addr:10\.29\.200\.[0-9][0-9][ ]</pre>
+      <pre>&gt; /sbin/ifconfig eth0<br>&lt;inet addr:10\.29\.200\.\d\d[ ]</pre>
 The periods are preceded by a backslash to indicate to regex that a
 period must be returned rather than the regex dot '.' which indicates
-any character.<br>
+any character. The \d indicates any single digit.<br>
       <br>
 Because regex is always enabled for expected results, some 'escaping'
 of characters must be done when using '&lt;'. The following
@@ -809,7 +812,10 @@ sign</td>
         </tbody>
       </table>
       <br>
-      <br>
+      Regex is a very powerful syntax unto itself, and one can create quite complex regex strings. There is an excellent <a href="http://www.addedbytes.com/cheat-sheets/regular-expressions-cheat-sheet/">regex cheat </a>sheet
+created by David Child, which is very helpful. That said, one does not
+need to be a regex expert to use expect-lite, it is possible to use
+regex in a very basic way, see examples for more info.<br>
       <h3><a name="expect_no_regex"></a>Using
 &lt;&lt; for non-regex evaluation</h3>
 There
@@ -1903,7 +1909,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">1 October 2011<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">11 October 2011<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 

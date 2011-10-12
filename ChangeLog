@@ -1,6 +1,20 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 11 October 2011 v4.2.0
+	Added Code Blocks, grouping lines of script for if statements and while loops
+		Added while loops via code blocks, e.g.
+			[ $i < $n
+			]
+		While loops have infinite loop protection (defaults to 5000)
+		Code Blocks can be pasted into IDE (with expect version 5.42 or later)
+	Added constant values can have spaces on CLI - feature request from Michel Desjardins
+		e.g. var="value and spaces"
+	Cygwin has been tested, however expect 5.26 (from 2003) does not support IDE paste
+		Working on submitting a newer version to Cygwin repository
+	Fixed var increment with spaces at end of var e.g. +$var 
+	
+	
 Released 23 August 2011 v4.1.2
 	Fixed @n (n=number) to set timeout value from IDE (problem with ssh user@192.168...)
 	Fixed *FORK display, when "session" is part of the session name
