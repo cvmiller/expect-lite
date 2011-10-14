@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.0"
+	variable version "4.2.1d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -413,7 +413,7 @@ namespace eval expectlite {
 	#	This function is also called by *INTERACT, providing similar functionality
 	#
 	proc instant_interact_sig {} {
-		global expect_out 
+		global expect_out errorInfo
 		upvar expectlite::remote_host		remote_host
 		upvar expectlite::_el				_el
 		upvar expectlite::DEBUG 			DEBUG
@@ -570,7 +570,9 @@ namespace eval expectlite {
 									cputs "$line"  $_el_info_color
 									# kick the prompt
 									protected_send "$_el_eols"
-									set retcode [ _el_script_exec "\|$line" ]
+									# does this line have a jump-to-label?
+									# run if statement with $_el_buf(stack) context
+									set retcode [_el_script_exec "\|$line"  $_el_buf(stack)]
 									#puts "=====>$retcode|$line|$line_meta"
 									# retcode 1 = result true, 0 = result false
 									# jump past code block
@@ -697,7 +699,7 @@ namespace eval expectlite {
 					}
 				} }  \
 			 error] } {
-				puts stderr "CONNECT ERROR: lost connection to $remote_host \n   $error"
+				puts stderr "CONNECT ERROR: lost connection to $remote_host \n   $error \n $errorInfo"
 				# Fail script?
 				exit 1
 			}

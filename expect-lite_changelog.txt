@@ -951,6 +951,11 @@ Released 21 Dec 2010 - 4.0.2
 11 October 2011 - 4.2.0
 	Released same as d13
 		
+13 October 2011 - 4.2.1d1
+	Fixed ?if 1==1? %TEST in IDE single step
+
+
+
 
 ------------ Future Versions --------------------------
 		
