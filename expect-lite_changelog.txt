@@ -954,6 +954,14 @@ Released 21 Dec 2010 - 4.0.2
 13 October 2011 - 4.2.1d1
 	Fixed ?if 1==1? %TEST in IDE single step
 
+8 November 2011 - 4.2.1d2
+	Cleaned up IDE paste (first line pasted must not be indented)
+
+15 November 2011 - 4.2.1d3
+	Fixed buffer read - more specific about lines read into buffer
+		was causing problems with lines starting with / ending with \ 
+
+
 
 
 

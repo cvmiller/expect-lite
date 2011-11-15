@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.1d1"
+	variable version "4.2.1d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -666,7 +666,7 @@ namespace eval expectlite {
 						interact_help
 						protected_send "$_el_eols"
 					}
-				-echo -re  {(^>[a-zA-Z0-9/$.]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z]|\[ )(.+)\r|(^@[0-9]+\r)|(\]\r)} {
+				-echo -re  {^(>[a-zA-Z0-9/$.]|\?[iI][fF]|\$[a-zA-Z0-9]|~[a-zA-Z0-9]|;|\*[A-Z]|\+\$|=\$|%[A-Z]|\[ )(.+)\r|(^@[0-9]+\r)|(\]\r)} {
 						#### Support for EL commands in Interact
 						#### Permits pasting of multiple commands into Interact session
 						#### test for expect version - 5.26 does not paste
@@ -1983,10 +1983,10 @@ namespace eval expectlite {
 
 			# add line to buffer
 			# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
-			if { [regexp {^[$-/:-@!~\[\]]} $buf_line ] } {
+			if { [regexp {^[$%*+:-@!~\[\]-]} $buf_line ] } {
 				# escape curly braces
 				regsub -all {([{}])} $buf_line {\\\1} buf_line
-				#puts "==add line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
+				puts "==add line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
 				lappend line_buffer  "{$buf_line} {$meta_line}"
 			}
 
