@@ -1986,7 +1986,7 @@ namespace eval expectlite {
 			if { [regexp {^[$%*+:-@!~\[\]-]} $buf_line ] } {
 				# escape curly braces
 				regsub -all {([{}])} $buf_line {\\\1} buf_line
-				puts "==add line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
+				#puts "==add line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
 				lappend line_buffer  "{$buf_line} {$meta_line}"
 			}
 
