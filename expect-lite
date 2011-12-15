@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.1d3"
+	variable version "4.2.1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1953,6 +1953,11 @@ namespace eval expectlite {
 			if { [ regexp {^%} $buf_line ] } {
 				# remove leading white space on line (permitting indentation
 				regsub {[ \t]+$} $buf_line {} buf_line
+			}
+			# pad back slash at end of line - do not escape curly list item
+			if { [ regexp {\\$} $buf_line ] } {
+				# remove leading white space on line (permitting indentation
+				regsub {\\$} $buf_line {\\ } buf_line
 			}
 
 			# process block lines ] pop

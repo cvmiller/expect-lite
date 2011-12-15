@@ -3,11 +3,11 @@
 
 @3
 
->echo "hello ken"
+>echo "hello ken"\
 <ken
 
 
-$EL_jtag=
+$EL_jtag=	\
 ?if $EL_jtag == ? $jtag=192.168.1.100 :: $jtag=$EL_jtag
 
 >ifconfig
@@ -51,6 +51,9 @@ $i=0
 
 >
 *INTERACT
+
+; show this \
+>
 
 # ; === Sudo stuff
 # # set user defined prompt line

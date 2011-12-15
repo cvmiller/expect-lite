@@ -1,6 +1,12 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 13 December 2011 v4.2.1
+	Fixed jump to label in IDE single step e.g. ?if 1==1? %TEST
+	Cleaned up IDE paste (first line pasted must not be indented)
+	Fixed buffer read - more specific about lines read into buffer
+	Fixed buffer read problem with lines ending in backslash \
+
 Released 11 October 2011 v4.2.0
 	Added Code Blocks, grouping lines of script for if statements and while loops
 		Added while loops via code blocks, e.g.

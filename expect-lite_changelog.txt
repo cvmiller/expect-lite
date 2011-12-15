@@ -961,7 +961,12 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed buffer read - more specific about lines read into buffer
 		was causing problems with lines starting with / ending with \ 
 
-
+12 December 2011 - 4.2.1d4
+	Fixed buffer read problem with line ending in backslash \
+	
+13 December 2011 - 4.2.1
+	Released. Same ad d4
+	
 
 
 

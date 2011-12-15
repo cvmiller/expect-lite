@@ -98,6 +98,18 @@ $IP=2001::DEAD
 *FORK
 >
 *NOTIMESTAMP
+$count=0
+$max=5
+%GEN_LOOP
+	?if $test_complete == Done ?%BREAK_LOOP
+	# increment variable
+	+$count
+?if $count <= $max ?%GEN_LOOP
+%BREAK_LOOP
+>
+
+
+
 *SHOW VARS
 *TCL puts "\nARGV:$argv0"
 *TCL puts [test_funct $cmd_list_ptr]
