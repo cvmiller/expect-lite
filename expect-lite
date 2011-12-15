@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.1"
+	variable version "4.2.2d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -2718,7 +2718,7 @@ namespace eval expectlite {
 			# use pre-read _el_buf(stack)
 			# read first line of buffer
 			set _el(line) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack]
-
+			
 		} elseif { [ regexp {^\|} $cmd_file ] == 0} {
 			#puts "zzz>$cmd_file|[ regexp {^\|} $cmd_file ]"
 			# read in cmd_file to buffer
@@ -2763,7 +2763,6 @@ namespace eval expectlite {
 			_el_deref_line
 
 
-			
 			#puts "el(line):$_el(line)"
 
 
@@ -3233,14 +3232,14 @@ namespace eval expectlite {
 										return $result
 										}
 								}; #switch
+								# pop _el_buf(stack)
+								incr _el_buf(stack) -1
+								
 							} else {
 								cputs "\nWarning: Skipping include file:$_include_file\n" $_el_warn_color
 							}
 
-							# pop _el_buf(stack)
-							incr _el_buf(stack) -1
-
-						}
+						}; #if
 
 					}
 				^\\+\\$[A-Za-z0-9_]+[=]	{ 	# Setup Dynamic Var using Expect Capture

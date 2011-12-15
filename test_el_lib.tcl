@@ -71,6 +71,8 @@ puts "argv0 is:$argv0"
 set cmd_file $argv0
 set cmd_list_ptr [expectlite::_el_buffer $cmd_file]
 
+# show first 20 lines of EL script
+#expectlite::_el_buffer_show 20 $expectlite::_el_buf(stack) 1
 
 # call el script exec
 set RESULT [ expectlite::_el_script_exec "" $cmd_list_ptr ]
@@ -95,18 +97,27 @@ $IP=2001::DEAD
 >date
 <2011
 >pwd
-*FORK
+#*FORK
 >
 *NOTIMESTAMP
 $count=0
-$max=5
+$max=3
 %GEN_LOOP
-	?if $test_complete == Done ?%BREAK_LOOP
+	>
+	?if $test_complete == Done ?%BREAK_LOOP1
 	# increment variable
 	+$count
 ?if $count <= $max ?%GEN_LOOP
-%BREAK_LOOP
+%BREAK_LOOP1
 >
+$i=2
+[ $i < 5
+	>
+	?if $i == 4 ?%BREAK_LOOP
+	# increment variable
+	+$i
+]
+%BREAK_LOOP
 
 
 

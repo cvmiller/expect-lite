@@ -967,7 +967,8 @@ Released 21 Dec 2010 - 4.0.2
 13 December 2011 - 4.2.1
 	Released. Same ad d4
 	
-
+14 December 2011 - 4.2.2d1
+	Fixed _buf(stack) crash in library mode
 
 
 ------------ Future Versions --------------------------
