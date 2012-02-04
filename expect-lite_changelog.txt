@@ -970,14 +970,26 @@ Released 21 Dec 2010 - 4.0.2
 14 December 2011 - 4.2.2d1
 	Fixed _buf(stack) crash in library mode
 
+3 February 2012 - 4.2.2d2
+	Fixed if-else to handle ipv6 addresses with double colons
+		ipv6 addr is defined at [0-9a-f:]
+
 
 ------------ Future Versions --------------------------
 		
 Future
 
+o	IPv6 improvements
+		add checking for more than one '::' in if statement, if so, force else to be ' :: '
+
+o	User script help - next release
+	Lines which beging with ''' can be integrated help
 
 o	fix build script to pull all data from Expect-lite, and build *proj directory
 
+o	pass vars/constants to include files
+	Separate level of var between user_namespace and const_namespace, which is deleted at end of include?
+		
 x	Add code-line-blocks with [ ] (4.2.0 candidate)
 	[ <test>
 	]
@@ -996,9 +1008,6 @@ x	Add code-line-blocks with [ ] (4.2.0 candidate)
 		x Create proc _el_buffer_goto, rather than setting buf pointer directly
 		o Don't return test_result in one_line mode, only return success/fail
 		o Handle arrow keys better - It may be possible to negate the escape like [^\x1B]\[
-		
-o	pass vars/constants to include files
-	Separate level of var between user_namespace and const_namespace, which is deleted at end of include?
 		
 x	Check 4.2.0 on cygwin
 
@@ -1041,9 +1050,6 @@ x	Clean up fork _el_fork($fork_id) to _el_fork($fork_id,session)
 x	Fix IDE '>' paste (added chars ./$)
 
 x	Fix MAN and man directory in tarball - MacOS X sees them as the same name
-
-o	User script help - next release
-	Lines which beging with """ can be integrated help
 
 x	Add deb and rpm to download files
 

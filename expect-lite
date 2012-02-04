@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.2d1"
+	variable version "4.2.2d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3006,12 +3006,19 @@ namespace eval expectlite {
 						set _else_action ""
 						set _action [string range $_cond_line [expr [string first $_cond $_cond_line] + [string length $_cond] ] [string length $_cond_line]]
 						#puts "\n##ACT>$_cond_line|$_action|[string first $_cond $_cond_line]|[string length $_cond]|[string length $_cond_line]"
+						# check for else action - defined by ::
+						
 						if { [regexp $_cond_else $_action] } {
 							# add spaces to else separator
-							regsub "$_cond_else" $_action " $_cond_else " _action
+							regsub {([^0-9a-f])::([^0-9a-f])} $_action "\\1 $_cond_else \\2" _action
+							#regsub {::} $_action " $_cond_else " _action
+							
 							# parse action into action::else_action
-							set _else_action [string range $_action [expr [string first $_cond_else $_action] + [string length $_cond_else] ] [string length $_action]]
-							set _action [string range $_action 0 [expr [string first $_cond_else $_action] - [string length $_cond_else] ]]
+							#set _else_action [string range $_action [expr [string first $_cond_else $_action] + [string length $_cond_else] ] [string length $_action]]
+							#set _action [string range $_action 0 [expr [string first $_cond_else $_action] - [string length $_cond_else] ]]
+							
+							regsub {^(.+) :: (.+)$} $_action "\\2" _else_action
+							regsub {^(.+) :: (.+)$} $_action "\\1" _action
 							# trim trailing spaces
 							set _action [string trimright $_action]
 							#puts "#2#>then$_action|else$_else_action|"
