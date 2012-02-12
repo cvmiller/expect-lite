@@ -10,6 +10,8 @@
 
 
 
+
+
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>expect-lite</title>
 
 <meta name="description" content="Automation for the rest of us">
@@ -51,31 +53,30 @@ line to indicate the action. Basic expect-lite scripts can be created
 by simply cutting and pasting text from a terminal window into a
 script, and adding '&gt;' '&lt;' characters. No knowledge of
 expect is required!</p><p>Includes a Powerful Debugger with breakpoints, step/skip, copy/paste expect-lite lines right into a running script.</p>
-      <p>Structured programming via Code Blocks, enables easy to create while loops, and conditionals (if statements).<br>
+      <p>Structured programming via Code Blocks, enables easy to create while loops, and conditionals (if statements).</p>
+      <p>Full IPv6 support, using telnet or ssh over IPv6, and IPv6 addresses in the script.<br>
 
       </p>
+
 
 <p>Expect-lite is targeted at the verification
 testing environment, and will produce a Pass/Fail result at the end of
 the script. However, its use is not limited to this environment and can
 be used anywhere a text-based interface needs a bit of automation. </p>
 <h2>What is it for?<!-- Features -->&nbsp;</h2>
-A simple to use automation tool to do:
+      <pre>A simple to use automation tool to do:http://www.freephoneline.ca/<br>      </pre>
 <ul>
 <li>Functional, System,&nbsp;Regression Testing.</li>
 <li>White or black box Testing.</li>
 <li>Automated Router Configuration.</li>
 <li>Compiler validation.</li>
 <li>etc.</li>
-</ul><h2>What New?</h2>Latest version 4.2.1 improvements include:<br><ul>
-        <li>Fixed small bugs in IDE single step and paste<br>
+</ul><h2>What New?</h2>Latest version 4.2.2 improvements include:<br><ul>
+        <li>Added IPv6 Support (about time, too!)<br>
         </li>
-
-        <li>Fixed problem with lines ending with backslash<br>
-        </li>
-</ul>
-<h2>Philosophy<!-- Ideas --> </h2>
-<p>The main purpose is keep it simple.
+        <li>Fixed bug in Library Mode<br>
+</li>
+</ul><p>The main purpose is keep it simple.
 However, the advanced features allow pretty creative scripting.</p>
 <p>The central ideas behind the design are:<br>
 </p>
@@ -90,7 +91,7 @@ However, the advanced features allow pretty creative scripting.</p>
 <p> </p>
 <h2>Examples<!-- Example --> </h2>
 <p>Check the IP address of the localhost</p>
-<pre>&gt;ipconfig<br>&lt;192\.168\.1\.1</pre>
+<pre>&gt;ifconfig<br>&lt;192\.168\.1\.1<br>&gt;ip -6 addr show<br>&lt;2001:db8::f00d<br></pre>
 <p>ssh to a remote host</p>
 <pre>&gt;ssh root@host-021<br>&lt;assword:<br>&gt;secret_password<br># issue a command once logged in<br>&gt;ls<br>&gt;exit</pre>While loops using code blocks<br>
       <pre>$i=1<br>[ $i &lt; 5<br>	&gt;echo "hello times $i"<br>	&lt;times $i<br>	+$i<br>]<br></pre>
@@ -114,13 +115,13 @@ expect-lite</big></a></p>
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">13 December 2011<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">13 February 2012<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
 <small><span style="font-style: italic;">this
 document for version
-4.2.1 and above</span><br style="font-style: italic;">
+4.2.2 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

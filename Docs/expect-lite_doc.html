@@ -11,6 +11,8 @@
 
 
 
+
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -69,8 +71,9 @@ enhances output, differentiates log messages</span></span></li>
 login</span></a> to remote
 host (supporting telnet, ssh with password, and ssh with keys)</li>
         <li><a href="#examples"><span style="font-weight: bold;">Examples</span></a>&nbsp;
-showing complex actions easily scripted<br>
-        </li>
+showing complex actions easily scripted</li>
+        <li><a style="font-weight: bold;" href="#ipv6_support">IPv6</a><span style="font-weight: bold;"> </span>Full Support <span style="background-color: yellow;">new in 4.2.2</span></li>
+
       </ul>
       <span style="font-weight: bold;">Variables<br>
       </span>
@@ -115,7 +118,7 @@ looping</span></a>
 using
 conditional branching, a repeat loop can be constructed with infinite
 loop protection</li>
-        <li><a style="font-weight: bold;" href="#code_blocks">Code Blocks</a> group lines of script for conditionals and while loops <span style="background-color: yellow;">new in 4.2.0</span></li>
+        <li><a style="font-weight: bold;" href="#code_blocks">Code Blocks</a> group lines of script for conditionals and while loops&nbsp;<span style="background-color: yellow;"></span></li>
 
       </ul>
       <span style="font-weight: bold;">Advanced</span><br>
@@ -637,6 +640,18 @@ ISO is default</td>
         </dd>
       </dl>
       <br>
+      <h2><a name="ipv6_support"></a>IPv6 Support</h2>
+expect-lite is an application, and will use communications
+protocols such as telnet and ssh to connect to a remote host. If telnet or ssh is IPv6 enabled, then expect-lite can/will
+use it.<br>
+      <br>
+However, it may be important to include IPv6 addresses in expect-lite
+scripts. expect-lite now fully supports IPv6 addresses including short
+hand notation with double colons, e.g. 2001:db8::dead<br>
+      <br>
+Care has been taken to have expect-lite do the right thing with IPv6
+addresses, however, it may be necessary to be more explicit when using
+conditionals (if/then/else), see <a href="#conditional_ipv6">conditionals and IPv6</a>.<br>
       <h2><a name="tips"></a>General Tips for
 writing scripts</h2>
 Here are some simple tips when script writing:<br>
@@ -1073,6 +1088,19 @@ printed when a conditional is evaluated, such as:<br>
 The message prints: what was evaluated (expr { "ppc" == "i386"
 }),&nbsp; 'then', and 'else' actions, as well as a result (true or
 false)<br>
+      <br>
+      <a name="conditional_ipv6"></a><span style="font-weight: bold;">IPv6 Addresses</span><br>
+      <br>
+Because IPv6 addresses are quite long, it is a common short hand to
+represent a long string of zeros with a double colon '::', such as
+2001:db8::f00d. The conditional also uses a double colon to signal the
+      <span style="font-style: italic;">else</span> portion of the conditional, so what happens when:<br>
+      
+      <pre>$platform=ppc<br>? $platform == i386 ? $my_addr=2001:db8::f00d :: $my_addr=2001:db8::feed</pre>
+
+      Fortunately, as of version 4.2.2, it will be as expected, $my_addr will be set to 2001:db8::feed<br>
+      <br>
+If in doubt, be sure to place spaces around the <span style="font-style: italic;">else</span> double colon, as spaces are never allowed in an IPv6 address.<br>
       <br>
       <a name="undefined_var_conditional"></a><span style="font-weight: bold;">Undefined variables</span><br>
 
@@ -1909,7 +1937,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">11 October 2011<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">13 February 2012<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
@@ -1919,7 +1947,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.2.0 and above</span><br style="font-style: italic;">
+document for version 4.2.2 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

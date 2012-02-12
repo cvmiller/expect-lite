@@ -1,6 +1,6 @@
 ##################################################################################
 #
-#  Copyright (C) Craig Miller 2008-2010
+#  Copyright (C) Craig Miller 2008-2012
 #
 #  Copyright (C) Freescale Semiconductor, Inc. 2005-2007
 #
@@ -971,24 +971,30 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed _buf(stack) crash in library mode
 
 3 February 2012 - 4.2.2d2
-	Fixed if-else to handle ipv6 addresses with double colons
+	Updated if-else to handle ipv6 addresses with double colons
 		ipv6 addr is defined at [0-9a-f:]
 
+13 February 2012 - 4.2.2 
+	Released. Same as d2
+	
 
 ------------ Future Versions --------------------------
 		
 Future
 
-o	IPv6 improvements
+x	IPv6 improvements
 		add checking for more than one '::' in if statement, if so, force else to be ' :: '
 
 o	User script help - next release
 	Lines which beging with ''' can be integrated help
+	Write documentation and see how it looks
 
-o	fix build script to pull all data from Expect-lite, and build *proj directory
+x	fix build script to pull all data from Expect-lite, and build *proj directory
 
 o	pass vars/constants to include files
 	Separate level of var between user_namespace and const_namespace, which is deleted at end of include?
+
+o	unknown host - ssh_key_login should answer "yes" when needed during login (like zlogin)
 		
 x	Add code-line-blocks with [ ] (4.2.0 candidate)
 	[ <test>

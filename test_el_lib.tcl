@@ -95,7 +95,7 @@ exit 0
 $IP=2001::DEAD
 ~junk
 >date
-<2011
+<2012
 >pwd
 #*FORK
 >
@@ -118,7 +118,10 @@ $i=2
 	+$i
 ]
 %BREAK_LOOP
-
+; === test IPv6 addressing
+$platform=ppc
+? $platform == i386 ? $my_addr=2001:db8::f00d :: $my_addr=2001:db8::feed
+? $my_addr!=2001:db8::feed ? *FAIL
 
 
 *SHOW VARS
