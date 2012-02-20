@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.2.0d13"
+	variable version "4.3.0d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -170,6 +170,9 @@ namespace eval expectlite {
 
 		# global constant for script name aka arg0
 		variable arg0 "arg0"
+		
+		# global flag show_help - displays help if set
+		variable SHOW_HELP 0
 
 		# set ::expectlite::global fork count (for multiple sessions) to 0
 		set ::expectlite::_el(fork_count) 0
@@ -413,7 +416,7 @@ namespace eval expectlite {
 	#	This function is also called by *INTERACT, providing similar functionality
 	#
 	proc instant_interact_sig {} {
-		global expect_out 
+		global expect_out errorInfo
 		upvar expectlite::remote_host		remote_host
 		upvar expectlite::_el				_el
 		upvar expectlite::DEBUG 			DEBUG
@@ -471,6 +474,11 @@ namespace eval expectlite {
 				-reset \007	{ # ^G show lines with meta-data
 					puts "Current Stack---->$_el_buf(stack)"
 					_el_buffer_show 20 $_el_buf(stack) 1
+					send "\n"
+					return 
+					}
+				-reset \005	{ # ^E show lines with $
+					_el_buffer_show_obj $_el_buf(stack)
 					send "\n"
 					return 
 					}
@@ -570,7 +578,9 @@ namespace eval expectlite {
 									cputs "$line"  $_el_info_color
 									# kick the prompt
 									protected_send "$_el_eols"
-									set retcode [ _el_script_exec "\|$line" ]
+									# does this line have a jump-to-label?
+									# run if statement with $_el_buf(stack) context
+									set retcode [_el_script_exec "\|$line"  $_el_buf(stack)]
 									#puts "=====>$retcode|$line|$line_meta"
 									# retcode 1 = result true, 0 = result false
 									# jump past code block
@@ -664,7 +674,7 @@ namespace eval expectlite {
 						interact_help
 						protected_send "$_el_eols"
 					}
-				-echo -re  {(^>[a-zA-Z0-9/$.]|^\?[iI][fF]|^\$[a-zA-Z0-9]|^~[a-zA-Z0-9]|^;|^\*[A-Z]|^\+\$|^=\$|%[A-Z]|\[ )(.+)\r|(^@[0-9]+\r)|(\]\r)} {
+				-echo -re  {^(>[a-zA-Z0-9/$.]|\?[iI][fF]|\$[a-zA-Z0-9]|~[a-zA-Z0-9]|;|\*[A-Z]|\+\$|=\$|%[A-Z]|\[ )(.+)\r|(^@[0-9]+\r)|(\]\r)} {
 						#### Support for EL commands in Interact
 						#### Permits pasting of multiple commands into Interact session
 						#### test for expect version - 5.26 does not paste
@@ -697,7 +707,7 @@ namespace eval expectlite {
 					}
 				} }  \
 			 error] } {
-				puts stderr "CONNECT ERROR: lost connection to $remote_host \n   $error"
+				puts stderr "CONNECT ERROR: lost connection to $remote_host \n   $error \n $errorInfo"
 				# Fail script?
 				exit 1
 			}
@@ -811,6 +821,7 @@ namespace eval expectlite {
 	#
 	proc usage {} {
 		upvar expectlite::version version
+		puts " "
 		puts "usage: expect-lite -c <command_file> \[ -r <remote_host_IP>\] \[-d <user_dir>\] \\ "
 		puts "              \[const1=value1\] \[*DIRECTIVE\]"
 		puts "   or: expect-lite c=<command_file> r=<remote_host_IP>  \[d=<user_dir>\]      \\ "
@@ -943,6 +954,7 @@ namespace eval expectlite {
 		upvar expectlite::EXP_INFO				EXP_INFO
 		upvar expectlite::_el_warn_color		_el_warn_color
 		upvar expectlite::_el_err_color			_el_err_color
+		upvar expectlite::SHOW_HELP				SHOW_HELP
 
 		# default timeout_multiplier multiplier to 1
 		set cli_namespace($timeout_multiplier) 1
@@ -987,7 +999,7 @@ namespace eval expectlite {
 				# look for help & debug options which overide script options
 				# added -r and -c for remote_host & cmd_file respectively
 				if { [catch { switch -glob -- $optarg {
-					-h		-
+					-h		{ set SHOW_HELP 1 }
 					--help	{ usage }
 					-v		{set WARN 10; set INFO 10}
 					-vv		-
@@ -1095,6 +1107,34 @@ namespace eval expectlite {
 		} else {
 			return ""
 		}
+	}
+
+	#
+	#	Reads in main command file, and if show_help is true, shows help and exits
+	#	
+	#
+	proc read_cmd_file { } {
+		upvar expectlite::cmd_file				cmd_file
+		upvar expectlite::INFO					INFO
+		upvar expectlite::_el_info_color		_el_info_color
+		upvar expectlite::SHOW_HELP				SHOW_HELP
+		upvar expectlite::arg0					arg0
+	
+		# read this file as el script, reference by buf_stack pointer
+		set cmd_list_ptr [expectlite::_el_buffer $cmd_file]
+
+		# if needed show help and exit
+		if { $SHOW_HELP } {
+			cputs "Help for: $cmd_file" $_el_info_color
+			_el_buffer_show_obj $cmd_list_ptr \'\'
+			cputs "Displaying assigned variables, which can be overridden with a Constant on command line" $_el_info_color
+			_el_buffer_show_obj $cmd_list_ptr
+			
+			usage
+			exit 1
+		}
+		# return the pointer to the buffer	
+		return $cmd_list_ptr
 	}
 
 	#
@@ -1431,6 +1471,34 @@ namespace eval expectlite {
 			wait_for_prompt
 		}
 		set timeout $_el_timeout
+	}
+	
+	#
+	#	initialize session and remote host
+	#
+	#
+	proc session_init { cmd_file_ptr } {
+		upvar expectlite::user_dir					user_dir
+		upvar expectlite::_el_fork					_el_fork
+		upvar expectlite::_el_eols				_el_eols
+	
+		# is main script name equal to command file (script) name 
+		# or Is this an include file, then don't do remote_host_init
+		read_set_config_directives $cmd_file_ptr
+		# init prompt for first (default) session
+		remote_host_init $user_dir
+		# kick the prompt
+		protected_send "$_el_eols"
+		
+		# set default fork session if it doesn't already exist
+		if { [info exists _el_fork(default,session)] != 1 } {
+			if { [catch { set _el_fork(default,session) $::spawn_id  } error] } {
+				puts stderr "BUG: Expect-lite: Bug in _el_script_exec init code while setting default FORK session \n   $error"
+				# Fail script?
+				exit 1
+			}
+		}
+	
 	}
 
 	#
@@ -1952,6 +2020,11 @@ namespace eval expectlite {
 				# remove leading white space on line (permitting indentation
 				regsub {[ \t]+$} $buf_line {} buf_line
 			}
+			# pad back slash at end of line - do not escape curly list item
+			if { [ regexp {\\$} $buf_line ] } {
+				# remove leading white space on line (permitting indentation
+				regsub {\\$} $buf_line {\\ } buf_line
+			}
 
 			# process block lines ] pop
 			if { [regexp {^[\]]} $buf_line ] } {
@@ -1981,7 +2054,7 @@ namespace eval expectlite {
 
 			# add line to buffer
 			# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
-			if { [regexp {^[$-/:-@!~\[\]]} $buf_line ] } {
+			if { [regexp {^[$%*+:-@!~'\[\]-]} $buf_line ] } {
 				# escape curly braces
 				regsub -all {([{}])} $buf_line {\\\1} buf_line
 				#puts "==add line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
@@ -2095,6 +2168,35 @@ namespace eval expectlite {
 		}
 	}
 	
+	#
+	#	Reads buffer, prints lines matching $obj
+	#	
+	#
+	proc _el_buffer_show_obj { buf_stack {obj "\\\$"}} {
+		upvar expectlite::_el_buf			_el_buf
+		upvar expectlite::_el_info_color		_el_info_color
+
+		set out_list {}
+		#puts "obj>>>$obj|"
+		foreach line $_el_buf($buf_stack) {
+			if { [ regexp "^$obj" [lindex $line 0 ] ] } {
+				lappend out_list [lindex $line 0]
+			}
+			#puts "ddd>$line"
+		}
+		# sort the output, except '' help lines
+		if { $obj != {''} } {
+			set out_list [ lsort -unique $out_list ]
+		} 
+		foreach line $out_list {
+			# remove '' from help lines
+			if { $obj == {''} } {
+				regsub {''} $line {} line
+			}
+			puts "\t$line"
+		}
+	}
+
 	#
 	#	Goto buffer line number
 	#	
@@ -2489,7 +2591,6 @@ namespace eval expectlite {
 		upvar expectlite::delay_wait_for_host		delay_wait_for_host
 		upvar expectlite::cli_namespace 			cli_namespace
 		upvar expectlite::user_namespace			user_namespace
-		upvar expectlite::remote_host				remote_host
 		upvar expectlite::user_dir					user_dir
 		upvar expectlite::_el_infinite_loop 		_el_infinite_loop
 		upvar expectlite::_incr_var 				_incr_var
@@ -2711,37 +2812,38 @@ namespace eval expectlite {
 			# use pre-read _el_buf(stack)
 			# read first line of buffer
 			set _el(line) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack]
-
+			set _el(line_meta) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack 1]
+			
 		} elseif { [ regexp {^\|} $cmd_file ] == 0} {
 			#puts "zzz>$cmd_file|[ regexp {^\|} $cmd_file ]"
 			# read in cmd_file to buffer
-			set buf_stack [_el_buffer $cmd_file]
-			# change to passed directory, if needed (and set term type & shell) for main script
-			if {$cli_namespace($arg0) == [parse_cmd_file_nopath  $cmd_file]} {
-				# is main script name equal to command file (script) name 
-				# or Is this an include file, then don't do remote_host_init
-				read_set_config_directives $buf_stack
-				# init prompt for first (default) session
-				remote_host_init $user_dir
-				# kick the prompt
-				protected_send "$_el_eols"
-			}
-
-			# set default fork session if it doesn't already exist
-			if { [info exists _el_fork(default,session)] != 1 } {
-				if { [catch { set _el_fork(default,session) $spawn_id  } error] } {
-					puts stderr "BUG: Expect-lite: Bug in _el_script_exec init code while setting default FORK session \n   $error"
-					# Fail script?
-					exit 1
-				}
-			}
-
-			# get first line of cmd_file from buffer
-			set _el(line) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack]
-			# get meta-data for line
-			set _el(line_meta) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack 1]
-			# remove leading white space on line (permitting indentation
-			regsub {^[ \t]+} $_el(line) {} _el(line)
+# 			set buf_stack [_el_buffer $cmd_file]
+# 			# change to passed directory, if needed (and set term type & shell) for main script
+# 			if {$cli_namespace($arg0) == [parse_cmd_file_nopath  $cmd_file]} {
+# 				# is main script name equal to command file (script) name 
+# 				# or Is this an include file, then don't do remote_host_init
+# 				read_set_config_directives $buf_stack
+# 				# init prompt for first (default) session
+# 				remote_host_init $user_dir
+# 				# kick the prompt
+# 				protected_send "$_el_eols"
+# 			}
+# 
+# 			# set default fork session if it doesn't already exist
+# 			if { [info exists _el_fork(default,session)] != 1 } {
+# 				if { [catch { set _el_fork(default,session) $spawn_id  } error] } {
+# 					puts stderr "BUG: Expect-lite: Bug in _el_script_exec init code while setting default FORK session \n   $error"
+# 					# Fail script?
+# 					exit 1
+# 				}
+# 			}
+# 
+# 			# get first line of cmd_file from buffer
+# 			set _el(line) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack]
+# 			# get meta-data for line
+# 			set _el(line_meta) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack 1]
+# 			# remove leading white space on line (permitting indentation
+# 			regsub {^[ \t]+} $_el(line) {} _el(line)
 			set _one_line 0
 
 		} else {
@@ -2756,7 +2858,6 @@ namespace eval expectlite {
 			_el_deref_line
 
 
-			
 			#puts "el(line):$_el(line)"
 
 
@@ -3000,12 +3101,19 @@ namespace eval expectlite {
 						set _else_action ""
 						set _action [string range $_cond_line [expr [string first $_cond $_cond_line] + [string length $_cond] ] [string length $_cond_line]]
 						#puts "\n##ACT>$_cond_line|$_action|[string first $_cond $_cond_line]|[string length $_cond]|[string length $_cond_line]"
+						# check for else action - defined by ::
+						
 						if { [regexp $_cond_else $_action] } {
 							# add spaces to else separator
-							regsub "$_cond_else" $_action " $_cond_else " _action
+							regsub {([^0-9a-f])::([^0-9a-f])} $_action "\\1 $_cond_else \\2" _action
+							#regsub {::} $_action " $_cond_else " _action
+							
 							# parse action into action::else_action
-							set _else_action [string range $_action [expr [string first $_cond_else $_action] + [string length $_cond_else] ] [string length $_action]]
-							set _action [string range $_action 0 [expr [string first $_cond_else $_action] - [string length $_cond_else] ]]
+							#set _else_action [string range $_action [expr [string first $_cond_else $_action] + [string length $_cond_else] ] [string length $_action]]
+							#set _action [string range $_action 0 [expr [string first $_cond_else $_action] - [string length $_cond_else] ]]
+							
+							regsub {^(.+) :: (.+)$} $_action "\\2" _else_action
+							regsub {^(.+) :: (.+)$} $_action "\\1" _action
 							# trim trailing spaces
 							set _action [string trimright $_action]
 							#puts "#2#>then$_action|else$_else_action|"
@@ -3226,14 +3334,14 @@ namespace eval expectlite {
 										return $result
 										}
 								}; #switch
+								# pop _el_buf(stack)
+								incr _el_buf(stack) -1
+								
 							} else {
 								cputs "\nWarning: Skipping include file:$_include_file\n" $_el_warn_color
 							}
 
-							# pop _el_buf(stack)
-							incr _el_buf(stack) -1
-
-						}
+						}; #if
 
 					}
 				^\\+\\$[A-Za-z0-9_]+[=]	{ 	# Setup Dynamic Var using Expect Capture
@@ -3704,9 +3812,12 @@ namespace eval expectlite {
 		if [catch { exp_version 5.42.0 } msg ] {
 			cputs "\nWarning: $msg\n" $_el_err_color
 		}
-
+		
 		# check terminal type for use of colors
-		check_term_type
+		check_term_type 
+
+		# read in cmd file and return handle to buffer
+		set cmd_file_ptr [ read_cmd_file ]
 
 		# Use selected (at top of file) connect_method
 		switch $connect_method {
@@ -3717,11 +3828,14 @@ namespace eval expectlite {
 		}
 
 
+		# initialize remote_host_init, fork session
+		session_init $cmd_file_ptr
+		
 		if { $DEBUG_LOG==1 } { log_file -noappend debug_output.txt }
 
 
 		# Send commands to remote host, and validate response
-		set _el_result [ _el_script_exec $cmd_file ]
+		set _el_result [ _el_script_exec "" $cmd_file_ptr ]
 
 
 		after [expr 5 * $delay_wait_for_host]

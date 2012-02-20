@@ -3,6 +3,8 @@
 
 @3
 
+*INTERACT
+
 >echo "hello ken"\
 <ken
 

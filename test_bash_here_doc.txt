@@ -1,3 +1,4 @@
+#!/usr/bin/env expect-lite
 # How to use this expect-lite file, Lines that begin with:
 #	'>' send to remote host, implies "wait for prompt"
 #	'<' _MUST_ be received from the remote host, or this config script will fail
@@ -10,20 +11,21 @@
 
 
 #
-# Test: 	Test bash here doc
-#		
-# Assumptions:	bash
-# Platforms: 	anywhere bash runs
-#
+'' Test: 	Test bash here doc
+''		
+'' Assumptions:	bash
+'' Platforms: 	anywhere bash runs
+''
+$tempfile=junk
 
 ; === Create the file using bash "here doc"
->cat > junk <<'+++'
+>cat > $tempfile <<'+++'
 >2+3
 >3+4
 >quit
 >+++
 ; === now look at the file
->cat junk
+>cat $tempfile
 
 >
 
