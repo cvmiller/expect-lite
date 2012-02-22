@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.0d1"
+	variable version "4.3.0d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3320,7 +3320,10 @@ namespace eval expectlite {
 							}
 							# Make Recursive Call in stand alone mode
 							if { [info exist ::EL_LIBRARY] != 1 } {
-								set result [_el_script_exec $include_path_file]
+								# read in cmd_file to buffer
+ 								set buf_stack [_el_buffer $include_path_file]
+								
+								set result [_el_script_exec "" $buf_stack]
 								# don't report false include failure, set test_failed
 								switch -- $result {
 									0 { # pass
@@ -3335,12 +3338,12 @@ namespace eval expectlite {
 										}
 								}; #switch
 								# pop _el_buf(stack)
-								incr _el_buf(stack) -1
+								_el_buffer_stack_clear $buf_stack
+								incr buf_stack -1
 								
 							} else {
 								cputs "\nWarning: Skipping include file:$_include_file\n" $_el_warn_color
 							}
-
 						}; #if
 
 					}

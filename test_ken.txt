@@ -2,12 +2,15 @@
 # make this puppy run
 
 @3
-
-*INTERACT
+$dummy_var=this is just to show a var
 
 >echo "hello ken"\
 <ken
 
+~show_vars.inc
+>echo "hello"
+
+*INTERACT
 
 $EL_jtag=	\
 ?if $EL_jtag == ? $jtag=192.168.1.100 :: $jtag=$EL_jtag

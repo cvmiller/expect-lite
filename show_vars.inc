@@ -8,4 +8,5 @@
 >
 >sleep 1
 >
+>echo "bye"
 >

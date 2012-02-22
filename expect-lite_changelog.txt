@@ -983,7 +983,9 @@ Released 21 Dec 2010 - 4.0.2
 		Displays help test starting with ''
 			e.g. '' this script does x,y and z
 
-
+21 February 2012 - 4.3.0d2
+	Fixed include file, broken in d1
+	
 
 
 ------------ Future Versions --------------------------
