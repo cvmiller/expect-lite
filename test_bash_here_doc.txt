@@ -11,11 +11,12 @@
 
 
 #
-'' Test: 	Test bash here doc
-''		
-'' Assumptions:	bash
-'' Platforms: 	anywhere bash runs
-''
+;;;
+Test: 	Test bash here doc
+		
+Assumptions:	bash
+Platforms: 	anywhere bash runs
+;;;
 $tempfile=junk
 
 ; === Create the file using bash "here doc"

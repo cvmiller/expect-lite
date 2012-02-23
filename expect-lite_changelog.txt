@@ -986,7 +986,10 @@ Released 21 Dec 2010 - 4.0.2
 21 February 2012 - 4.3.0d2
 	Fixed include file, broken in d1
 	
-
+23 February 2012 - 4.3.0.d3
+	Added help block defined by ;;; (start and end)
+	Removed '$' from assigned vars in help
+	
 
 ------------ Future Versions --------------------------
 		

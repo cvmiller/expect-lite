@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.0d2"
+	variable version "4.3.0d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1126,8 +1126,9 @@ namespace eval expectlite {
 		# if needed show help and exit
 		if { $SHOW_HELP } {
 			cputs "Help for: $cmd_file" $_el_info_color
-			_el_buffer_show_obj $cmd_list_ptr \'\'
-			cputs "Displaying assigned variables, which can be overridden with a Constant on command line" $_el_info_color
+			#_el_buffer_show_obj $cmd_list_ptr \'\'
+			_el_buffer_show_help $cmd_list_ptr
+			cputs "Displaying assigned variables, which can be overridden with \na Constant on command line e.g var=value" $_el_info_color
 			_el_buffer_show_obj $cmd_list_ptr
 			
 			usage
@@ -1997,6 +1998,8 @@ namespace eval expectlite {
 		
 		set line_buffer {}
 		set listptr 0
+		# read help flag
+		set read_help 0
 		
 		if {$cmd_file != ""} {
 			# Protect against no file to read
@@ -2052,12 +2055,24 @@ namespace eval expectlite {
 				_el_buffer_block_push [llength $line_buffer]
 			}
 
+			# check if help lines are in file
+			if { [ regexp {^;;;} $buf_line ] && $read_help == 1 } {
+				set read_help 0
+			} elseif { [ regexp {^;;;} $buf_line ] && $read_help == 0 } {
+				set read_help 1
+			} 
+
 			# add line to buffer
 			# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
 			if { [regexp {^[$%*+:-@!~'\[\]-]} $buf_line ] } {
 				# escape curly braces
 				regsub -all {([{}])} $buf_line {\\\1} buf_line
 				#puts "==add line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
+				lappend line_buffer  "{$buf_line} {$meta_line}"
+			} elseif { $read_help == 1 } {
+				# escape curly braces
+				regsub -all {([{}])} $buf_line {\\\1} buf_line
+				#puts "==add help line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
 				lappend line_buffer  "{$buf_line} {$meta_line}"
 			}
 
@@ -2185,17 +2200,57 @@ namespace eval expectlite {
 			#puts "ddd>$line"
 		}
 		# sort the output, except '' help lines
-		if { $obj != {''} } {
-			set out_list [ lsort -unique $out_list ]
-		} 
+		set out_list [ lsort -unique $out_list ]
 		foreach line $out_list {
-			# remove '' from help lines
-			if { $obj == {''} } {
-				regsub {''} $line {} line
+			# remove $ from help lines
+			if { $obj == {\$} } {
+				regsub {\$} $line {} line
 			}
 			puts "\t$line"
 		}
 	}
+	
+	#
+	#	Reads buffer, prints contigous help lines
+	#	
+	#
+	proc _el_buffer_show_help { buf_stack {obj {^;;;} }} {
+		upvar expectlite::_el_buf			_el_buf
+		upvar expectlite::_el_info_color		_el_info_color
+		upvar expectlite::WARN					WARN
+
+		set out_list {}
+		#puts "obj>>>$obj|"
+		# find beginning of help text
+		set _ptr_list [lsearch -regexp -all -index 0 $_el_buf($buf_stack)  $obj ]
+		#puts "===bufstack===>$_el_buf($buf_stack)"
+		#puts "=====PL====>$_ptr_list|"
+		if { $_ptr_list == {} } {
+			if {$WARN} {
+				puts -nonewline "\n\nWARNING: Help Text not found\n" 
+			}
+			# signal label not found
+			set _ptr -1
+		} else {
+			set _ptr_list [ lsort $_ptr_list ]
+			if { [ llength $_ptr_list ] > 1  } {
+				set help_ptr_begin [ lindex $_ptr_list 0 ]
+				set help_ptr_end [ lindex  $_ptr_list 1]
+				_el_buffer_goto $help_ptr_begin $buf_stack
+				set help_length [ expr $help_ptr_end - $help_ptr_begin ]
+				#_el_buffer_show $help_length $buf_stack
+				set num_of_lines [expr $help_length + 0 ]
+				set debug 0
+				for {set n [expr $_el_buf($buf_stack,ptr) +1]} {$n<[expr $num_of_lines + $_el_buf($buf_stack,ptr)]} {incr n} {
+					puts "\t[ _el_buffer_read $n $buf_stack 0 $debug ]"
+				}
+			
+			}
+		} ;#if
+		
+		
+
+	}; #end proc
 
 	#
 	#	Goto buffer line number
@@ -3264,7 +3319,7 @@ namespace eval expectlite {
 							#puts "++++++ptr>$_el_buf($buf_stack,ptr)"
 						}
 					}
-				^\;;	{	# Send "comment" to stdout unbuffered
+				^\;;[^;]	{	# Send "comment" to stdout unbuffered
 
 						# execute expect lines if present
 						_el_exec_expect
@@ -3283,7 +3338,7 @@ namespace eval expectlite {
 						}
 
 					}
-				^\;	{	# Send "comment" to stdout buffered
+				^\;[^;]	{	# Send "comment" to stdout buffered
 
 						# execute expect lines if present
 						_el_exec_expect
