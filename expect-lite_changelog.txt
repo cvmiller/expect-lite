@@ -989,6 +989,11 @@ Released 21 Dec 2010 - 4.0.2
 23 February 2012 - 4.3.0.d3
 	Added help block defined by ;;; (start and end)
 	Removed '$' from assigned vars in help
+
+25 February 2012 - 4.3.0d4
+	Created special buffer for help (just one)
+		any text can be inside help buffer, including $this=that
+	Fixed fail script recursive call - was crashing expect-lite (4.3.0d only)
 	
 
 ------------ Future Versions --------------------------

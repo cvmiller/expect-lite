@@ -4,12 +4,16 @@
 @3
 $dummy_var=this is just to show a var
 
+# fail script
+*~self_test_fail_script.txt
+
 >echo "hello ken"\
 <ken
 
 ~show_vars.inc
 >echo "hello"
-
+<bye, bye
+>
 *INTERACT
 
 $EL_jtag=	\

@@ -16,6 +16,7 @@ Test: 	Test bash here doc
 		
 Assumptions:	bash
 Platforms: 	anywhere bash runs
+$this=that
 ;;;
 $tempfile=junk
 

@@ -2,3 +2,6 @@
 ; === In Fail Script
 $FAIL=1
 ; === FAIL=$FAIL
+# back door to continue after fail script
+#!set expectlite::_el(continue) 1
+>

@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.0d3"
+	variable version "4.3.0d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -198,6 +198,8 @@ namespace eval expectlite {
 		#
 		# stack which contains list of valid buffers
 		set ::expectlite::_el_buf(stack) "0"
+		# buffer which contains  help text
+		set ::expectlite::_el_buf(help) {}
 		# buf pointer - contains line number of buffer
 		set ::expectlite::_el_buf(0,ptr) "0"
 		# block line stack. used when reading into buffer blocks of lines
@@ -999,8 +1001,8 @@ namespace eval expectlite {
 				# look for help & debug options which overide script options
 				# added -r and -c for remote_host & cmd_file respectively
 				if { [catch { switch -glob -- $optarg {
-					-h		{ set SHOW_HELP 1 }
-					--help	{ usage }
+					-h		-
+					--help	{ set SHOW_HELP 1 }
 					-v		{set WARN 10; set INFO 10}
 					-vv		-
 					--verbose	{set WARN 10; set DEBUG 10}
@@ -1119,14 +1121,15 @@ namespace eval expectlite {
 		upvar expectlite::_el_info_color		_el_info_color
 		upvar expectlite::SHOW_HELP				SHOW_HELP
 		upvar expectlite::arg0					arg0
-	
+		upvar expectlite::_el_buf			_el_buf
+
 		# read this file as el script, reference by buf_stack pointer
 		set cmd_list_ptr [expectlite::_el_buffer $cmd_file]
-
+				
 		# if needed show help and exit
 		if { $SHOW_HELP } {
 			cputs "Help for: $cmd_file" $_el_info_color
-			#_el_buffer_show_obj $cmd_list_ptr \'\'
+
 			_el_buffer_show_help $cmd_list_ptr
 			cputs "Displaying assigned variables, which can be overridden with \na Constant on command line e.g var=value" $_el_info_color
 			_el_buffer_show_obj $cmd_list_ptr
@@ -1997,6 +2000,7 @@ namespace eval expectlite {
 		}; #end proc
 		
 		set line_buffer {}
+		set help_buffer {}
 		set listptr 0
 		# read help flag
 		set read_help 0
@@ -2058,23 +2062,28 @@ namespace eval expectlite {
 			# check if help lines are in file
 			if { [ regexp {^;;;} $buf_line ] && $read_help == 1 } {
 				set read_help 0
+				# stip three semi-colons
+				regsub {;;;} $buf_line {} buf_line
+				# add last line of help
+				lappend help_buffer  "$buf_line"
 			} elseif { [ regexp {^;;;} $buf_line ] && $read_help == 0 } {
 				set read_help 1
 			} 
 
 			# add line to buffer
-			# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
-			if { [regexp {^[$%*+:-@!~'\[\]-]} $buf_line ] } {
+			if { $read_help == 1 } {
+				# place help lines into help_buffer
+				# stip three semi-colons
+				regsub {;;;} $buf_line {} buf_line
+				#puts "==add help line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
+				lappend help_buffer  "$buf_line"
+			} elseif { [regexp {^[$%*+:-@!~'\[\]-]} $buf_line ] } {
+				# don't read in blank lines - make sure to include all needed lines [><?+*-~;@$=!%]
 				# escape curly braces
 				regsub -all {([{}])} $buf_line {\\\1} buf_line
 				#puts "==add line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
 				lappend line_buffer  "{$buf_line} {$meta_line}"
-			} elseif { $read_help == 1 } {
-				# escape curly braces
-				regsub -all {([{}])} $buf_line {\\\1} buf_line
-				#puts "==add help line==>[llength $line_buffer] | {$buf_line} {$meta_line}"
-				lappend line_buffer  "{$buf_line} {$meta_line}"
-			}
+			} 
 
 		}
 		if {$cmd_file != "" } {
@@ -2086,6 +2095,10 @@ namespace eval expectlite {
 		incr _el_buf(stack)
 		# save the buffer
 		set _el_buf($_el_buf(stack)) $line_buffer
+		
+		# save the help buffer
+		set _el_buf(help) $help_buffer
+		
 		# initialize the buffer pointer - points to the line no in the buffer
 		set _el_buf($_el_buf(stack),ptr) 0
 
@@ -2220,35 +2233,19 @@ namespace eval expectlite {
 		upvar expectlite::WARN					WARN
 
 		set out_list {}
-		#puts "obj>>>$obj|"
-		# find beginning of help text
-		set _ptr_list [lsearch -regexp -all -index 0 $_el_buf($buf_stack)  $obj ]
-		#puts "===bufstack===>$_el_buf($buf_stack)"
-		#puts "=====PL====>$_ptr_list|"
-		if { $_ptr_list == {} } {
-			if {$WARN} {
-				puts -nonewline "\n\nWARNING: Help Text not found\n" 
-			}
-			# signal label not found
-			set _ptr -1
-		} else {
-			set _ptr_list [ lsort $_ptr_list ]
-			if { [ llength $_ptr_list ] > 1  } {
-				set help_ptr_begin [ lindex $_ptr_list 0 ]
-				set help_ptr_end [ lindex  $_ptr_list 1]
-				_el_buffer_goto $help_ptr_begin $buf_stack
-				set help_length [ expr $help_ptr_end - $help_ptr_begin ]
-				#_el_buffer_show $help_length $buf_stack
-				set num_of_lines [expr $help_length + 0 ]
-				set debug 0
-				for {set n [expr $_el_buf($buf_stack,ptr) +1]} {$n<[expr $num_of_lines + $_el_buf($buf_stack,ptr)]} {incr n} {
-					puts "\t[ _el_buffer_read $n $buf_stack 0 $debug ]"
-				}
-			
-			}
-		} ;#if
+		#puts "obj>>>$_el_buf(help)|"
 		
-		
+		#check that there is text in the help buffer
+		if { $_el_buf(help) != {} } {
+			set i 0
+			# display text in help buffer
+			while { $i < [llength $_el_buf(help)] } {
+				set buf_line [lindex $_el_buf(help)  $i]
+				puts "\t$buf_line"
+				incr i
+			} ;#end while
+		}
+
 
 	}; #end proc
 
@@ -2871,35 +2868,11 @@ namespace eval expectlite {
 			
 		} elseif { [ regexp {^\|} $cmd_file ] == 0} {
 			#puts "zzz>$cmd_file|[ regexp {^\|} $cmd_file ]"
-			# read in cmd_file to buffer
-# 			set buf_stack [_el_buffer $cmd_file]
-# 			# change to passed directory, if needed (and set term type & shell) for main script
-# 			if {$cli_namespace($arg0) == [parse_cmd_file_nopath  $cmd_file]} {
-# 				# is main script name equal to command file (script) name 
-# 				# or Is this an include file, then don't do remote_host_init
-# 				read_set_config_directives $buf_stack
-# 				# init prompt for first (default) session
-# 				remote_host_init $user_dir
-# 				# kick the prompt
-# 				protected_send "$_el_eols"
-# 			}
-# 
-# 			# set default fork session if it doesn't already exist
-# 			if { [info exists _el_fork(default,session)] != 1 } {
-# 				if { [catch { set _el_fork(default,session) $spawn_id  } error] } {
-# 					puts stderr "BUG: Expect-lite: Bug in _el_script_exec init code while setting default FORK session \n   $error"
-# 					# Fail script?
-# 					exit 1
-# 				}
-# 			}
-# 
-# 			# get first line of cmd_file from buffer
-# 			set _el(line) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack]
-# 			# get meta-data for line
-# 			set _el(line_meta) [_el_buffer_read  $_el_buf($buf_stack,ptr) $buf_stack 1]
-# 			# remove leading white space on line (permitting indentation
-# 			regsub {^[ \t]+} $_el(line) {} _el(line)
-			set _one_line 0
+			# read in cmd_file to buffer - no longer used
+			cputs "\nError: Calling el_script_exec <filename> has been deprecated\n as of v4.3.0" $_el_err_color
+			#HALT
+			exit 2
+			
 
 		} else {
 			# cmd_file is string to evaluate (trim leading spaces if needed)
@@ -3763,8 +3736,14 @@ namespace eval expectlite {
 					# set fail_script up for success
 					set _el(success) 1
 
+
 					# Make Recursive Call
-					_el_script_exec $include_path_file
+					# read in cmd_file (fail script) to buffer
+					set buf_stack [_el_buffer $include_path_file]
+					_el_script_exec "" $buf_stack
+					# pop _el_buf(stack)
+					incr buf_stack -1
+					
 					# special short cut to allow main script to continue
 					if { [info exists _el(continue)] == 1 } {
 						if { $_el(continue) == 1 } { set _el(success) 1 }
@@ -3774,7 +3753,7 @@ namespace eval expectlite {
 						set _el(success) 0
 					}
 					#puts "success->$_el(success)"
-					#puts "FS>$_el_fail_script"	
+					#puts "FS>$_el_fail_script"
 				}
 				# last chance to let script continue, even though it should fail
 				if {$NOFAIL} {
