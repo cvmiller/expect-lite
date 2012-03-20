@@ -3,18 +3,22 @@
 
 @3
 $dummy_var=this is just to show a var
+$joe=dude
+$user=admin
 
 # fail script
-*~self_test_fail_script.txt
+#*~self_test_fail_script.txt
 
 >echo "hello ken"\
 <ken
 
-~show_vars.inc
+~show_vars.inc zamaze=15 dummy_var=override_this joe=$user
 >echo "hello"
-<bye, bye
+<\nhello
 >
-*INTERACT
+*SHOW VARS
+>
+*TERM
 
 $EL_jtag=	\
 ?if $EL_jtag == ? $jtag=192.168.1.100 :: $jtag=$EL_jtag

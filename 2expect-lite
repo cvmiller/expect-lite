@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.0d4"
+	variable version "4.3.0d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1727,6 +1727,88 @@ namespace eval expectlite {
 		return $fcolor
 	}
 
+
+	#
+	#	Proc to allow passing of arguments to Include file as constants
+	#		preserves any constants already defined, and restores them 
+	#		after include file returns
+	#
+	#	preserve const var=value and return preserved values as list {{var} {value}...}
+	#
+	proc _el_preserve_const { varvalue_list } {
+		upvar expectlite::cli_namespace			cli_namespace
+		
+		set out_list {}
+		# tease apart in list
+		foreach x $varvalue_list {
+			# pull values off of list
+			set var [lindex $x 0]
+			set value [lindex $x 1]
+			# is there a constant with this name?
+			if { [info exists cli_namespace($var) ] } {
+				#preserve value of constant
+				lappend out_list "{$var} {$cli_namespace($var)}"
+				set cli_namespace($var) $value
+			} else {
+				# put empty value on list
+				lappend out_list "{$var} {}"
+				set cli_namespace($var) $value
+			
+			}
+		}; #foreach
+		#puts "pppppp>$out_list"
+		return $out_list
+	}
+
+	#
+	#	restore const var=value from list {{var} {value}...}
+	#
+	proc _el_restore_const { varvalue_list } {
+		upvar expectlite::cli_namespace			cli_namespace
+		
+		# tease apart in list
+		foreach x $varvalue_list {
+			# pull values off of list
+			set var [lindex $x 0]
+			set value [lindex $x 1]
+			# is there a constant with this name?
+			if { [info exists cli_namespace($var) ] } {
+				#restore value of constant
+				if { $value != {} } { 
+					set cli_namespace($var) $value
+				} else {
+					unset cli_namespace($var)
+				}
+			}
+		}; #foreach
+	}
+	
+	
+	#
+	#	Parse arg string for var=value in list {{var} {value}...}
+	#
+	proc _el_parse_var_value { varvalue_list } {
+		set out_list {}
+		if { [llength $varvalue_list] > 0 } {
+			foreach x $varvalue_list {
+				# is passed value in format 'var='
+				if {  [regexp {[a-zA-Z0-9_]+[=]}  $x ] == 1 } {
+					set var_value_l [split $x "=" ]
+					set var [lindex $var_value_l 0]
+					set value [lindex $var_value_l 1]
+					lappend out_list "{$var} {$value}"
+					#puts ">>>$x>>$var $value"
+				}
+			}; #foreach
+		}
+		if { [llength $out_list ] > 0 } {
+			return $out_list
+		} else {
+			return {}
+		}
+	}; #proc
+
+
 	#
 	#	Prints a comment line (begins with a ';')
 	#	
@@ -3333,6 +3415,12 @@ namespace eval expectlite {
 
 						set _include_file [_el_strip_char $_el(line) $_include]
 						#puts "==========> $_include_file"
+						
+						# set up passed values
+						set _var_value [split $_include_file " "]
+						# get only the first word as include file
+						set _include_file [lindex [split $_include_file " " ] 0]
+						
 						# don't include file if name is set to __NO_STRING_CAPTURED__ (which is a blank dynamic/capture variable)
 						if { $_include_file != "__NO_STRING_CAPTURED__" } {
 							# absolute path to include file?
@@ -3348,6 +3436,13 @@ namespace eval expectlite {
 							}
 							# Make Recursive Call in stand alone mode
 							if { [info exist ::EL_LIBRARY] != 1 } {
+								# parse passed constants on include line
+								set _pass_var_values [ _el_parse_var_value $_var_value ]
+								#puts "==========> $_pass_var_values"
+
+								# preserve constants going into include
+								set _keep_var_values [ _el_preserve_const $_pass_var_values ]
+
 								# read in cmd_file to buffer
  								set buf_stack [_el_buffer $include_path_file]
 								
@@ -3368,6 +3463,8 @@ namespace eval expectlite {
 								# pop _el_buf(stack)
 								_el_buffer_stack_clear $buf_stack
 								incr buf_stack -1
+								# restore constants
+								_el_restore_const $_keep_var_values
 								
 							} else {
 								cputs "\nWarning: Skipping include file:$_include_file\n" $_el_warn_color

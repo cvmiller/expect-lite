@@ -995,6 +995,12 @@ Released 21 Dec 2010 - 4.0.2
 		any text can be inside help buffer, including $this=that
 	Fixed fail script recursive call - was crashing expect-lite (4.3.0d only)
 	
+19 March 2012 - 4.3.0.d5
+	Created method to pass "constants" to include files
+		e.g. ~show_vars.inc dummy_var=override_this joe=$user
+		Passed values will only "override" vars in include file, not create vars
+		
+
 
 ------------ Future Versions --------------------------
 		

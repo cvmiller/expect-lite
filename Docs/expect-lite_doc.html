@@ -13,6 +13,9 @@
 
 
 
+
+
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -144,7 +147,9 @@ Expect</span></a> - using
 native expect embedded in an expect-lite script</li>
         <li><a href="expect-lite_library.html"><span style="font-weight: bold;">Library mode</span></a> use expect-lite as
 a TCL package&nbsp;<span style="background-color: rgb(255, 255, 102);"></span> <br>
-        </li>
+</li>
+        <li><a href="#script_help"><span style="font-weight: bold;">User Defined Script Help</span></a> makes your script more user-friendly <span style="background-color: yellow;">new in 4.3.0</span></li>
+
       </ul>
       <span style="font-weight: bold;">Debugging<br>
       </span>
@@ -373,6 +378,12 @@ extra newlines are printed (useful for printing script help)<br>
                 </td>
               </tr>
               <tr>
+                <td style="vertical-align: top;">;;;<br>
+                </td>
+                <td style="vertical-align: top;">Marks the beginning and end of user defined script help (see <a href="#script_help">script help</a>)<br>
+                </td>
+              </tr>
+<tr>
                 <td style="vertical-align: top;">@num<br>
                 </td>
                 <td style="vertical-align: top;">changes
@@ -1220,6 +1231,38 @@ decrements the infinite loop counter (default is 5000). It may
 be a good idea to set the infinite loop value to something low, when
 first writing while loops, just in case:<br>
       <pre>*INFINITE_LOOP 20<br></pre>
+      <br>
+      <h2><a name="script_help"></a>Script Help with --help -h</h2>
+Once the script running, it might be handy to add help to make it more
+user-friendly or refresh the mind when running the script at a later
+date. As of version 4.3.0, t is possible to use the build-in script
+help function which when --help or -h are typed on the command line, a
+help <span style="font-style: italic;">section</span> and assigned variables will be printed.<br>
+      <br>
+The help section is defined in the script as a block of text which
+starts with a triple-semi-colon, and ends with a triple-semi-colon,
+text inside this block will <span style="font-weight: bold;">not</span> be executed by the script. For example:<br>
+      <pre>;;;<br>Test: 	Test bash here doc<br>		<br>Assumptions:	bash<br>Platforms: 	anywhere bash runs<br>;;;<br></pre>
+
+Then when running the script, with the --help or -h cli argument, the following will be printed<br>
+
+      
+      <pre>$ ./test_bash_here_doc.txt -h<br><span style="color: rgb(0, 102, 0);">Help for: ./test_bash_here_doc.txt</span><br><br>        Test:   Test bash here doc<br><br>        Assumptions:    bash<br>        Platforms:      anywhere bash runs<br><br><span style="color: rgb(0, 102, 0);">Displaying assigned variables, which can be overridden with </span><br style="color: rgb(0, 102, 0);"><span style="color: rgb(0, 102, 0);">a Constant on command line e.g var=value</span><br>        tempfile=junk<br></pre>
+
+
+      The second portion of the help is a list of variables inside the script which can be overridden as constants (see <a href="#constants">Constants</a>)
+on the command line. The assigned variables section of the help will
+always be printed regardless if a triple-semi-colon help block has been
+defined in the script. This is useful for older scripts which do not
+have a triple-semi-colon help block.<br>
+      <br>
+Constants are a very powerful feature of expect-lite which allow the
+behaviour of the script to change without having to edit the script. In
+the example above, if the script were run with the following arguments:<br>
+      <pre>$ ./test_bash_here_doc.txt tempfile=/tmp/mydata.txt<br>      </pre>
+When the script runs, rather than creating a file called 'junk', it
+will instead create a file in the /tmp directory called mydata.txt<br>
+      <br>
 <br>
       <h2><a name="bash_shell"></a>Expect-lite
 &amp; Bash</h2>
@@ -1572,7 +1615,8 @@ Example of the different logging levels are:<br>
         <li>INFO: Entering FORK sessions, Constant substitution,
 Conditional
 Statement Results, Jumping to labels, Including files, Dynamic Variable
-Assignments, User Defined Prompt assignments</li>
+Assignments, User Defined Prompt assignments and ##Overal Result.<br>
+</li>
         <li>EXP_INFO: prints "expected" text (lines with &lt; or
 &lt;&lt;). Also enabled with -V flag on the command line.</li>
         <li>WARN: Instant-Interact feature disabled,
@@ -1664,7 +1708,7 @@ name including script name and date. The <a href="#predefined_variables">predefi
 $arg0 is contains
 the expect-lite script name.<br>
       <pre># date stamp of script run time<br>&gt;echo `date +_%Y_%m_%d_%H-%M-%S`<br>+$DATE=\n(_[0-9_-]+)<br><br>$temp_file=$arg0$DATE<br>; === Create a temp file using bash "here doc" method<br>&gt;cat &gt; $temp_file &lt;&lt;'+++'<br>&gt;line 1<br>&gt;line 2<br>&gt;+++<br>&gt;<br></pre>
-      <a name="script_help"></a>Creating script help. First, require a
+      <a name="script_help_example_old"></a>Creating script help. First, require a
 parameter be passed via the CLI, such as sw_build:<br>
       <pre>./upgrade_script.elt sw_build=0015<br></pre>
 Inside the script itself, default $sw_build to 0, the CLI constant will
@@ -1672,7 +1716,15 @@ override. <br>
       <pre>$sw_build=0000<br>; === Check passed parameters<br>&gt;<br>*NOINFO<br>?if $sw_build != 0000 ? %CONTINUE<br>	;; ##############################<br>	;;	$arg0 Requires parameters: sw_build, IP<br>	;;	e.g. $arg0 sw_build=0015 IP=10.3.5.4<br>	;; ##############################<br>	# quit the script without continuing<br>	*FAIL<br>%CONTINUE<br>*INFO<br><br></pre>
 Now when just the script is executed, help will be displayed, and the
 script will terminate.<br>
-      <pre>./upgrade_script.elt<br><br><span style="color: rgb(51, 102, 255);"> === Check passed parameters</span><br><br><span style="color: rgb(0, 153, 0);">expect-lite directive: *NOINFO </span><br><span style="color: rgb(51, 102, 255);"> ##############################</span><br style="color: rgb(51, 102, 255);"><span style="color: rgb(51, 102, 255);"> upgrade_script.elt Requires parameters: sw_build, IP</span><br style="color: rgb(51, 102, 255);"><span style="color: rgb(51, 102, 255);"> e.g. upgrade_script.elt sw_build=0015 IP=10.3.5.4</span><br style="color: rgb(51, 102, 255);"><span style="color: rgb(51, 102, 255);"> ##############################</span><br><br><span style="color: rgb(0, 153, 0);">expect-lite directive: *FAIL </span><br><br></pre>
+      <pre>./upgrade_script.elt<br><br><span style="color: rgb(51, 102, 255);"> === Check passed parameters</span><br><br><span style="color: rgb(0, 153, 0);">expect-lite directive: *NOINFO </span><br><span style="color: rgb(51, 102, 255);"> ##############################</span><br style="color: rgb(51, 102, 255);"><span style="color: rgb(51, 102, 255);"> upgrade_script.elt Requires parameters: sw_build, IP</span><br style="color: rgb(51, 102, 255);"><span style="color: rgb(51, 102, 255);"> e.g. upgrade_script.elt sw_build=0015 IP=10.3.5.4</span><br style="color: rgb(51, 102, 255);"><span style="color: rgb(51, 102, 255);"> ##############################</span><br><br><span style="color: rgb(0, 153, 0);">expect-lite directive: *FAIL </span><br><br></pre><a name="script_help_example"></a>As
+of version 4.3.0, User defined help can make scripts more
+user-friendly. Text between triple-semi-colons ';;;' will be displayed
+when the -h or --help option is used on the command line<br>
+      <pre>;;;<br>Test: 	Test bash here doc<br>		<br>Assumptions:	bash<br>Platforms: 	anywhere bash runs<br>;;;<br></pre>
+Then running the script, the help text as well as variables&nbsp; in
+the script which can be overridden on the command line (as constants).<br>
+      <pre>$ ./test_bash_here_doc.txt -h<br><span style="color: rgb(0, 102, 0);">Help for: ./test_bash_here_doc.txt</span><br><br>        Test:   Test bash here doc<br><br>        Assumptions:    bash<br>        Platforms:      anywhere bash runs<br><br><span style="color: rgb(0, 102, 0);">Displaying assigned variables, which can be overridden with </span><br style="color: rgb(0, 102, 0);"><span style="color: rgb(0, 102, 0);">a Constant on command line e.g var=value</span><br>        tempfile=junk<br><br></pre>
+
       <h2><a name="test_failure"></a>Test
 Failure?!?</h2>
 When will expect-lite fail a test? It will only fail a test when an
@@ -1947,7 +1999,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.2.2 and above</span><br style="font-style: italic;">
+document for version 4.3.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
 
