@@ -20,6 +20,10 @@ $user=admin
 >
 *TERM
 
+
+#~/home/cvmiller/Expect-lite/junk
+#~xyz.inc
+
 $EL_jtag=	\
 ?if $EL_jtag == ? $jtag=192.168.1.100 :: $jtag=$EL_jtag
 

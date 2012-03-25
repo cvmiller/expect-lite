@@ -1000,6 +1000,18 @@ Released 21 Dec 2010 - 4.0.2
 		e.g. ~show_vars.inc dummy_var=override_this joe=$user
 		Passed values will only "override" vars in include file, not create vars
 		
+21 March 2012 - 4.3.0d6
+	Added *NOINTERACT directive
+		This will ignore any *INTERACT break points
+		Useful for regression of scripts
+		This can not be turned off (like *NOFAIL) once invoked
+
+23 March 2012 - 4.3.0d7
+	Added better "include file" message with passed constants
+
+24 March 2012 - 4.3.0d8
+	Added include file check (exists) at start up
+
 
 
 ------------ Future Versions --------------------------
@@ -1013,6 +1025,8 @@ o	User script help - next release
 	Lines which beging with ''' can be integrated help
 		if no lines with ''' then show all variable assignments
 	Write documentation and see how it looks
+	
+x	Validate include files at beginning of script run 
 
 x	fix build script to pull all data from Expect-lite, and build *proj directory
 
