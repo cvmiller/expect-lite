@@ -1012,6 +1012,8 @@ Released 21 Dec 2010 - 4.0.2
 24 March 2012 - 4.3.0d8
 	Added include file check (exists) at start up
 
+26 March 2012 - 4.3.0d9
+	Fixed include file check to ignore include variable names (since they are not resolved at check time)
 
 
 ------------ Future Versions --------------------------

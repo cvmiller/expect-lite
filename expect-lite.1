@@ -3,18 +3,19 @@
 .\" Updated Man Page for expect-lite - version 3.7.0	7/31/2010
 .\" Updated Man Page for expect-lite - version 4.0.x	9/28/2011
 .\" Updated Man Page for expect-lite - version 4.0.2	10/8/2011
+.\" Updated Man Page for expect-lite - version 4.3.0	3/25/2012
 .\"
-.TH EXPECT-LITE "1" "October 2011" "expect-lite version 4.2.0" "User Commands"
+.TH EXPECT-LITE "1" "April 2012" "expect-lite version 4.3.0" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
 .B expect-lite 
-[\fI\-vv\fR] \fI-c <script>\fR [\fI-r <host>\fR]  [\fICONSTANT=value\fR] [\fI*DIRECTIVE\fR]
+[\fI\-vv\fR] \fI-c <script>\fR [\fI-r <host>\fR]  [\fICONSTANT=value\fR] [\fI*DIRECTIVE\fR] [-h|--help]
 .br
 or
 .br
-.B expect-lite 
-[\fI\-vv\fR] \fIc=<script>\fR  [\fIr=<host>\fR] [\fICONSTANT=value\fR] [\fI*DIRECTIVE\fR]
+.B script.elt 
+[\fI\-vv\fR]  [\fIr=<host>\fR] [\fICONSTANT=value\fR] [\fI*DIRECTIVE\fR] [-h|--help]
 .SH DESCRIPTION
 .ds sd \fIexpect-lite\fP
 .PP
@@ -45,13 +46,17 @@ prints warnings and debug (i.e. expect match info)
 .TP
 eg. ./expect\-lite \-v r=host\-008 c=pm_alt.elt
 .PP
+user defined help options: \fB\-h\fR|\fB\-\-help\fR
+.IP
+displays user defined help text (demarcated by ;;;) and variables defined in script which can be overriden by constants on the command line
+.PP
 
 .SH
 COMMAND SYNOPSIS
 .PP
 This  is  just a brief synopsis of \*(sd commands to serve as a reminder to those who already
 know \*(sd;  other  documentation  (such  as  the  html  document)  must  be  consulted  for 
-fuller descriptions.
+more complete descriptions.
 .SS
 Special Characters
 .TP
@@ -82,6 +87,9 @@ add custom colour comment lines, colour may be blue, ltblue, gray, ltgray, cyan,
 .TP
 ;;
 similar to above, but no extra newlines are printed (useful for printing script help)
+.TP
+;;;
+marks beginning and ending of a block of help text. Help Text is user defined help for a script and is printed when -h or --help is on the command line
 .TP
 @num
 changes the expect timeout to num of seconds
@@ -132,9 +140,8 @@ While Loop, using code blocks e.g.
 %
 label - used for jumping to labels 
 .TP
-~\fIfilename\fP
-includes a expect-lite automation file, useful for creation of common variable files, or 'subprograms/subroutines'
-
+~\fIfilename\fP [constant=value] [constant=value] [...]
+includes a expect-lite script file, useful for creation of common variable files, or 'subprograms/subroutines'. Can pass optional parameters which will override (as constants) the variables in the include file
 
 .P
 .SS
@@ -153,13 +160,16 @@ Immediately terminates script, but returns 0 (pass)
 Immediately fails script, and returns 1 (fail) 
 .TP
 *NOFAIL
-Script will run to completion, and returns 1, if failure occured during execution, or 0, if pass
+Script will run to completion, and returns 1, if failure occured during execution, or 0, if pass (it is a sticky flag, and can not be unset)
 .TP
 **SHELL=<shell>
 Configuration directive which sets the shell imediately after automatic login to remote host (see setting the shell)
 .TP
 *INTERACT
 A breakpoint which places user in interact mode, and pauses the script and turns control of the keyboard over to the user 
+.TP
+*NOINTERACT
+Once set, will ignore all succeding breakpoints (*INTERACT). This permits running a  script or scripts in an unattended regression. This can not be unset (it is a sticky flag)
 .TP
 *FORK <session>
 Multiple session support. Directs expect-lite to open a new session and spawns a newshell 
@@ -278,7 +288,7 @@ Written by Craig Miller
 .SH "REPORTING BUGS"
 Report bugs to <cvmiller at gmail dot com>.
 .SH COPYRIGHT
-Copyright \(co 2008-2011 Craig Miller
+Copyright \(co 2008-2012 Craig Miller
 .br
 Copyright \(co 2005-2007 FreeScale Semiconductor and Craig Miller
 .br

@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.0d8"
+	variable version "4.3.0d9"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1132,6 +1132,34 @@ namespace eval expectlite {
 		# read this file as el script, reference by buf_stack pointer
 		set cmd_list_ptr [expectlite::_el_buffer $cmd_file]
 				
+		# validate include files
+		set missing_include 0
+		set inc_files [_el_buffer_get_obj $cmd_list_ptr ~]
+		foreach line $inc_files {
+			set _include_file [_el_strip_char $line $_include]
+			# get only the first word as include file
+			set _include_file [lindex [split $_include_file " " ] 0]
+			
+			# is include file a variable, skip validation
+			if { [ regexp {^\$} $_include_file ] == 0 } {
+				# absolute path to include file?
+				set _slash "/"
+				if { [string index $_include_file 0] == $_slash} {
+					set include_path_file "$_include_file"
+				} else {
+					set include_path_file "[parse_cmd_file_path $cmd_file]$_include_file"
+				}
+				# validate include file
+				if { $DEBUG } {
+					puts "Checking include file exists: $include_path_file"
+				}
+				if {[file exists $include_path_file] == 0} {
+					cputs "$include_path_file   not found!" $_el_err_color
+					incr missing_include
+				}
+			}		
+		}; #foreach
+		
 		# if needed show help and exit
 		if { $SHOW_HELP } {
 			cputs "Help for: $cmd_file" $_el_info_color
@@ -1149,35 +1177,12 @@ namespace eval expectlite {
 			usage
 			exit 1
 		}
-		# validate include files
-		set missing_include 0
-		set inc_files [_el_buffer_get_obj $cmd_list_ptr ~]
-		foreach line $inc_files {
-			set _include_file [_el_strip_char $line $_include]
-
-			# get only the first word as include file
-			set _include_file [lindex [split $_include_file " " ] 0]
-			# absolute path to include file?
-			set _slash "/"
-			if { [string index $_include_file 0] == $_slash} {
-				set include_path_file "$_include_file"
-			} else {
-				set include_path_file "[parse_cmd_file_path $cmd_file]$_include_file"
-			}
-			# validate include file
-			if { $DEBUG } {
-				puts "Checking include file exists: $include_path_file"
-			}
-			if {[file exists $include_path_file] == 0} {
-				cputs "$include_path_file   not found!" $_el_err_color
-				incr missing_include
-			}		
-		}; #foreach
 		if { $missing_include } {
 			cputs "\nMissing required include files, exiting..." $_el_err_color
 			# exit with abend code
 			exit 2
 		}
+		
 		# return the pointer to the buffer	
 		return $cmd_list_ptr
 	}
