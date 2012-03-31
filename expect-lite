@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.0d9"
+	variable version "4.3.0d11"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -649,10 +649,10 @@ namespace eval expectlite {
 								} else {
 									cputs "$line" $_el_info_color
 									#puts "---->$::spawn_id"
-									_el_script_exec "\|$line"  $_el_buf(stack)
+									set _el_result [ _el_script_exec "\|$line"  $_el_buf(stack)]
 									
 									
-									if {$_el(test_failed) == 1 } {
+									if {$_el_result == 1 } {
 										# step failed? kick the prompt
 										protected_send "$_el_eols"
 									}
@@ -2594,6 +2594,7 @@ namespace eval expectlite {
 				# do not disable if CLI has enabled
 				if {$TIMESTAMP != 10 } { set TIMESTAMP 0 }
 			}
+			"\\*PASS" -
 			"\\*TERM"	{	# Terminate but Pass Test
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				### Terminate the test with a pass
@@ -3494,14 +3495,23 @@ namespace eval expectlite {
 								# read in cmd_file to buffer
  								set buf_stack [_el_buffer $include_path_file]
 								
+								# preserve test_failed going into include file
+								set _preserve_test_result $_el(test_failed)
+								set _el(test_failed) 0
+								
 								set result [_el_script_exec "" $buf_stack]
 								# don't report false include failure, set test_failed
 								switch -- $result {
 									0 { # pass
+										set _el(success) 1
+										set _el(test_failed) $_preserve_test_result
 										}
 									1 { # fail
-										set _el(success) 1
+										set _el(success) 0
+										# no need to restore, it failed
 										set _el(test_failed) 1
+										
+										cputs "\n##Include Result: FAILED: $include_path_file\n" $_el_err_color
 										}
 									2 { # fail right now!
 										# return result code to caller, stop now

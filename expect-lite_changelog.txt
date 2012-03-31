@@ -995,7 +995,7 @@ Released 21 Dec 2010 - 4.0.2
 		any text can be inside help buffer, including $this=that
 	Fixed fail script recursive call - was crashing expect-lite (4.3.0d only)
 	
-19 March 2012 - 4.3.0.d5
+19 March 2012 - 4.3.0d5
 	Created method to pass "constants" to include files
 		e.g. ~show_vars.inc dummy_var=override_this joe=$user
 		Passed values will only "override" vars in include file, not create vars
@@ -1015,6 +1015,16 @@ Released 21 Dec 2010 - 4.0.2
 26 March 2012 - 4.3.0d9
 	Fixed include file check to ignore include variable names (since they are not resolved at check time)
 
+28 March 2012 - 4.3.0d10
+	Added "##Include Result: FAIL" if included file has failed step(s)
+	
+31 March 2012 - 4.3.0d11
+	Re-added *PASS - synonym for *TERM
+		Originally in 3.7.1, but got lost	
+
+
+
+
 
 ------------ Future Versions --------------------------
 		
@@ -1023,7 +1033,7 @@ Future
 x	IPv6 improvements
 		add checking for more than one '::' in if statement, if so, force else to be ' :: '
 
-o	User script help - next release
+x	User script help - next release
 	Lines which beging with ''' can be integrated help
 		if no lines with ''' then show all variable assignments
 	Write documentation and see how it looks
@@ -1032,7 +1042,7 @@ x	Validate include files at beginning of script run
 
 x	fix build script to pull all data from Expect-lite, and build *proj directory
 
-o	pass vars/constants to include files
+x	pass vars/constants to include files
 	Separate level of var between user_namespace and const_namespace, which is deleted at end of include?
 
 o	unknown host - ssh_key_login should answer "yes" when needed during login (like zlogin)
