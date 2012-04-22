@@ -1,6 +1,22 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 24 April 2012 v4.3.0
+	Added "User Defined Help", see with -h or --help e.g.
+		;;; start of help
+			This script configures all routers
+		;;; copyright 2012
+	Added passing arguments to include files e.g.
+		~login.inc user=root
+		Passed arguments var=value scope is only inside the include file
+	Added ##Include Result: FAILED: <include-file-name>
+	Added directive *NOINTERACT to ignore breakpoints (*INTERACT)
+		Useful for quick regression scripts
+	Added include filename check at startup
+		ensure include files are available before executing script
+	Re-added *PASS as pseudonym for *TERM
+		This behaviour will be improved later
+
 Released 13 February 2012 v4.2.2
 	Fixed _buf(stack) crash in library mode only
 	Updated if-else to handle ipv6 addresses with double colons

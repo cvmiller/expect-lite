@@ -13,6 +13,8 @@
 
 
 
+
+
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>expect-lite</title>
 
 <meta name="description" content="Automation for the rest of us">
@@ -73,12 +75,15 @@ be used anywhere a text-based interface needs a bit of automation. </p>
 <li>Automated Router Configuration.</li>
 <li>Compiler validation.</li>
 <li>etc.</li>
-</ul><h2>What New?</h2>Latest version 4.2.2 improvements include:<br><ul>
-        <li>Added IPv6 Support (about time, too!)<br>
+</ul><h2>What New?</h2>Latest version 4.3.0 improvements include:<br>
+      <ul>
+        <li>User defined help (run your script with a -h)</li>
+        <li>Pass include files parameters (e.g. ~login.inc user=root)<br>
         </li>
-        <li>Fixed bug in Library Mode<br>
-</li>
-</ul><p>The main purpose is keep it simple.
+        <li>*NOINTERACT directive (useful for quick regression scripts)</li>
+        <li>##Include Result: FAIL message (for quick regression scripts)</li>
+      </ul>
+<p>The main purpose is keep it simple.
 However, the advanced features allow pretty creative scripting.</p>
 <p>The central ideas behind the design are:<br>
 </p>
@@ -95,7 +100,7 @@ However, the advanced features allow pretty creative scripting.</p>
 <p>Check the IP address of the localhost</p>
 <pre>&gt;ifconfig<br>&lt;192\.168\.1\.1<br>&gt;ip -6 addr show<br>&lt;2001:db8::f00d<br></pre>
 <p>ssh to a remote host</p>
-<pre>&gt;ssh root@host-021<br>&lt;assword:<br>&gt;secret_password<br># issue a command once logged in<br>&gt;ls<br>&gt;exit</pre>While loops using code blocks<br>
+<pre>&gt;ssh root@host-021<br>&lt;assword:<br>&gt;&gt;secret_password<br># issue a command once logged in<br>&gt;ls<br>&gt;exit</pre>While loops using code blocks<br>
       <pre>$i=1<br>[ $i &lt; 5<br>	&gt;echo "hello times $i"<br>	&lt;times $i<br>	+$i<br>]<br></pre>
       <br>
 expect-lite includes over 25 example scripts
@@ -117,13 +122,13 @@ expect-lite</big></a></p>
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">13 February 2012<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">24 April&nbsp; 2012<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
 <small><span style="font-style: italic;">this
 document for version
-4.2.2 and above</span><br style="font-style: italic;">
+4.3.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

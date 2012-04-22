@@ -1020,8 +1020,9 @@ Released 21 Dec 2010 - 4.0.2
 	
 31 March 2012 - 4.3.0d11
 	Re-added *PASS - synonym for *TERM
-		Originally in 3.7.1, but got lost	
+		Originally in 3.7.1, but got lost in 4.x dev
 
+22 April 2012 - 4.3.0 released
 
 
 
@@ -1044,6 +1045,10 @@ x	fix build script to pull all data from Expect-lite, and build *proj directory
 
 x	pass vars/constants to include files
 	Separate level of var between user_namespace and const_namespace, which is deleted at end of include?
+
+o	Change *PASS to invoke return (pass) from include script, or term with PASS if main script
+
+o	Unset a variable - useful for starting a regression test with pseudo-arrays
 
 o	unknown host - ssh_key_login should answer "yes" when needed during login (like zlogin)
 		
@@ -1077,7 +1082,8 @@ x	fix cygwin and old expect version with paste - test for expect version
 
 x	allow spaces for constants e.g. var="this or that" from Michel Desjardins	madesjardins@rogers.com
 
-o	list processing - foreach loop [[ $x=item1 item2 item3		 ]]
+o	list processing - foreach loop [ $x=item1 item2 item3		 ]
+		Requested by Tao
 
 o	Add && and || to if statements
 

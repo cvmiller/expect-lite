@@ -88,7 +88,7 @@ $blank=
 ?1>2?>echo "fd80::dead:1"::>echo "ff01::02"
 <ff01
 >
-*TERM
+#*TERM
 
 $check_ext=true
 ; === Capture with expect	? $check_ext == true ?+$module=^([a-z]+).+ext3

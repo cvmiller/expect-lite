@@ -69,7 +69,7 @@
 >>
 >^D
 >
-
+*NODEBUG
 
 #pau!
 

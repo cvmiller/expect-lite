@@ -43,12 +43,12 @@ $gen$three=this is the third
 ; === Test new Var Functionality ===
 
 ; === Test assignment var into array var
-$test
+$ztest
 $count=0
-$test$count=TEST
+$ztest$count=TEST
 
 # self test
-?if $test$count != TEST ? >echo FAIL :: >echo Good
+?if $ztest$count != TEST ? >echo FAIL :: >echo Good
 <\nGood
 
 ; === Test increment var 
@@ -145,7 +145,10 @@ $ABC=$gen$one $two$three$four
 
 
 
-
+#restore prompt
+>export PS1="\$ "
+# reset user defined prompt
+*//
 
 >sleep 1
 
