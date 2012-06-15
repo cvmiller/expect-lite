@@ -1025,11 +1025,51 @@ Released 21 Dec 2010 - 4.0.2
 22 April 2012 - 4.3.0 released
 
 
+20 May 2012 - 4.3.1d1
+	Fixed little bugs
+		IDE ^E would crash expect-lite (left over debug code) 
+		EL_CONNECT_METHOD=ssh - improved to look for prompt at login
+		Validated EL_CONNECT_METHOD at startup
+
+8 June 2012 - 4.3.1d2
+	Fixed path bug with include files
+	Fixed ssh (no key) login prompt detection
+	
+14 June 2012 - 4.3.1d3
+	Fixed *INFINITE_LOOP bug, would double/triple count down
+		Now decrements loop at top of loop, instead of bottom
+
+
 
 
 ------------ Future Versions --------------------------
 		
 Future
+
+o	Support expect 5.43 (no -index in lsearch)
+
+x	Fix include file check, when not in same directory. e.g. bin/test.elt
+		Fix this as part of larger include file var="val ue" issue
+		el_script_exec no longer has cmd_file which points to path. 
+			Need to add global(?) for path to main cmd_file
+
+
+
+o	Include EL version with *DEBUG, possibly turn on *INFO (as well) add -vvv
+
+x	Improve ssh connect method to use prompt detection (now it uses last login and tomato)
+		From Frederic Perras
+		
+o	Add named functions
+		Something like _name [
+				...
+				]
+		Frederic Perras would also like to have a "library include file of functions"
+			Think of a persistant include file (not flushed after exiting, and searchable
+		
+o	Allow passing of spaces to include files e.g. var="more value"
+
+x	Add Env Var validation e.g. connect_method=ssh-key creates BUG!
 
 x	IPv6 improvements
 		add checking for more than one '::' in if statement, if so, force else to be ' :: '

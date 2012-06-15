@@ -11,6 +11,10 @@ $user=admin
 
 >echo "hello ken"\
 <ken
+>
+*INTERACT
+
+*PASS
 
 ~show_vars.inc zamaze=15 dummy_var=override_this joe=$user
 >echo "hello"
