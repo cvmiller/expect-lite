@@ -1039,6 +1039,12 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed *INFINITE_LOOP bug, would double/triple count down
 		Now decrements loop at top of loop, instead of bottom
 
+16 June 2012 - 4.3.1d4
+	Fixed lsearch to work with older versions of expect (older than 5.44.x)
+	Fixed default EL_CONNECT_METHOD to "none"
+
+17 June 2012 - 4.3.1d5
+	Fixed CLI -v,-vv,-vvv override of logging (*INFO, *WARN, *DEBUG)
 
 
 

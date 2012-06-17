@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.1d3"
+	variable version "4.3.1d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -143,6 +143,9 @@ namespace eval expectlite {
 
 		# declare array cli_namespace (for cli passed constants)
 		set ::expectlite::cli_namespace(#) " "
+
+		# declare array cli_namespace (for cli passed constants)
+		set ::expectlite::cli_namespace(EL_CONNECT_METHOD) "none"
 
 		# declare global array _el (for internal expect-lite vars)
 		set ::expectlite::_el(0) 0
@@ -949,6 +952,7 @@ namespace eval expectlite {
 		upvar expectlite::cli_namespace			cli_namespace
 		upvar expectlite::timeout_multiplier	timeout_multiplier
 		upvar expectlite::arg0					arg0
+		upvar expectlite::INFO					INFO
 		upvar expectlite::WARN					WARN
 		upvar expectlite::DEBUG					DEBUG
 		upvar expectlite::EXP_INFO				EXP_INFO
@@ -1004,7 +1008,7 @@ namespace eval expectlite {
 					-v		{set WARN 10; set INFO 10}
 					-vv		-
 					--verbose	{set WARN 10; set DEBUG 10}
-					-vvv		{set WARN 0; set DEBUG 10}
+					-vvv		{set INFO 10; set WARN 10; set DEBUG 10}
 					-V		-
 					--verify	{set EXP_INFO 10; set INFO 10}
 					-r		{ set remote_host $optargval; incr x  }
@@ -1072,6 +1076,7 @@ namespace eval expectlite {
 		# Assign any Environment Variables starting with 'EL_' to Constants
 		# only show in Debug and not Library mode
 		if { $DEBUG && [info exists ::EL_LIBRARY] != 1} {
+			puts "expect-lite version $expectlite::version"
 			puts "Env Vars -> Constants:"
 		}
 		foreach key [array names env] {
@@ -1091,6 +1096,7 @@ namespace eval expectlite {
 			default {
 				cputs "ERROR: EL_CONNECT_METHOD set incorrect! Set to: $cli_namespace(EL_CONNECT_METHOD)" $_el_err_color
 				cputs "Please set to one of: none, telnet, ssh, ssh_key" $_el_err_color
+				cputs "export EL_CONNECT_METHOD=telnet" $_el_err_color
 				exit 1
 				}
 		}
@@ -1437,10 +1443,12 @@ namespace eval expectlite {
 		upvar expectlite::_el_buf				_el_buf
 
 		# search for shell configuration directive (**SHELL=...)
-		set _search "^\\\*\*SHELL=.*"
+		#set _search "^\\\*\*SHELL=.*"
+		set _search "\{\\\*\*SHELL=.*"
 
 		# search buffer _el_buf($buf_stack) with $_search  
-		set _buf_ptr [lsearch -regexp -index 0 $_el_buf($buf_stack) "$_search"]
+		#set _buf_ptr [lsearch -regexp -index 0 $_el_buf($buf_stack) "$_search"]
+		set _buf_ptr [lsearch -regexp  $_el_buf($buf_stack) "$_search"]
 		
 		set _line [_el_buffer_read $_buf_ptr $buf_stack]	
 		#puts "shell_line-------->$_line|$_buf_ptr"
@@ -2461,8 +2469,16 @@ namespace eval expectlite {
 			puts -nonewline "\nJumping to label"
 
 		}
+		
+		
 		# get a list of pointers which match search of first field (line-data)
-		set _ptr_list [lsearch -all -index 0 $_el_buf($buf_stack) "$line_search"]
+		if { [exp_version] >= "5.44.0" } {
+			set _ptr_list [lsearch -all -index 0 $_el_buf($buf_stack) "$line_search"]
+		} else {
+			# TCL 8.4 does not support lsearh -index 
+			set line_search_glob "\{$line_search*"
+			set _ptr_list [lsearch -all $_el_buf($buf_stack) "$line_search_glob"]
+		}
 		
 		if { $_ptr_list == {} } {
 			if {$WARN} {

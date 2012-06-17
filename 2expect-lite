@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.0d5"
+	variable version "4.3.1d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -144,6 +144,9 @@ namespace eval expectlite {
 		# declare array cli_namespace (for cli passed constants)
 		set ::expectlite::cli_namespace(#) " "
 
+		# declare array cli_namespace (for cli passed constants)
+		set ::expectlite::cli_namespace(EL_CONNECT_METHOD) "none"
+
 		# declare global array _el (for internal expect-lite vars)
 		set ::expectlite::_el(0) 0
 
@@ -164,6 +167,9 @@ namespace eval expectlite {
 
 		# keep script running to end: turn on to never fail test
 		variable NOFAIL 0
+
+		# clear NOINTERACT flag 0=allow interact, >0 skip interact
+		variable NOINTERACT 0
 
 		# global constant for timeout_multiplier mode
 		variable timeout_multiplier "timeout_multiplier"
@@ -479,11 +485,6 @@ namespace eval expectlite {
 					send "\n"
 					return 
 					}
-				-reset \005	{ # ^E show lines with $
-					_el_buffer_show_obj $_el_buf(stack)
-					send "\n"
-					return 
-					}
 				-re {(^\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
 					# determine next or skip step
 					set param "s" ; # set default to step
@@ -646,10 +647,10 @@ namespace eval expectlite {
 								} else {
 									cputs "$line" $_el_info_color
 									#puts "---->$::spawn_id"
-									_el_script_exec "\|$line"  $_el_buf(stack)
+									set _el_result [ _el_script_exec "\|$line"  $_el_buf(stack)]
 									
 									
-									if {$_el(test_failed) == 1 } {
+									if {$_el_result == 1 } {
 										# step failed? kick the prompt
 										protected_send "$_el_eols"
 									}
@@ -951,6 +952,7 @@ namespace eval expectlite {
 		upvar expectlite::cli_namespace			cli_namespace
 		upvar expectlite::timeout_multiplier	timeout_multiplier
 		upvar expectlite::arg0					arg0
+		upvar expectlite::INFO					INFO
 		upvar expectlite::WARN					WARN
 		upvar expectlite::DEBUG					DEBUG
 		upvar expectlite::EXP_INFO				EXP_INFO
@@ -1006,7 +1008,7 @@ namespace eval expectlite {
 					-v		{set WARN 10; set INFO 10}
 					-vv		-
 					--verbose	{set WARN 10; set DEBUG 10}
-					-vvv		{set WARN 0; set DEBUG 10}
+					-vvv		{set INFO 10; set WARN 10; set DEBUG 10}
 					-V		-
 					--verify	{set EXP_INFO 10; set INFO 10}
 					-r		{ set remote_host $optargval; incr x  }
@@ -1074,6 +1076,7 @@ namespace eval expectlite {
 		# Assign any Environment Variables starting with 'EL_' to Constants
 		# only show in Debug and not Library mode
 		if { $DEBUG && [info exists ::EL_LIBRARY] != 1} {
+			puts "expect-lite version $expectlite::version"
 			puts "Env Vars -> Constants:"
 		}
 		foreach key [array names env] {
@@ -1083,6 +1086,19 @@ namespace eval expectlite {
 				}
 				set cli_namespace($key) $env($key)
 			}
+		}
+		# validate ENV Vars
+		switch -glob -- $cli_namespace(EL_CONNECT_METHOD) {
+			none -
+			ssh -
+			ssh_key -
+			telnet { # do nothing }
+			default {
+				cputs "ERROR: EL_CONNECT_METHOD set incorrect! Set to: $cli_namespace(EL_CONNECT_METHOD)" $_el_err_color
+				cputs "Please set to one of: none, telnet, ssh, ssh_key" $_el_err_color
+				cputs "export EL_CONNECT_METHOD=telnet" $_el_err_color
+				exit 1
+				}
 		}
 
 		if {[info exists ::EL_LIBRARY] != 1} {
@@ -1118,25 +1134,72 @@ namespace eval expectlite {
 	proc read_cmd_file { } {
 		upvar expectlite::cmd_file				cmd_file
 		upvar expectlite::INFO					INFO
-		upvar expectlite::_el_info_color		_el_info_color
+		upvar expectlite::_el_info_color			_el_info_color
 		upvar expectlite::SHOW_HELP				SHOW_HELP
 		upvar expectlite::arg0					arg0
-		upvar expectlite::_el_buf			_el_buf
+		upvar expectlite::_el_buf				_el_buf
+		upvar expectlite::_include				_include
+		upvar expectlite::_el_err_color 			_el_err_color
+		upvar expectlite::DEBUG 					DEBUG
+		upvar expectlite::_el 					_el
 
 		# read this file as el script, reference by buf_stack pointer
 		set cmd_list_ptr [expectlite::_el_buffer $cmd_file]
-				
+
+		# preserve cmd_file for later use 
+		set _el(cmd_file) $cmd_file
+						
+		# validate include files
+		set missing_include 0
+		set inc_files [_el_buffer_get_obj $cmd_list_ptr ~]
+		foreach line $inc_files {
+			set _include_file [_el_strip_char $line $_include]
+			# get only the first word as include file
+			set _include_file [lindex [split $_include_file " " ] 0]
+			
+			# is include file a variable, skip validation
+			if { [ regexp {^\$} $_include_file ] == 0 } {
+				# absolute path to include file?
+				set _slash "/"
+				if { [string index $_include_file 0] == $_slash} {
+					set include_path_file "$_include_file"
+				} else {
+					set include_path_file "[parse_cmd_file_path $cmd_file]$_include_file"
+				}
+				# validate include file
+				if { $DEBUG } {
+					puts "Checking include file exists: $include_path_file"
+				}
+				if {[file exists $include_path_file] == 0} {
+					cputs "$include_path_file   not found!" $_el_err_color
+					incr missing_include
+				}
+			}		
+		}; #foreach
+		
 		# if needed show help and exit
 		if { $SHOW_HELP } {
 			cputs "Help for: $cmd_file" $_el_info_color
 
 			_el_buffer_show_help $cmd_list_ptr
 			cputs "Displaying assigned variables, which can be overridden with \na Constant on command line e.g var=value" $_el_info_color
-			_el_buffer_show_obj $cmd_list_ptr
-			
+			set var_list [_el_buffer_get_obj $cmd_list_ptr]
+
+			set var_list [ lsort -unique $var_list ]
+			foreach line $var_list {
+				# remove $ from help lines
+				regsub {\$} $line {} line
+				puts "\t$line"
+			}
 			usage
 			exit 1
 		}
+		if { $missing_include } {
+			cputs "\nMissing required include files, exiting..." $_el_err_color
+			# exit with abend code
+			exit 2
+		}
+		
 		# return the pointer to the buffer	
 		return $cmd_list_ptr
 	}
@@ -1215,7 +1278,7 @@ namespace eval expectlite {
 					#zlogin $pass $login_attempts
 					}
 				-re "Last login" { return }
-				-re "Tomato" { return }
+				-re {.*[>#%$] $} { return }
 				-re {.+\n} { #expect connected  }
 
 			 }
@@ -1380,10 +1443,12 @@ namespace eval expectlite {
 		upvar expectlite::_el_buf				_el_buf
 
 		# search for shell configuration directive (**SHELL=...)
-		set _search "^\\\*\*SHELL=.*"
+		#set _search "^\\\*\*SHELL=.*"
+		set _search "\{\\\*\*SHELL=.*"
 
 		# search buffer _el_buf($buf_stack) with $_search  
-		set _buf_ptr [lsearch -regexp -index 0 $_el_buf($buf_stack) "$_search"]
+		#set _buf_ptr [lsearch -regexp -index 0 $_el_buf($buf_stack) "$_search"]
+		set _buf_ptr [lsearch -regexp  $_el_buf($buf_stack) "$_search"]
 		
 		set _line [_el_buffer_read $_buf_ptr $buf_stack]	
 		#puts "shell_line-------->$_line|$_buf_ptr"
@@ -2279,10 +2344,10 @@ namespace eval expectlite {
 	}
 	
 	#
-	#	Reads buffer, prints lines matching $obj
+	#	Reads buffer, returns list of items maching $obj
 	#	
 	#
-	proc _el_buffer_show_obj { buf_stack {obj "\\\$"}} {
+	proc _el_buffer_get_obj { buf_stack {obj "\\\$"}} {
 		upvar expectlite::_el_buf			_el_buf
 		upvar expectlite::_el_info_color		_el_info_color
 
@@ -2294,15 +2359,8 @@ namespace eval expectlite {
 			}
 			#puts "ddd>$line"
 		}
-		# sort the output, except '' help lines
-		set out_list [ lsort -unique $out_list ]
-		foreach line $out_list {
-			# remove $ from help lines
-			if { $obj == {\$} } {
-				regsub {\$} $line {} line
-			}
-			puts "\t$line"
-		}
+		#puts "out_list>$out_list"
+		return $out_list
 	}
 	
 	#
@@ -2411,8 +2469,16 @@ namespace eval expectlite {
 			puts -nonewline "\nJumping to label"
 
 		}
+		
+		
 		# get a list of pointers which match search of first field (line-data)
-		set _ptr_list [lsearch -all -index 0 $_el_buf($buf_stack) "$line_search"]
+		if { [exp_version] >= "5.44.0" } {
+			set _ptr_list [lsearch -all -index 0 $_el_buf($buf_stack) "$line_search"]
+		} else {
+			# TCL 8.4 does not support lsearh -index 
+			set line_search_glob "\{$line_search*"
+			set _ptr_list [lsearch -all $_el_buf($buf_stack) "$line_search_glob"]
+		}
 		
 		if { $_ptr_list == {} } {
 			if {$WARN} {
@@ -2433,12 +2499,12 @@ namespace eval expectlite {
 				}
 			}
 			set _ptr [lindex $_ptr_list $i]
-			
+
 			# decrement infinite loop detector 
 			incr _el_infinite_loop -1
 			if { $_el_infinite_loop < 1 } {
 				# return search not found
-				cputs ":$line_search\n\n\nERROR: Infinite Loop Detected!\n\n" $_el_err_color
+				cputs ":$line_search\n\n\nERROR: Infinite Loop Detected!!\n\n" $_el_err_color
 				return -2
 			}
 		}
@@ -2462,6 +2528,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_infinite_loop		_el_infinite_loop
 		upvar expectlite::_el_err_color			_el_err_color
 		
+		#cputs "=======>infinite_loop=$_el_infinite_loop" $_el_err_color
 		# decrement infinite loop detector 
 		incr _el_infinite_loop -1
 		if { $_el_infinite_loop < 1 } {
@@ -2495,6 +2562,7 @@ namespace eval expectlite {
 		upvar expectlite::NOFAIL				NOFAIL
 		upvar expectlite::_el					_el
 		upvar expectlite::TIMESTAMP 			TIMESTAMP
+		upvar expectlite::NOINTERACT			NOINTERACT
 
 
 
@@ -2554,6 +2622,7 @@ namespace eval expectlite {
 				# do not disable if CLI has enabled
 				if {$TIMESTAMP != 10 } { set TIMESTAMP 0 }
 			}
+			"\\*PASS" -
 			"\\*TERM"	{	# Terminate but Pass Test
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				### Terminate the test with a pass
@@ -2587,8 +2656,10 @@ namespace eval expectlite {
 				# Skip interact if in Library mode
 				# Jump to interact
 				if { [info exist ::EL_LIBRARY] == 0 } {
-					cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-					instant_interact_sig
+					if { $NOINTERACT == 0 } {
+						cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+						instant_interact_sig
+					}
 				} else {
 					cputs "\nSkipping expect-lite directive: $g_dir_str " $_el_info_color
 				}
@@ -2622,6 +2693,11 @@ namespace eval expectlite {
 			"\\*NOFAIL"	{	# Never fail the test
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				incr NOFAIL
+			}
+		
+			"\\*NOINTERACT"	{	# Never stop at *INTERACT (good for regression)
+				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				incr NOINTERACT
 			}
 		}
 		# end switch glob
@@ -3418,6 +3494,7 @@ namespace eval expectlite {
 						
 						# set up passed values
 						set _var_value [split $_include_file " "]
+						set _include_file_str $_include_file
 						# get only the first word as include file
 						set _include_file [lindex [split $_include_file " " ] 0]
 						
@@ -3428,11 +3505,11 @@ namespace eval expectlite {
 							if { [string index $_include_file 0] == $_slash} {
 								set include_path_file "$_include_file"
 							} else {
-								set include_path_file "[parse_cmd_file_path $cmd_file]$_include_file"
+								set include_path_file "[parse_cmd_file_path $_el(cmd_file)]$_include_file"
 							}
 							#puts "->$include_path_file"
 							if {$INFO} {
-								cputs "\nIncluding: $_include_file\n" $_el_info_color
+								cputs "\nIncluding: $_include_file_str\n" $_el_info_color
 							}
 							# Make Recursive Call in stand alone mode
 							if { [info exist ::EL_LIBRARY] != 1 } {
@@ -3446,14 +3523,23 @@ namespace eval expectlite {
 								# read in cmd_file to buffer
  								set buf_stack [_el_buffer $include_path_file]
 								
+								# preserve test_failed going into include file
+								set _preserve_test_result $_el(test_failed)
+								set _el(test_failed) 0
+								
 								set result [_el_script_exec "" $buf_stack]
 								# don't report false include failure, set test_failed
 								switch -- $result {
 									0 { # pass
+										set _el(success) 1
+										set _el(test_failed) $_preserve_test_result
 										}
 									1 { # fail
-										set _el(success) 1
+										set _el(success) 0
+										# no need to restore, it failed
 										set _el(test_failed) 1
+										
+										cputs "\n##Include Result: FAILED: $include_path_file\n" $_el_err_color
 										}
 									2 { # fail right now!
 										# return result code to caller, stop now
@@ -3765,6 +3851,18 @@ namespace eval expectlite {
 								# stop loop, jump to bottom of loop + 1
 								_el_buffer_goto [expr $_el(line_meta)] $_el_buf(stack)
 							}
+							
+							# test for infinite loop
+							set retcode [_el_check_infinite_loop]
+							if { $retcode == -2 } {
+								# infinite loop failed (-2)
+								# signal to fail script - something is wrong
+								set _el(success) 0
+								# tell the user why this failed
+								set prev_line "Infinite Loop Detected!"
+								set _test_result -2
+							}							
+							
 						};#if Catch
 
 					}
@@ -3776,21 +3874,11 @@ namespace eval expectlite {
 						print_comment_line
 
 						#puts "====>end block lines|$_el(line_meta)"
-						# test for infinite loop
-						set retcode [_el_check_infinite_loop]
-						if { $retcode == -2 } {
-							# infinite loop failed (-2)
-							# signal to fail script - something is wrong
-							set _el(success) 0
-							# tell the user why this failed
-							set prev_line "Infinite Loop Detected!"
-							set _test_result -2
-						} else {
-							if { $_one_line == 0 } {
-								# jump back to top of block lines
-								_el_buffer_goto [expr $_el(line_meta) - 1 ] $_el_buf(stack)
-							}
+						if { $_one_line == 0 } {
+							# jump back to top of block lines
+							_el_buffer_goto [expr $_el(line_meta) - 1 ] $_el_buf(stack)
 						}
+						
 					}
 				default {	# blank lines are allowed
 
@@ -3824,7 +3912,7 @@ namespace eval expectlite {
 					if { [string index $_el_fail_script 0] == $_slash} {
 						set include_path_file "$_el_fail_script"
 					} else {
-						set include_path_file "[parse_cmd_file_path $cmd_file]$_el_fail_script"
+						set include_path_file "[parse_cmd_file_path $_el(cmd_file)]$_el_fail_script"
 					}
 					#puts "->$include_path_file"
 					if {$INFO} {
