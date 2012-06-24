@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.1d4"
+	variable version "4.3.1d6"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -158,7 +158,10 @@ namespace eval expectlite {
 
 		# clear ide paste lines flag
 		set ::expectlite::_el(ide_paste_lines) 0
-
+		
+		# initialize the command file name
+		set ::expectlite::_el(cmd_file) ""
+		
 		# debugging aid: turn on to display match string and expect buffer
 		variable DEBUG 0
 

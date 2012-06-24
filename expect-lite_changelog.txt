@@ -1046,13 +1046,17 @@ Released 21 Dec 2010 - 4.0.2
 17 June 2012 - 4.3.1d5
 	Fixed CLI -v,-vv,-vvv override of logging (*INFO, *WARN, *DEBUG)
 
+24 June 2012 - 4.3.1d6
+	Fixed un-initialized cmd_file in Library Mode
+
+
 
 
 ------------ Future Versions --------------------------
 		
 Future
 
-o	Support expect 5.43 (no -index in lsearch)
+x	Support expect 5.43 (no -index in lsearch)
 
 x	Fix include file check, when not in same directory. e.g. bin/test.elt
 		Fix this as part of larger include file var="val ue" issue
@@ -1061,7 +1065,7 @@ x	Fix include file check, when not in same directory. e.g. bin/test.elt
 
 
 
-o	Include EL version with *DEBUG, possibly turn on *INFO (as well) add -vvv
+x	Include EL version with *DEBUG, possibly turn on *INFO (as well) add -vvv
 
 x	Improve ssh connect method to use prompt detection (now it uses last login and tomato)
 		From Frederic Perras
