@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.1d6"
+	variable version "4.3.2d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -483,9 +483,10 @@ namespace eval expectlite {
 					exit 
 					}
 				-reset \007	{ # ^G show lines with meta-data
-					puts "Current Stack---->$_el_buf(stack)"
-					_el_buffer_show 20 $_el_buf(stack) 1
-					send "\n"
+					#puts "Current Stack---->$_el_buf(stack)"
+					#_el_buffer_show 20 $_el_buf(stack) 1
+					#send "\n"
+					puts "Infinite loop count: $expectlite::_el_infinite_loop"
 					return 
 					}
 				-re {(^\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
@@ -1483,7 +1484,7 @@ namespace eval expectlite {
 	#		starts shell on remote host, sets sane prompt, and cd's to user directory (aka user_dir) if needed
 	#	
 	proc remote_host_init { user_dir  } {
-		global spawn_id timeout
+		global spawn_id timeout expect_out
 		upvar expectlite::remote_host			remote_host
 		upvar expectlite::remote_shell			remote_shell
 #		upvar expectlite::PROMPT				PROMPT
@@ -1492,11 +1493,14 @@ namespace eval expectlite {
 		upvar expectlite::connect_method		connect_method
 		upvar expectlite::delay_wait_for_host	delay_wait_for_host
 		upvar expectlite::_el_eols				_el_eols
-
-		set timeout 2
-
+		
+		set timeout 5
+		
+		#set an initial sane value
+		set detected_prompt "$ "
+		
 		# suppress stdout during login for *FORK
-		if { $DEBUG != 1} {
+		if { $DEBUG > 0 } {
 			# turn off stdout - suppress login banners - show with -vv
 			log_user 0
 		}
@@ -1514,7 +1518,15 @@ namespace eval expectlite {
 				timeout { if {$DEBUG} { puts "DEBUG: Unable to detect Shell Start\n" } }
 			}
 		}
+		# attempt to detect shell by prompt
+		protected_send "$_el_eols"
+		expect -re {([%>#$]) $} {
+			if {$DEBUG} { puts "<<$expect_out(0,string)>>" }
+			#puts "<<$expect_out(buffer)>>" 
+			set detected_prompt $expect_out(0,string)
+		}
 		# set sane prompt
+		
 		switch -glob -- $remote_shell {
 			csh -
 			tcsh 	{ set _prompt "%c02 %# %L"
@@ -1527,9 +1539,19 @@ namespace eval expectlite {
 						protected_send "export PS1=$_prompt$_el_eols" 
 						expect -re {.+PS1.+} { }
 					}
-			default 	{ set _prompt "\$ " 
-						protected_send "export PS1=\'$_prompt\'$_el_eols" 
-						protected_send "set prompt = \"$_prompt\"$_el_eols" }
+			default 	{ switch -glob -- $detected_prompt {
+						"# " -
+						"$ " { 	set _prompt "\$ " 
+								protected_send "export PS1=\'$_prompt\'$_el_eols" 
+								if {$DEBUG} { puts "DEBUG: Setting sh prompt. \n" }
+							}
+						"% " -
+						"> " {	set _prompt "\$ " 
+								protected_send "set prompt = \"$_prompt\"$_el_eols" 
+								if {$DEBUG} { puts "DEBUG: Setting csh prompt. \n" } 
+							}
+						}
+					}
 		}
 		# clear expect_out(buffer)
 		#expect -re {.+} {}
@@ -2534,7 +2556,7 @@ namespace eval expectlite {
 		#cputs "=======>infinite_loop=$_el_infinite_loop" $_el_err_color
 		# decrement infinite loop detector 
 		incr _el_infinite_loop -1
-		if { $_el_infinite_loop < 1 } {
+		if { $_el_infinite_loop < 0 } {
 			# return search not found
 			cputs "\n\nERROR: Infinite Loop Detected!\n\n" $_el_err_color
 			return -2
@@ -3809,6 +3831,14 @@ namespace eval expectlite {
 						
 						#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2|"
 						
+						# Var is defined as in the set [a-zA-Z0-9_]
+						if { [regexp {\$[a-zA-Z0-9_]+} $_conditional] } {
+							if {$DEBUG} { puts "EL:Unresolved Var:$_conditional"}
+							# replace all unresolved vars with ""
+							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
+							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
+						} 
+						
 						# allow _cond_arg2 to be blank, test against blank
 						if {( $_cond_oper == "==" || $_cond_oper == "!=" ) && ($_cond_arg2 == "" ) } {
 							# build special test line against blank arg2
@@ -3850,21 +3880,22 @@ namespace eval expectlite {
 							# skip to label if present in action or else_action
 							if { [eval  $_test ] } {
 								# continue loop
+								
+								# test for infinite loop
+								set retcode [_el_check_infinite_loop]
+								if { $retcode == -2 } {
+									# infinite loop failed (-2)
+									# signal to fail script - something is wrong
+									set _el(success) 0
+									# tell the user why this failed
+									set prev_line "Infinite Loop Detected!"
+									set _test_result -2
+								}							
+								
 							} elseif { $_el(line_meta) != -1 } {
 								# stop loop, jump to bottom of loop + 1
 								_el_buffer_goto [expr $_el(line_meta)] $_el_buf(stack)
 							}
-							
-							# test for infinite loop
-							set retcode [_el_check_infinite_loop]
-							if { $retcode == -2 } {
-								# infinite loop failed (-2)
-								# signal to fail script - something is wrong
-								set _el(success) 0
-								# tell the user why this failed
-								set prev_line "Infinite Loop Detected!"
-								set _test_result -2
-							}							
 							
 						};#if Catch
 

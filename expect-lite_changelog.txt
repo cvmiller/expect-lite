@@ -1049,12 +1049,30 @@ Released 21 Dec 2010 - 4.0.2
 24 June 2012 - 4.3.1d6
 	Fixed un-initialized cmd_file in Library Mode
 
+26 June 2012 - 4.3.1 Released
+
+26 June 2012 - 4.3.2d1
+	Fixed prompt detection/setting by making it more intellegent
+		Ubuntu BUG #994386 by TJ
+		
+29 June 2012 - 4.3.2d2
+	Fixed while loop test blank == blank, allows test against undefined vars
+
+11 July 2012 - 4.3.2d3
+	Fixed infinite loop decrementing in while loops, was counting too many
+	
+12 July 2012 - 4.3.2d4
+	Fixed uninitilized variable in 4.3.2d1 fix
 
 
 
 ------------ Future Versions --------------------------
 		
 Future
+
+
+o	Fix bug in remote_host_init - does not detect shell before setting prompt
+		See Ubuntu BUG #994386 Crash using 'default' shell prompt setting
 
 x	Support expect 5.43 (no -index in lsearch)
 
@@ -1078,6 +1096,8 @@ o	Add named functions
 			Think of a persistant include file (not flushed after exiting, and searchable
 		
 o	Allow passing of spaces to include files e.g. var="more value"
+		Change parsing to allow spaces without quotes, parse on var= rather than split on spaces
+		
 
 x	Add Env Var validation e.g. connect_method=ssh-key creates BUG!
 
