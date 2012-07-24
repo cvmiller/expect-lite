@@ -1064,6 +1064,10 @@ Released 21 Dec 2010 - 4.0.2
 12 July 2012 - 4.3.2d4
 	Fixed uninitilized variable in 4.3.2d1 fix
 
+23 July 2012 - 
+	Started expect-lite blog - http://expect-lite.blogspot.ca
+	
+
 
 
 ------------ Future Versions --------------------------

@@ -12,6 +12,11 @@ $user=admin
 >echo "hello ken"\
 <ken
 >
+
+$x=1 
+$y=2 
+; ==== $xABC$y 
+
 *INTERACT
 
 *PASS
