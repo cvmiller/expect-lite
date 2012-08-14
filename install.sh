@@ -9,6 +9,8 @@
 #
 #	21 Aug 2011 - added configure only option, just configures user
 #
+#	11 Aug 2012 - added configure as non-privilaged user
+#
 
 
 function usage {
@@ -27,7 +29,7 @@ function usage {
 
 # Script Defaults	   
 numopts=0
-VERSION=0.99
+VERSION=1.0
 SSH_HOME=$HOME/.ssh
 
 PREFIX=""
@@ -144,7 +146,7 @@ if [ $remove ]; then
 	exit 
 fi
 
-new_ver=$(grep "set version" ./expect-lite | cut -d " " -f 3)
+new_ver=$(grep "variable version" ./expect-lite | cut -d " " -f 3)
 
 echo "=======================================" 
 echo "Installing expect-lite version $new_ver"
@@ -161,6 +163,7 @@ if [ ! -e /usr/bin/expect ]; then
 	echo "Exiting...."
 	exit 1
 fi
+
 
 # don't move old version expect-lite if just configure only
 if [ $configure_only ]; then
@@ -187,6 +190,8 @@ else
 	fi
 fi
 
+
+
 # Actual Install. skip if configure only
 if [ $configure_only ]; then
 	echo "1,2,3)	==================="
@@ -199,6 +204,13 @@ else
 	cd man
 	installit expect-lite.1.gz $PREFIX$MAN_DIR "3"
 	cd - > /dev/null
+fi
+
+# run configure section as non-privilaged user
+if [ "$USER" == "root" ]; then
+	echo "SU)	==================="
+	echo "	Calling install script as non-privilaged user $SUDO_USER for configuration"
+	sudo -u $SUDO_USER $SUDO_COMMAND -c
 fi
 
 
@@ -239,6 +251,8 @@ fi
 
 
 # Pau!
+if [ "$SUDO_USER" != "root" ]; then
 echo "=======================================" 
 echo "Installation Complete!"
 echo "=======================================" 
+fi

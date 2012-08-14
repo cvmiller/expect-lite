@@ -4,6 +4,7 @@
 
 
 
+
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <meta name="AUTHOR" content="Craig Miller">
@@ -32,11 +33,15 @@ to see Features, Downloads, and Docs </noscript>
 <!--- Begin of Right Column Content --->
 
 
-<h2>Download<br></h2>expect-lite can be downloaded from&nbsp;the expect-lite Project Page: <a href="http://sourceforge.net/projects/expect-lite">http://sourceforge.net/projects/expect-lite</a><br>The tar.gz package includes the latest expect-lite, as well as over 25 examples.<br>
+<h2>Download<br></h2>expect-lite can be downloaded from&nbsp;the expect-lite Project Page: <a href="http://sourceforge.net/projects/expect-lite">http://sourceforge.net/projects/expect-lite</a><br>The tar.gz/rpm/deb package includes the latest expect-lite, as well as over 25 examples.<br>
       <br>
-Or, if you are running a modern version of Ubuntu: apt-get install expect-lite<br><br>
-Or, if you are running a modern version of gentoo: emerge -auv expect-lite<br>
-<br><h2>Quick Install</h2>Untar the expect-lite package, and use the
+Or, if you are running a modern version of Ubuntu: <small><span style="font-family: monospace;">apt-get install expect-lite</span></small><br><br>
+Or, if you are running a modern version of gentoo: <small><span style="font-family: monospace;">emerge -auv expect-lite</span></small><br>
+      <br>
+Or, download the RPM or DEB file (from sourceforge) and install using '<small><span style="font-family: monospace;">sudo rpm -Uv expect-lite*.rpm</span></small>' or '<small><span style="font-family: monospace;">sudo dpkg -i expect-lite*deb</span></small>' Then use the '<small><span style="font-family: monospace;">/usr/share/doc/expect-lite/install.sh -c</span></small>' to configure ssh and .bashrc<br>
+<br><h2>Quick Install</h2>To install using the tar.gz file: Prior to
+untaring the package, be sure to type 'umask 0' to preserve permissions
+of the package. Untar the expect-lite package, and use the
 included install.sh script (as of version 4.0.2). If on
 Linux/Unix/MacOS X, sudo permissions will be required to install:<br><pre>sudo ./install.sh</pre>Since cygwin does not require sudo previlages, just type:<br><pre>./install.sh</pre>Test by typing at the prompt:<br>
 <pre>expect-lite</pre>
@@ -148,10 +153,10 @@ The shell variables are treated as constants in the expect-lite script, overridi
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">23 August 2011<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">23 August 2012<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this
-document for version 4.1.2 or later</span><br style="font-style: italic;">
+document for version 4.3.2 or later</span><br style="font-style: italic;">
 </small>
 </body></html>

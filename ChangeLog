@@ -1,6 +1,26 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+
+Released 12 August 2012 v4.3.2
+	Small bug fixes
+		Ubuntu BUG #994386 - login send incorrect env setup command
+		Fixed while loop test blank (indefined) variable
+		Fixed infinite loop counter (was still counting too many)
+		Fixed install.sh to configure as unprivilaged use (fix for NFS mounted home dir)
+	Released expect-lite blog - http://expect-lite.blogspot.ca
+
+Released 27 June 2012 v4.3.1
+	User defined help (run your script with a -h)
+	Pass include files parameters (e.g. ~login.inc user=root)
+	Lots of small bug fixes
+		Fixed path bug with include files
+		Fixed ssh (no key) login prompt detection
+		Fixed *INFINITE_LOOP bug, would double/triple count down
+		Fixed to work with older versions of expect (older than 5.44.x, such as cygwin, and old linux installations)
+		Fixed CLI -v,-vv,-vvv override of logging (*INFO, *WARN, *DEBUG)
+		Validate EL_CONNECT_METHOD at startup (default=none)
+
 Released 24 April 2012 v4.3.0
 	Added "User Defined Help", see with -h or --help e.g.
 		;;; start of help

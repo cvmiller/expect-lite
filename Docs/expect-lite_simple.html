@@ -16,6 +16,7 @@
 
 
 
+
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>expect-lite</title>
 
 <meta name="description" content="Automation for the rest of us">
@@ -76,21 +77,18 @@ be used anywhere a text-based interface needs a bit of automation. </p>
 <li>Automated Router Configuration.</li>
 <li>Compiler validation.</li>
 <li>etc.</li>
-</ul><h2>What New?</h2>Latest version 4.3.1 improvements include:<br>
+</ul><h2>What New?</h2>Latest version 4.3.2 improvements include:<br>
       <ul>
-        <li>User defined help (run your script with a -h)</li>
-        <li>Pass include files parameters (e.g. ~login.inc user=root)<br>
-        </li>
-        <li>Lots of small bug fixes</li>
+        <li>Started tips &amp; tricks blog &lt;http://expect-lite.blogspot.ca&gt;<br>
+</li><li>more of small bug fixes</li>
         <ul>
-          <li>Fixed path bug with include files</li>
-          <li>Fixed ssh (no key) login prompt detection</li>
-          <li>Fixed *INFINITE_LOOP bug, would double/triple count down</li>
-          <li>Fixed to work with older versions of expect (older than 5.44.x, such as cygwin, and old linux installations)</li>
-          <li>Fixed CLI -v,-vv,-vvv override of logging (*INFO, *WARN, *DEBUG)</li>
-          <li>Validate EL_CONNECT_METHOD at startup (default=none)<br>
+          <li>Fixed Ubuntu BUG #994386 (send correct env setting upon login)</li>
+          <li>Fixed while loop test blank == blank (allows test against undefined vars)</li>
+          <li>Fixed infinite loop counting in while loops<br>
           </li>
-        </ul>
+          <li>Updated Install.sh to configure as non-privilaged user<br>
+          </li>
+</ul>
 
       </ul>
 <p>The main purpose is keep it simple.
@@ -132,13 +130,13 @@ expect-lite</big></a></p>
 </tr>
 </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">27 June&nbsp; 2012<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">14 August&nbsp; 2012<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
 <small><span style="font-style: italic;">this
 document for version
-4.3.1 and above</span><br style="font-style: italic;">
+4.3.2 and above</span><br style="font-style: italic;">
 </small>
 <br>
 
