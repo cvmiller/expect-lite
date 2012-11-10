@@ -2,7 +2,7 @@
 
 ##################################################################################
 #
-#  Copyright (C) 2008-2011 Craig Miller
+#  Copyright (C) 2008-2012 Craig Miller
 #
 #  Copyright (C) 2005-2007 Freescale Semiconductor, Inc. 
 #
@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.2"
+	variable version "4.3.3d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1237,8 +1237,8 @@ namespace eval expectlite {
 		expect "ogin:"
 
 		#The script sends the user variable
-		if { [catch { send "$user\r"   } error] } {
-			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
+		if { [catch { send -- "$user\r"   } error] } {
+			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error\n    $errorInfo"
 			# Fail script?
 			exit 1
 		}
@@ -1248,7 +1248,7 @@ namespace eval expectlite {
 		#The script sends the password variable
 		# do not log password
 		set log_user 0
-		send "$pass\r" 
+		send -- "$pass\r" 
 		set log_user 1
 		#wait_for_prompt
 		set timeout $_el_timeout
@@ -1273,12 +1273,12 @@ namespace eval expectlite {
 				-re "assword:"	{
 					# do not log password
 					set log_user 0
-					send "$pass$_el_eols" 
+					send -- "$pass$_el_eols" 
 					set log_user 1
 					#puts "send pass"
 					}
 				-re "Are you sure you want to continue connecting" {
-					send "yes$_el_eols"
+					send -- "yes$_el_eols"
 					#zlogin $pass $login_attempts
 					}
 				-re "Last login" { return }
@@ -1379,7 +1379,7 @@ namespace eval expectlite {
 		# TODO:Auto update ~/.ssh/known_hosts if needed
 
 		# Test the connection by sending a return
-		if { [catch { send "$_el_eols"   } error] } {
+		if { [catch { send -- "$_el_eols"   } error] } {
 			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
 			# Fail script?
 			exit 1
@@ -1391,7 +1391,7 @@ namespace eval expectlite {
 		set timeout 5
 		expect {
 			-re "Are you sure you want to continue connecting" {
-			send "yes$_el_eols"
+			send -- "yes$_el_eols"
 			}
 			-re {.+} { #puts "expect-lite: Connected" }
 			timeout { }
@@ -1433,7 +1433,7 @@ namespace eval expectlite {
 			# Fail script?
 			exit 1
 		}
-		send " $_el_eols"
+		send -- " $_el_eols"
 		set timeout 10
 	}
 
@@ -1472,7 +1472,7 @@ namespace eval expectlite {
 	proc protected_send { str } {
 		upvar expectlite::remote_host			remote_host
 
-		if { [catch { send "$str"   } error] } {
+		if { [catch { send -- "$str"   } error] } {
 			puts stderr "CONNECT ERROR: Unable to connect to remote_host: $remote_host \n   $error"
 			# Fail script?
 			exit 1
@@ -1843,7 +1843,7 @@ namespace eval expectlite {
 				# put empty value on list
 				lappend out_list "{$var} {}"
 				set cli_namespace($var) $value
-			
+
 			}
 		}; #foreach
 		#puts "pppppp>$out_list"
@@ -1879,18 +1879,56 @@ namespace eval expectlite {
 	#
 	proc _el_parse_var_value { varvalue_list } {
 		set out_list {}
-		if { [llength $varvalue_list] > 0 } {
-			foreach x $varvalue_list {
+		# create new list
+		set in_list {}
+		set val_str ""
+		# Parse list to be var-value and directives pairs
+		# append to list in format {var=} {value with spaces}
+		foreach x $varvalue_list {
+			#puts "==x>$x, $val_str"
+			if {  [regexp {[a-zA-Z0-9_]+[=]}  $x ] == 1 } {
+				if { $val_str != ""} {
+					lappend in_list [string trimright $val_str " "]
+					set val_str ""
+				}
+				set y [ split $x "=" ]
+				#puts "==y>$y"
+				set val_str [lindex $y 1]
+				lappend in_list "[lindex $y 0]="
+			} elseif { [regexp {[*][A-Z0-9_]+}  $x ] == 1 } {
+				if { $val_str != ""} {
+					lappend in_list [string trimright $val_str " "]
+					set val_str ""
+				}
+				lappend in_list $x
+				lappend in_list {}
+			} else {
+				set val_str "$val_str $x "
+			}
+		}
+		# append last value part
+		if { $val_str != ""} {
+			lappend in_list [string trimright $val_str " "]
+		}
+		#puts "==in_list>$in_list"
+		# walk through list creating {{var} {value}}
+		set i 0
+		if { [llength $in_list] > 0 } {
+			foreach x $in_list {
 				# is passed value in format 'var='
 				if {  [regexp {[a-zA-Z0-9_]+[=]}  $x ] == 1 } {
 					set var_value_l [split $x "=" ]
 					set var [lindex $var_value_l 0]
-					set value [lindex $var_value_l 1]
+					set value [lindex $in_list [expr $i + 1]]
+					#set value [lindex $var_value_l 1]
 					lappend out_list "{$var} {$value}"
-					#puts ">>>$x>>$var $value"
+					#puts ">>>$x>>$var=$value"
 				}
+				incr i
 			}; #foreach
 		}
+		# walk through list to format directives as {{*DIRECTIVE} {}}
+			# TODO implement directive processing in the future
 		if { [llength $out_list ] > 0 } {
 			return $out_list
 		} else {
@@ -2891,8 +2929,9 @@ namespace eval expectlite {
 							} else {set prepend ""}
 						# this is a var definition line - don't dereference first var (it is being set)
 						set parse_list1 [split $_el(line) "="]
+						#puts "===PL>$parse_list1, [llength $parse_list1]"
 						# check that this is an assignment, and not an increment var command
-						if { [llength $parse_list1] == 2 } {
+						if { [llength $parse_list1] >= 2 } {
 							# check if there are other variables on left side of equals assignment
 							set _left_vars [lindex $parse_list1 0]
 							set _el_var_list [split $_left_vars "$"]
@@ -2907,7 +2946,10 @@ namespace eval expectlite {
 								#regsub {[^A-Za-z0-9_$]} $_left_vars {} _left_vars
 							}
 							# 1st pass of dereferncing assignment variables
-							set _el_assignment [parse_var [lindex $parse_list1 1] $_var]
+							set _right_value [join [lrange $parse_list1 1 end] "="]
+							#set _el_assignment [parse_var [lindex $parse_list1 1] $_var]
+							#puts "====RV>$_right_value"
+							set _el_assignment [parse_var $_right_value $_var]
 							# 2nd pass of dereferencing assignment variables
 							set _el(line) "$_left_vars=[parse_var $_el_assignment $_var]"
 						}
@@ -3092,10 +3134,10 @@ namespace eval expectlite {
 						# Check if passed char is lower case
 						if {[expr $control_char_ascii - 96] > 0 } {
 							# Send lower case control char
-							send [format %c [expr $control_char_ascii - 96]]
+							send -- [format %c [expr $control_char_ascii - 96]]
 						} else {
 							# Send upper case control char
-							send [format %c [expr $control_char_ascii - 64]]
+							send -- [format %c [expr $control_char_ascii - 64]]
 						}
 						#puts "=>$control_char_ascii"
 						# notify user
@@ -3115,7 +3157,7 @@ namespace eval expectlite {
 							puts -nonewline [timestamp -format $_el(ts_fmt)]
 						}
 						# Check of remote_host is still connected before sending string
-						if { [catch { send  "[_el_strip_char $_el(line) $_out_nowait]$_el_eols"  } error] } {
+						if { [catch { send  -- "[_el_strip_char $_el(line) $_out_nowait]$_el_eols"  } error] } {
 							cputs "CONNECT ERROR: Lost connection to $remote_host \n   $error \nExiting..." $_el_err_color
 							# Fail script
 							exit 1
@@ -3143,7 +3185,7 @@ namespace eval expectlite {
 						}
 
 						# Check of remote_host is still connected before sending string
-						if { [catch { send   "[_el_strip_char $_el(line) $_out]$_el_eols"  } error] } {
+						if { [catch { send  -- "[_el_strip_char $_el(line) $_out]$_el_eols"  } error] } {
 							puts stderr "CONNECT ERROR: Lost connection to $remote_host \n   $error \nExiting..."
 							# Fail script
 							exit 1
@@ -4101,7 +4143,7 @@ namespace eval expectlite {
 
 		# exit local or remote shell
 		if { [catch {  send "exit $_el_eols" } error] } {
-			if {$WARN} {cputs  "Warning: Lost connection to $remote_host \n  $error " $_el_warn_color}
+			if {$WARN} {cputs  "Warning: Lost connection to $remote_host \n  $error\n  $errorInfo " $_el_warn_color}
 		}
 
 		wait_for_prompt

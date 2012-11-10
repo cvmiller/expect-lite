@@ -1070,6 +1070,16 @@ Released 21 Dec 2010 - 4.0.2
 12 August 2012 - 4.3.2 Released
 	Updated Install.sh to configure as non-privilaged user
 
+24 Oct 2012 - 4.3.3d1
+	Fixed "send" bug "bad flag -1"
+
+9 Nov 2012 - 4.3.3d2
+	Fixed dyn var capture when "=" are present
+		e.g. +$var=(\d) = STRING:
+	
+10 Nov 2012 - 4.3.3d3
+	Added include file passing var=values with spaces
+		e.g. ~mycinclude.inc var1=this or that var2=just that
 
 
 
@@ -1088,7 +1098,9 @@ o	Add code block for if-else statement
 
 o	Include el_shell.elt in examples of next release
 
-
+o	Harden "send" command against bad flag "-1" 
+		use -- 
+	
 x	Fix installer to do home directory stuff (.ssh, .bashrc) as unprivlaged user
 		Update docs to suggest umask 0 before untar-ing
 		x run ./install.sh -c to setup .bashrc and .ssh
@@ -1136,7 +1148,7 @@ b	using el-shell to develop scripts
 
 k	Regex made easy - using \d \w and |
 
-b	Parseing columnar output - e.g. route -n
+k	Parseing columnar output - e.g. route -n
 
 
 x	Add $var exist to if statement processing (added in 4.1.2)
