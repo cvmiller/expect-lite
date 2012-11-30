@@ -1082,6 +1082,9 @@ Released 21 Dec 2010 - 4.0.2
 		e.g. ~mycinclude.inc var1=this or that var2=just that
 
 
+29 Nov 2012 - 4.3.3d4
+	Fixed single number expect, if number was not on a line by itself
+	
 
 ------------ Future Versions --------------------------
 		
@@ -1096,6 +1099,9 @@ o	Add code block for if-else statement
 		]::[
 		]
 
+o	add *LOG <file> *NOLOG - native logging directive
+		try: exp_internal -f <log file> 0
+		
 o	Include el_shell.elt in examples of next release
 
 o	Harden "send" command against bad flag "-1" 

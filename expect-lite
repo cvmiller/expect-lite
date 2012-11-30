@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.3d3"
+	variable version "4.3.3d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3238,7 +3238,10 @@ namespace eval expectlite {
 								 -re \n$teststr\r { 
 					 		    	#puts "\nGood=[_el_strip_char $_el(line) $_in]\n" 
 							    	set _el(success) 1
-							    	} 
+							    	}
+								 -re $teststr {
+								 	set _el(success) 1
+								 	}
 						    	}
 						} else {
 							# test for multi-char expect strings
