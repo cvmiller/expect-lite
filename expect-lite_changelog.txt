@@ -1081,10 +1081,17 @@ Released 21 Dec 2010 - 4.0.2
 	Added include file passing var=values with spaces
 		e.g. ~mycinclude.inc var1=this or that var2=just that
 
-
 29 Nov 2012 - 4.3.3d4
 	Fixed single number expect, if number was not on a line by itself
 	
+2 Dec 2012 - 4.3.3.d5
+	Added check for redirection and ^\, issue warning:
+		Warning: Output is redirected from tty.
+		The script quit unexpectantly
+
+
+
+
 
 ------------ Future Versions --------------------------
 		
@@ -1104,8 +1111,11 @@ o	add *LOG <file> *NOLOG - native logging directive
 		
 o	Include el_shell.elt in examples of next release
 
-o	Harden "send" command against bad flag "-1" 
+x	Harden "send" command against bad flag "-1" 
 		use -- 
+
+o	Fix installer when using NFS home drive
+		Many errors
 	
 x	Fix installer to do home directory stuff (.ssh, .bashrc) as unprivlaged user
 		Update docs to suggest umask 0 before untar-ing

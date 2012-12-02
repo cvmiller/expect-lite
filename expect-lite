@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.3d4"
+	variable version "4.3.3d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -302,6 +302,11 @@ namespace eval expectlite {
 		#
 		#
 		trap {
+			# check if app has output redirected using istty()
+			if {[catch {fconfigure stdout -mode}]} {
+    			puts stderr "expect-lite: Warning: Output is redirected from tty.\n The script quit unexpectantly.\n"
+			} 
+
 			if { $expectlite::_el(ide_paste_lines) } {
 				catch { puts stderr "\nreturning to instant-interact...\n" }
 				# flush the paste buffer

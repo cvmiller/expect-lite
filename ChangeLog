@@ -2,6 +2,15 @@
 All changes by Craig Miller cvmiller at gmail dot com
 
 
+Released 4 December 2012 v4.3.3
+	Fixed "send" bug "bad flag -1"
+	Fixed dyn var capture when "=" are present
+		e.g. +$var=(\d) = STRING:
+	Fixed single number expect, if number was not on a line by itself
+	Added warning when using redirection and user presses ^\:
+	Fixed dyn var capture when "=" are present
+			e.g. +$var=(\d) = STRING
+			
 Released 12 August 2012 v4.3.2
 	Small bug fixes
 		Ubuntu BUG #994386 - login send incorrect env setup command
