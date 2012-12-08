@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.3.3d5"
+	variable version "4.4.0d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -173,6 +173,9 @@ namespace eval expectlite {
 
 		# clear NOINTERACT flag 0=allow interact, >0 skip interact
 		variable NOINTERACT 0
+
+		# clear LOG flag 0=no log, 1 logging
+		variable LOG 0
 
 		# global constant for timeout_multiplier mode
 		variable timeout_multiplier "timeout_multiplier"
@@ -378,14 +381,21 @@ namespace eval expectlite {
 		upvar expectlite::_el_warn_color			_el_warn_color
 		upvar expectlite::_el_err_color 			_el_err_color
 		upvar expectlite::_el_comment_color 		_el_comment_color
+		upvar expectlite::LOG 						LOG
 
 		proc protect_puts { str } {
+			upvar LOG 	LOG
 			# catch stdout errors and quit
 			if { [catch { puts $str } error] } {
 				puts stderr "ERROR:$error"
 				exit 1
 			}
+			# Log to file
+			if { $LOG } {
+				send_log "$str\n"
+			}			
 		}
+
 
 		if {$_el_comment_color == "none"} {
 			# use no color
@@ -964,6 +974,7 @@ namespace eval expectlite {
 		upvar expectlite::INFO					INFO
 		upvar expectlite::WARN					WARN
 		upvar expectlite::DEBUG					DEBUG
+		upvar expectlite::LOG					LOG
 		upvar expectlite::EXP_INFO				EXP_INFO
 		upvar expectlite::_el_warn_color		_el_warn_color
 		upvar expectlite::_el_err_color			_el_err_color
@@ -1001,13 +1012,13 @@ namespace eval expectlite {
 					# no optargval, set to a sane value
 					set optargval "--"
 				}
-				#puts "=====>$x|$optarg|$optargval|"
+				puts "=====>$x|$optarg|$optargval|"
 				# Check that last parameter is command file name
 				# script name cannot have '=', which would be interpretted as a constant
 				if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
 					#puts ">>>$optarg>>>$optargval"
 					set cmd_file $optarg
-					set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file] 
+					set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file]
 				}
 				# look for help & debug options which overide script options
 				# added -r and -c for remote_host & cmd_file respectively
@@ -1060,9 +1071,11 @@ namespace eval expectlite {
 				#cli-based directives (in form *DIRECTIVE)
 				if [ regexp {\*[A-Z_]+} $optarg] {
 					_el_global_directive $optarg
+					# add more to accept *DIR args??
 				}
-			}
-
+			} ; # for loop
+			# assign over riding directives
+			if { $LOG } { set LOG 10 }
 
 			#puts "->$remote_host|$cmd_file|$user_dir"
 
@@ -1992,12 +2005,12 @@ namespace eval expectlite {
 		set var_list [array names user_namespace]
 		set var_list_sorted [lsort $var_list]
 
-		puts "DEBUG Info: Printing all expect-lite variables"
+		cputs "DEBUG Info: Printing all expect-lite variables" "none"
 		# print internal vars
 		if { [ info exists cli_namespace($arg0) ] } { 
 			set ii_len [string length $arg0]
 			set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
-			puts "Var:arg0 $ii_blank Value:$cli_namespace($arg0)"
+			cputs "Var:arg0 $ii_blank Value:$cli_namespace($arg0)" "none"
 		}
 		foreach ii $var_list_sorted {
 			# create aligned columns
@@ -2012,10 +2025,10 @@ namespace eval expectlite {
 			if { $ii != 0 } {
 				if { [info exists cli_namespace($ii) ] } { 
 					# print var, value, Const
-					puts "Var:$ii $ii_blank Value:$user_namespace($ii) $iii_blank Const:$cli_namespace($ii)"
+					cputs "Var:$ii $ii_blank Value:$user_namespace($ii) $iii_blank Const:$cli_namespace($ii)" none
 				} else {
 					# print var, value
-					puts "Var:$ii $ii_blank Value:$user_namespace($ii)"
+					cputs "Var:$ii $ii_blank Value:$user_namespace($ii)" none
 
 				}
 			}
@@ -2631,6 +2644,9 @@ namespace eval expectlite {
 		upvar expectlite::_el					_el
 		upvar expectlite::TIMESTAMP 			TIMESTAMP
 		upvar expectlite::NOINTERACT			NOINTERACT
+		upvar expectlite::LOG					LOG
+		upvar expectlite::arg0					arg0
+		upvar expectlite::cli_namespace			cli_namespace
 
 
 
@@ -2650,6 +2666,58 @@ namespace eval expectlite {
 			"\\*DEBUG"	{	# Turn on DEBUG logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				set DEBUG 1
+			}
+			"\\*LOG*"	{	# Turn on LOG logging
+				# set default log file name to script name+.log
+				if { [info exist cli_namespace($arg0)] } {
+					set fname "$cli_namespace($arg0).log"
+				} else {
+					# use a default name
+					set fname "expect-lite.log"
+				}
+				
+				set log_list [split $g_dir_str]
+				if { [llength $log_list] > 2 } {
+					if {$WARN} {
+						cputs "\n\nWarning: LOG: Too Many Parameters: $g_dir_str\n" $_el_warn_color
+					}
+					# invalid *LOG command, exit this function
+					return 1
+				} elseif {[llength $log_list] == 2 } {
+					# get log filename
+					set fname [lindex $log_list 1]
+				}
+
+				switch -- $LOG {
+					0	{ # open log file
+						# make sure log file is writable
+						if {[ catch { log_file -noappend "$fname"}  error ]} {
+							cputs "ERROR: Expect: $error\n" $_el_err_color
+							return -1
+						}
+						set LOG 1
+					}
+					-1	{ # Log was already open, so just append to log file
+						if {[ catch { log_file -a "$fname"}  error ]} {
+							cputs "ERROR: Expect: $error\n" $_el_err_color
+							return -1
+						}
+						set LOG 1
+					}
+					10	{ #do nothing, overiden at CLI
+					}
+				} ; # end switch
+				cputs "\nexpect-lite directive: $g_dir_str to file: $fname" $_el_info_color
+				
+			}
+			"\\*NOLOG"	{	# Turn off LOG logging
+				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				# do not disable if CLI has enabled
+				if {$LOG != 10 } { 
+					set LOG -1
+					# turn off log file
+					log_file
+				}
 			}
 			"\\*NOINFO"	{	# Turn off INFO logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
@@ -2826,7 +2894,7 @@ namespace eval expectlite {
 					set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] "
 				}
 
-			}
+			} ; #timestamp
 
 		}
 		# end switch regex

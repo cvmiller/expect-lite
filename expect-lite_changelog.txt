@@ -1089,8 +1089,16 @@ Released 21 Dec 2010 - 4.0.2
 		Warning: Output is redirected from tty.
 		The script quit unexpectantly
 
+3 Dec 2012 - 4.3.3 Released
 
-
+8 Dec 2012 - 4.4.0d1
+	Added *LOG [path/name] |*NOLOG directives
+		*LOG <no logname> starts log in current dir with test name+log
+		*NOLOG stops logging
+		*LOG [path/fname] logs to path with fname
+		*LOG after *NOLOG will append to test name.log file
+		*LOG [path/fname] after *NOLOG will append to path/name file
+	Still to be done CLI *LOG [path/name]
 
 
 ------------ Future Versions --------------------------
@@ -1107,9 +1115,14 @@ o	Add code block for if-else statement
 		]
 
 o	add *LOG <file> *NOLOG - native logging directive
-		try: exp_internal -f <log file> 0
+		try: exp_internal -f <log file> 0 - doesn't work, used log_file instead
+		*LOG <no fnam> starts log in current dir with test name+log
+		*NOLOG stops logging
+		*LOG [path/fname] logs to path with fname
+		*LOGAPPEND append to exiting or default log? 
+		Add *LOG path/name to CLI parser
 		
-o	Include el_shell.elt in examples of next release
+x	Include el_shell.elt in examples of next release 4.3.3
 
 x	Harden "send" command against bad flag "-1" 
 		use -- 
