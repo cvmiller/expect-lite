@@ -1100,6 +1100,12 @@ Released 21 Dec 2010 - 4.0.2
 		*LOG [path/fname] after *NOLOG will append to path/name file
 	Still to be done CLI *LOG [path/name]
 
+10 Dec 2012 - 4.4.0.d2
+	Added *LOG var deref for log file name
+		e.g. *LOG $mynode-$arg0.log
+
+
+
 
 ------------ Future Versions --------------------------
 		

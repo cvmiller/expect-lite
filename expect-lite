@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d1"
+	variable version "4.4.0d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1012,7 +1012,7 @@ namespace eval expectlite {
 					# no optargval, set to a sane value
 					set optargval "--"
 				}
-				puts "=====>$x|$optarg|$optargval|"
+				#puts "=====>$x|$optarg|$optargval|"
 				# Check that last parameter is command file name
 				# script name cannot have '=', which would be interpretted as a constant
 				if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
@@ -2676,7 +2676,10 @@ namespace eval expectlite {
 					set fname "expect-lite.log"
 				}
 				
+				# remove excess spaces in log string
+				regsub {[ ]+} $g_dir_str " " g_dir_str
 				set log_list [split $g_dir_str]
+				
 				if { [llength $log_list] > 2 } {
 					if {$WARN} {
 						cputs "\n\nWarning: LOG: Too Many Parameters: $g_dir_str\n" $_el_warn_color
@@ -3034,7 +3037,9 @@ namespace eval expectlite {
 					{^\-\$.*} {
 						# this is a decr var line - don't touch it
 					}	
+					{^\*[A-Z]+.*} - 
 					{^\=\$.*} {
+						# this is used to dereference a *DIRECTIVE $var line as well as math var line.
 						# this is a math var definition line - don't dereference first var (it is being set)
 						# separate var from rest of line with space
 						regsub {^(=\$[A-Za-z0-9_]+)}  $_el(line) {\1 } _el(line)
@@ -3046,6 +3051,7 @@ namespace eval expectlite {
 						#puts "l2.1>$_parse_line"
 						# first pass at dereferencing variables
 						set _parse_line [parse_var $_parse_line $_var]
+						# extra space "  " prevents arrays from being supported
 						set _el(line) "$_math_var  [parse_var $_parse_line $_var]"
 
 						#puts "l2>$_el(line)"
