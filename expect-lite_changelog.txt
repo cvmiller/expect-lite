@@ -1104,6 +1104,16 @@ Released 21 Dec 2010 - 4.0.2
 	Added *LOG var deref for log file name
 		e.g. *LOG $mynode-$arg0.log
 
+11 Dec 2012 - 4.4.0.d4
+	Added *LOG <filename>.log to CLI parser
+		Log filename _must_ end in 'log' to avoid confusion with script name
+	
+12 Dec 2012 - 4.4.0.d5
+	Fixed closing first log file when using 2 *LOG commands in a row 
+	e.g.
+		*LOG myfile1
+		*LOG myfile2
+		
 
 
 
@@ -1125,8 +1135,11 @@ o	add *LOG <file> *NOLOG - native logging directive
 		*LOG <no fnam> starts log in current dir with test name+log
 		*NOLOG stops logging
 		*LOG [path/fname] logs to path with fname
-		*LOGAPPEND append to exiting or default log? 
+		*LOGAPPEND or *LOGA append to exiting or default log? 
 		Add *LOG path/name to CLI parser
+			Use a second pass by ARG list to pick out Directives with args
+			Preserve Directives (for include files), and expire directives upon return
+		CLI *LOG/*NOLOG should override script values
 		
 x	Include el_shell.elt in examples of next release 4.3.3
 
@@ -1150,9 +1163,9 @@ o	Add named functions
 		Frederic Perras would also like to have a "library include file of functions"
 			Think of a persistant include file (not flushed after exiting, and searchable
 		
-o	Allow passing of spaces to include files e.g. var="more value"
+x	Allow passing of spaces to include files e.g. var="more value"
 		Change parsing to allow spaces without quotes, parse on var= rather than split on spaces
-		
+		implemented in 4.3.3
 
 o	Change *PASS to invoke return (pass) from include script, or term with PASS if main script
 
@@ -1176,10 +1189,12 @@ o	Add Conditional if, used right after > command. Eliminates need to capture var
 	
 b	Blog: describe "how I test" with loopback
 		run ./install -c to set this up
+		
+b	Logging (once 4.4.0 is out)
 
 k	Embedding Env Vars
 
-b	using el-shell to develop scripts
+k	using el-shell to develop scripts
 
 k	Regex made easy - using \d \w and |
 

@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d2"
+	variable version "4.4.0d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1012,7 +1012,7 @@ namespace eval expectlite {
 					# no optargval, set to a sane value
 					set optargval "--"
 				}
-				#puts "=====>$x|$optarg|$optargval|"
+				puts "=====>$x|$optarg|$optargval|"
 				# Check that last parameter is command file name
 				# script name cannot have '=', which would be interpretted as a constant
 				if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
@@ -1070,12 +1070,20 @@ namespace eval expectlite {
 				}
 				#cli-based directives (in form *DIRECTIVE)
 				if [ regexp {\*[A-Z_]+} $optarg] {
-					_el_global_directive $optarg
-					# add more to accept *DIR args??
+					if {[regexp {^[-*]|[=]} $optargval] == 1 } {
+						# next item (optargval) is a - or *DIR
+						_el_global_directive $optarg
+					} elseif { [regexp {.+\.log} $optargval] == 1 } {
+						# accept *LOG <filename>
+						_el_global_directive "$optarg $optargval"
+						# increment loop to skip optargval
+						incr x
+					}
 				}
 			} ; # for loop
 			# assign over riding directives
 			if { $LOG } { set LOG 10 }
+			if { $LOG < 0 } { set LOG -10 }
 
 			#puts "->$remote_host|$cmd_file|$user_dir"
 
@@ -2692,9 +2700,12 @@ namespace eval expectlite {
 				}
 
 				switch -- $LOG {
+					1 -
 					0	{ # open log file
+						# close running log
 						# make sure log file is writable
-						if {[ catch { log_file -noappend "$fname"}  error ]} {
+						log_file
+						if {[ catch { log_file; log_file -noappend "$fname"}  error ]} {
 							cputs "ERROR: Expect: $error\n" $_el_err_color
 							return -1
 						}
@@ -2709,6 +2720,8 @@ namespace eval expectlite {
 					}
 					10	{ #do nothing, overiden at CLI
 					}
+					-10	{ #do nothing, overiden at CLI
+					}
 				} ; # end switch
 				cputs "\nexpect-lite directive: $g_dir_str to file: $fname" $_el_info_color
 				
@@ -2716,7 +2729,7 @@ namespace eval expectlite {
 			"\\*NOLOG"	{	# Turn off LOG logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				# do not disable if CLI has enabled
-				if {$LOG != 10 } { 
+				if {$LOG != 10 && $LOG != -10 } { 
 					set LOG -1
 					# turn off log file
 					log_file
