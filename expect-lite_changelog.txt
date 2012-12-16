@@ -1114,7 +1114,10 @@ Released 21 Dec 2010 - 4.0.2
 		*LOG myfile1
 		*LOG myfile2
 		
-
+15 Dec 2012 - 4.4.0.d6
+	Added warning if overwriting and existing log file
+	Added *LOGAPPEND (can be shorted to *LOGA) which appends to log file
+	
 
 
 ------------ Future Versions --------------------------
@@ -1131,7 +1134,7 @@ o	Add code block for if-else statement
 		]
 
 o	add *LOG <file> *NOLOG - native logging directive
-		try: exp_internal -f <log file> 0 - doesn't work, used log_file instead
+		x try: exp_internal -f <log file> 0 - doesn't work, used log_file instead
 		*LOG <no fnam> starts log in current dir with test name+log
 		*NOLOG stops logging
 		*LOG [path/fname] logs to path with fname
@@ -1140,6 +1143,8 @@ o	add *LOG <file> *NOLOG - native logging directive
 			Use a second pass by ARG list to pick out Directives with args
 			Preserve Directives (for include files), and expire directives upon return
 		CLI *LOG/*NOLOG should override script values
+		Update MAN page, Documentation, self test
+		
 		
 x	Include el_shell.elt in examples of next release 4.3.3
 

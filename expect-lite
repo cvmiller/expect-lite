@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d5"
+	variable version "4.4.0d6"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1012,7 +1012,7 @@ namespace eval expectlite {
 					# no optargval, set to a sane value
 					set optargval "--"
 				}
-				puts "=====>$x|$optarg|$optargval|"
+				#puts "=====>$x|$optarg|$optargval|"
 				# Check that last parameter is command file name
 				# script name cannot have '=', which would be interpretted as a constant
 				if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
@@ -1070,15 +1070,16 @@ namespace eval expectlite {
 				}
 				#cli-based directives (in form *DIRECTIVE)
 				if [ regexp {\*[A-Z_]+} $optarg] {
-					if {[regexp {^[-*]|[=]} $optargval] == 1 } {
-						# next item (optargval) is a - or *DIR
-						_el_global_directive $optarg
-					} elseif { [regexp {.+\.log} $optargval] == 1 } {
-						# accept *LOG <filename>
-						_el_global_directive "$optarg $optargval"
-						# increment loop to skip optargval
-						incr x
-					}
+					switch -regexp $optargval {
+						{^[-*]|[=]} { # next arg is -,*DIR, or var=value
+							_el_global_directive $optarg
+						}
+						{.+\.log} { # next arg is *LOG <filename>							
+							_el_global_directive "$optarg $optargval"
+							# increment loop to skip optargval
+							incr x
+						}
+					}; #end switch
 				}
 			} ; # for loop
 			# assign over riding directives
@@ -2697,14 +2698,27 @@ namespace eval expectlite {
 				} elseif {[llength $log_list] == 2 } {
 					# get log filename
 					set fname [lindex $log_list 1]
+					# check for *LOGAPPEND
+					if { [regexp {LOGA} [lindex $log_list 0]] == 1 } {
+						set LOG -1
+						# close any running log
+						log_file
+					}
 				}
 
 				switch -- $LOG {
 					1 -
 					0	{ # open log file
+						# check of log file exists, and issue warning
+						if {[file exists $fname] == 1} {
+							if {$WARN} {
+							cputs "expect-lite: Warning: Overwriting $fname " $_el_warn_color
+							}
+						}
+					
 						# close running log
-						# make sure log file is writable
 						log_file
+						# make sure log file is writable
 						if {[ catch { log_file; log_file -noappend "$fname"}  error ]} {
 							cputs "ERROR: Expect: $error\n" $_el_err_color
 							return -1
@@ -2717,6 +2731,9 @@ namespace eval expectlite {
 							return -1
 						}
 						set LOG 1
+						if {$INFO} {
+							cputs "\nexpect-lite: Appending to log file: $fname" $_el_info_color
+						}
 					}
 					10	{ #do nothing, overiden at CLI
 					}
