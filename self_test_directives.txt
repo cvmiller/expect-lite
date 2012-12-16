@@ -1,3 +1,4 @@
+#!/usr/bin/env expect-lite
 # 
 # Test expect-lite directives (requires version 3.5.0 or later)
 #
@@ -52,6 +53,34 @@ $temp=fine
 >
 ; === Check timeout error
 @two
+>
+*INFO
+; === check logging
+*LOG /tmp/$arg0.log
+>echo hello
+>
+*NOLOG
+; === check log
+>grep hello /tmp/$arg0.log
+<\nhello
+>
+*LOG /tmp/$arg0.log
+>echo goodbye
+>
+*NOLOG
+>
+; === check log append
+>egrep 'hello|goodbye' /tmp/$arg0.log
+<\nhello
+<\ngoodbye
+>rm /tmp/$arg0.log
+>
+; === check log with no permissions
+*LOG /root/$arg0.log
+>echo hello
+>
+
+
 >
 #Pau!
 

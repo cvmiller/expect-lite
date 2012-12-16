@@ -4,8 +4,9 @@
 .\" Updated Man Page for expect-lite - version 4.0.x	9/28/2011
 .\" Updated Man Page for expect-lite - version 4.0.2	10/8/2011
 .\" Updated Man Page for expect-lite - version 4.3.0	3/25/2012
+.\" Updated Man Page for expect-lite - version 4.4.0	12/16/2012
 .\"
-.TH EXPECT-LITE "1" "December 2012" "expect-lite version 4.3.3" "User Commands"
+.TH EXPECT-LITE "1" "December 2012" "expect-lite version 4.4.0" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -185,6 +186,14 @@ Controls end of line sequence sent to remote host, either line feed, or carriage
 .P
 .SS
 Logging
+.PP
+Logging encompases two operations: 1) writing to a log file, 2) controlling additional messages, such as info, exp_info and warnings. All logging commands when used on the CLI will override those inside the script
+.TP
+*LOG|*NOLOG
+Enable/disable logging of standard out and messages to a file. The log file name will be <script_name>.log saved in the script directory.
+.TP
+*LOG <file_name>|*LOGAPPEND <file_name>
+Enable logging to a user specified path/file_name. When invoked on the CLI, the specified file_name must end in ".log" to avoid ambiguity
 .TP
 *INFO|*NOINFO
 Enable/disable informational messages

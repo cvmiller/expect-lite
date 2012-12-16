@@ -1118,7 +1118,12 @@ Released 21 Dec 2010 - 4.0.2
 	Added warning if overwriting and existing log file
 	Added *LOGAPPEND (can be shorted to *LOGA) which appends to log file
 	
+16 Dec 2012 - 4.4.0d7
+	Changed "Bad Timeout" from Error to Warning
+	Updated DEBUG messages to be properly send to *LOG file
 
+
+	
 
 ------------ Future Versions --------------------------
 		
@@ -1139,11 +1144,12 @@ o	add *LOG <file> *NOLOG - native logging directive
 		*NOLOG stops logging
 		*LOG [path/fname] logs to path with fname
 		*LOGAPPEND or *LOGA append to exiting or default log? 
-		Add *LOG path/name to CLI parser
+		x Add *LOG path/name to CLI parser
 			Use a second pass by ARG list to pick out Directives with args
 			Preserve Directives (for include files), and expire directives upon return
-		CLI *LOG/*NOLOG should override script values
-		Update MAN page, Documentation, self test
+		x CLI *LOG/*NOLOG should override script values
+		x Update MAN page, Documentation, self test
+		x Check *DEBUG is logged
 		
 		
 x	Include el_shell.elt in examples of next release 4.3.3

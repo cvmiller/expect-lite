@@ -57,7 +57,17 @@ $LOCALHOST=localhost
 <expect-lite directive: \*WARN
 <Warning:Prompt Timed Out!
 <Check timeout error
-<ERROR: Bad Timeout Value: two
+<WARN: Bad Timeout Value: two
+
+<expect-lite directive: \*LOG
+<expect-lite directive: \*NOLOG
+<expect-lite: Appending to log file
+<expect-lite directive: \*LOG
+<expect-lite directive: \*NOLOG
+
+<expect-lite: ERROR: couldn't open
+
+# test over check status
 >echo $?
 <\n1
 ; *********** Expect-lite Directive Test Pass! ************

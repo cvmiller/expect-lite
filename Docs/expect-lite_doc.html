@@ -22,6 +22,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -75,7 +76,7 @@ with the standard #!/usr/bin/env expect-lite line <span style="background-color:
 mechanism</span></a> to read
 other script files (sourcing)</li>
         <ul>
-          <li><a style="font-weight: bold;" href="#include_file_parameters">Pass var=values</a> to include scripts <span style="background-color: yellow;">new in 4.3.0</span></li>
+          <li><a style="font-weight: bold;" href="#include_file_parameters">Pass var=values</a> to include scripts<span style="background-color: yellow;"></span></li>
         </ul>
 
         <li><span style="background-color: rgb(255, 255, 102);"><span style="background-color: white;"><a style="font-weight: bold;" href="expect-lite_doc.html#directive_managing_logging">Color</a>
@@ -85,7 +86,10 @@ login</span></a> to remote
 host (supporting telnet, ssh with password, and ssh with keys)</li>
         <li><a href="#examples"><span style="font-weight: bold;">Examples</span></a>&nbsp;
 showing complex actions easily scripted</li>
-        <li><a style="font-weight: bold;" href="#ipv6_support">IPv6</a><span style="font-weight: bold;"> </span>Full Support&nbsp;<span style="background-color: yellow;"></span></li>
+        <li><a style="font-weight: bold;" href="#ipv6_support">IPv6</a><span style="font-weight: bold;"> </span>Full Support <br>
+</li>
+        <li><span style="font-weight: bold;">Logging to a file</span>, native support for saving output <span style="background-color: yellow;">new in 4.4.0</span></li>
+
 
       </ul>
       <span style="font-weight: bold;">Variables<br>
@@ -530,65 +534,65 @@ expect-lite.<br>
           <table style="text-align: left; width: 80%;" border="1" cellpadding="2" cellspacing="2">
             <tbody>
               <tr>
-                <td style="vertical-align: top; color: rgb(204, 204, 204); background-color: rgb(204, 204, 204);"><br>
+                <td style="vertical-align: top; color: rgb(204, 204, 204); background-color: rgb(204, 204, 204); width: 197px;"><br>
                 </td>
-                <td style="vertical-align: top; color: rgb(204, 204, 204); background-color: rgb(204, 204, 204);"><span style="color: rgb(0, 0, 0); font-weight: bold;">Expect-lite
+                <td style="vertical-align: top; color: rgb(204, 204, 204); background-color: rgb(204, 204, 204); width: 289px;"><span style="color: rgb(0, 0, 0); font-weight: bold;">Expect-lite
 Directives</span><br>
                 </td>
               </tr>
               <tr>
-                <td align="undefined" valign="undefined">*~filename</td>
-                <td align="undefined" valign="undefined">Include
+                <td style="width: 197px;" align="undefined" valign="undefined">*~filename</td>
+                <td style="width: 289px;" align="undefined" valign="undefined">Include
 a fail
 script, which expect-lite runs only if the main script fails (see <a href="#fail_script">fail script</a>)</td>
               </tr>
               <tr>
-                <td style="vertical-align: top;">*/prompt/<br>
+                <td style="vertical-align: top; width: 197px;">*/prompt/<br>
                 </td>
-                <td style="vertical-align: top;">Set
+                <td style="vertical-align: top; width: 289px;">Set
 a user defined prompt (see <a href="#user_defined_prompt">user
 defined
 prompt</a>)<br>
                 </td>
               </tr>
               <tr>
-                <td style="vertical-align: top;">*TERM<br>
+                <td style="vertical-align: top; width: 197px;">*TERM<br>
                 </td>
-                <td style="vertical-align: top;">Immediately
+                <td style="vertical-align: top; width: 289px;">Immediately
 terminates script, but returns 0 (pass) (see <a href="#directive_term_fail">stopping execution early</a>)<br>
                 </td>
               </tr>
               <tr>
-                <td style="vertical-align: top;">*FAIL<br>
+                <td style="vertical-align: top; width: 197px;">*FAIL<br>
                 </td>
-                <td style="vertical-align: top;">Immediately
+                <td style="vertical-align: top; width: 289px;">Immediately
 fails script, and returns 1 (fail) (see&nbsp;<a href="#directive_term_fail">stopping execution early</a>)<br>
                 </td>
               </tr>
               <tr>
-                <td>*NOFAIL</td>
-                <td>Script will run to completion, and returns 1, if
+                <td style="width: 197px;">*NOFAIL</td>
+                <td style="width: 289px;">Script will run to completion, and returns 1, if
 failure occurred during execution, or 0, if pass</td>
               </tr>
               <tr>
-                <td style="vertical-align: top;">*NOINTERACT<br>
+                <td style="vertical-align: top; width: 197px;">*NOINTERACT<br>
                 </td>
-                <td style="vertical-align: top;">Will ignore breakpoints (*INTERACT), good for regression testing (see <a href="#directive_nointeract">directives</a>)<br>
+                <td style="vertical-align: top; width: 289px;">Will ignore breakpoints (*INTERACT), good for regression testing (see <a href="#directive_nointeract">directives</a>)<br>
                 </td>
               </tr>
 <tr>
-                <td style="vertical-align: top;">**SHELL=&lt;shell&gt;<br>
+                <td style="vertical-align: top; width: 197px;">**SHELL=&lt;shell&gt;<br>
                 </td>
-                <td style="vertical-align: top;">Configuration
+                <td style="vertical-align: top; width: 289px;">Configuration
 directive which sets the shell immediately after automatic login to
 remote host (see <a href="#directive_shell">setting the
 shell</a>)<br>
                 </td>
               </tr>
               <tr>
-                <td style="vertical-align: top;">*INTERACT<br>
+                <td style="vertical-align: top; width: 197px;">*INTERACT<br>
                 </td>
-                <td style="vertical-align: top;">Sets a breakpoint and places
+                <td style="vertical-align: top; width: 289px;">Sets a breakpoint and places
 user in
 interact
 mode, which pauses the script and turns control of the keyboard over to
@@ -598,73 +602,91 @@ Techniques: Interact</a>)<br>
                 </td>
               </tr>
               <tr>
-                <td align="undefined" valign="undefined">*FORK
+                <td style="width: 197px;" align="undefined" valign="undefined">*FORK
 &lt;session&gt;</td>
-                <td align="undefined" valign="undefined">Multiple
+                <td style="width: 289px;" align="undefined" valign="undefined">Multiple
 session support.
 Directs expect-lite to open a new session and spawns a newshell (see <a href="#directive_fork">multiple sessions</a>)</td>
               </tr>
               <tr>
-                <td style="vertical-align: top;">*SHOW VARS<br>
+                <td style="vertical-align: top; width: 197px;">*SHOW VARS<br>
                 </td>
-                <td style="vertical-align: top;">Debug
+                <td style="vertical-align: top; width: 289px;">Debug
 information, displays
 all expect-lite variables. Can be used in interact mode.</td>
               </tr>
               <tr>
-                <td>*EOLS LF<br>
+                <td style="width: 197px;">*EOLS LF<br>
 *EOLS CRLF</td>
-                <td>Controls end of line sequence sent to remote
+                <td style="width: 289px;">Controls end of line sequence sent to remote
 host, either line feed, or carriage return &amp; line feed.</td>
               </tr>
               <tr>
-                <td style="vertical-align: top;">*INFINITE_LOOP
+                <td style="vertical-align: top; width: 197px;">*INFINITE_LOOP
 &lt;N&gt;<br>
                 </td>
-                <td style="vertical-align: top;">Sets/resets the
+                <td style="vertical-align: top; width: 289px;">Sets/resets the
 infinite loop protection value, which is a total count of all loops in
 script. Default is 5000<br>
                 </td>
               </tr>
               <tr>
-                <td style="background-color: rgb(204, 204, 204);" align="undefined" valign="undefined"><br>
+                <td style="background-color: rgb(204, 204, 204); width: 197px;" align="undefined" valign="undefined"><br>
                 </td>
-                <td style="background-color: rgb(204, 204, 204);" align="undefined" valign="undefined"><span style="color: rgb(0, 0, 0); font-weight: bold;">Logging
+                <td style="background-color: rgb(204, 204, 204); width: 289px;" align="undefined" valign="undefined"><span style="color: rgb(0, 0, 0); font-weight: bold;">Logging
 Directives</span></td>
               </tr>
               <tr>
-                <td align="undefined" valign="undefined">*INFO <br>
-*NOINFO</td>
-                <td align="undefined" valign="undefined">Enable/disable
-informational messages (see <a href="#directive_managing_logging">managing
+                <td style="vertical-align: top; width: 197px;">*LOG<br>
+*NOLOG<br>
+                </td>
+                <td style="vertical-align: top; width: 289px;">Enable/disable
+logging to a file. Will create file &lt;script_name&gt;.log (same as
+$arg0.log) if no path/file_name is supplied.(see  <a href="expect-lite_doc.html#directive_managing_logging">managing
 logging</a>)</td>
               </tr>
               <tr>
-                <td align="undefined" valign="undefined">*WARN <br>
+                <td style="vertical-align: top; width: 197px;">*LOG&nbsp; &lt;file_name&gt;<br>
+
+*LOGAPPEND &lt;file_name&gt;<br>
+                </td>
+                <td style="vertical-align: top; width: 289px;">Enable&nbsp;
+logging to a user specified path/file_name. When invoked on the CLI,
+the specified file_name must end in ".log" to&nbsp; avoid ambiguity<br>
+                </td>
+              </tr>
+<tr>
+                <td style="width: 197px;" align="undefined" valign="undefined">*INFO <br>
+*NOINFO</td>
+                <td style="width: 289px;" align="undefined" valign="undefined">Enable/disable
+informational messages</td>
+              </tr>
+              <tr>
+                <td style="width: 197px;" align="undefined" valign="undefined">*WARN <br>
 *NOWARN</td>
-                <td align="undefined" valign="undefined">Enable/disable
+                <td style="width: 289px;" align="undefined" valign="undefined">Enable/disable
 warning messages</td>
               </tr>
               <tr>
-                <td align="undefined" valign="undefined">*DEBUG <br>
+                <td style="width: 197px;" align="undefined" valign="undefined">*DEBUG <br>
 *NODEBUG</td>
-                <td align="undefined" valign="undefined">Enable/disable
+                <td style="width: 289px;" align="undefined" valign="undefined">Enable/disable
 debug
 messages</td>
               </tr>
               <tr>
-                <td>*NOCOLOR</td>
-                <td>Disables color output, best when logging
+                <td style="width: 197px;">*NOCOLOR</td>
+                <td style="width: 289px;">Disables color output, best when logging
 output</td>
               </tr>
               <tr>
-                <td>*TIMESTAMP &lt;ISO|YMD|DMY|MDY&gt;</td>
-                <td>Prints Date and Timestamp for each command sent,
+                <td style="width: 197px;">*TIMESTAMP &lt;ISO|YMD|DMY|MDY&gt;</td>
+                <td style="width: 289px;">Prints Date and Timestamp for each command sent,
 ISO is default</td>
               </tr>
               <tr>
-                <td>*NOTIMESTAMP</td>
-                <td>Disables timestamp printing</td>
+                <td style="width: 197px;">*NOTIMESTAMP</td>
+                <td style="width: 289px;">Disables timestamp printing</td>
               </tr>
             </tbody>
           </table>
@@ -1638,22 +1660,46 @@ expect-lite is still single threaded, meaning commands will always be
 executed the order as they appear in the script.<br>
       <br>
       <h3><a name="directive_managing_logging"></a>Managing
-Logging *INFO,
+Logging *LOG, *LOGAPPEND, *NOLOG, *INFO,
 *NOINFO, *EXP_INFO, *NOEXP_INFO, *WARN, *NOWARN,
-*DEBUG, *NODEBUG, *NOCOLOR</h3>
-Expect-lite provides additional information (logging) which makes it
-easier to debug failures. As of version 3.7.0, the output is coloured
-based on three levels of logging: <span style="color: rgb(0, 153, 0);">info</span>,
+*DEBUG, *NODEBUG, *NOCOLOR</h3>Expect-lite
+provides additional information (logging) which makes it
+easier to debug failures. As of version 4.4.0 expect-lite supports
+native saving output to a file (logging). Using *LOG, *LOGAPPEND, and
+*NOLOG, logging can be controlled within a script. On the CLI,&nbsp;
+the *LOG commands will override those inside the script.<br>
+      <br>
+The following logging commands are supported:<br>
+      <ul>
+        <li>*LOG: with no file name, will automatically create a log
+file with the script name + ".log" in the same directory as the script.
+If a path/file name is supplied, expect-lite will write standard out
+and additional info (INFO, WARN, DEBUG) to the path/file name file.
+Because parameters can be entered in any order on the CLI, the
+path/file_name must end in ".log" to prevent ambiguity.<br>
+        </li>
+        <li>*NOLOG: closes any open logging files, and disables any
+additional output from be saved to a file. When used on the CLI, all
+logging to a file will be disabled.<br>
+        </li>
+        <li>*LOGAPPEND: Will cause output to be appended to an existing
+file, or create a new file if existing file doesn't exist. Output will
+be appended to path/file_name, when using *LOGAPPEND
+&lt;path/file_name&gt;.<br>
+        </li>
+      </ul>
+The output is coloured
+based on three levels of information desired: <span style="color: rgb(0, 153, 0);">info</span>,
       <span style="color: rgb(204, 153, 51);">warnings</span>,
 and debug. By default, <span style="color: rgb(0, 153, 0);">info </span>and
       <span style="color: rgb(204, 153, 51);">warnings</span> are
 turned on and <span style="color: rgb(0, 153, 0);">exp_info </span>is
 turned off.&nbsp;
-However, using the logging directives: *INFO, *NOINFO, *WARN, *NOWARN,
+However, using the log information directives: *INFO, *NOINFO, *WARN, *NOWARN,
 *DEBUG, *NODEBUG, these messages can be managed. Additionally,
 *NOCOLOR, will turn off color output.<br>
       <br>
-Example of the different logging levels are:<br>
+Example of the different information levels are:<br>
       <ul>
         <li>INFO: Entering FORK sessions, Constant substitution,
 Conditional
@@ -1686,8 +1732,7 @@ serious level of <span style="color: rgb(204, 0, 0);">ERROR</span>,
 which can not be suppressed, and will terminate
 expect-lite with a non-zero return code. Examples of <span style="color: rgb(204, 0, 0);">ERROR</span>s are:
 unable
-to connect or lost connection with remote host, include file not found,
-bad timeout value (non-numeric) or infinite loop detection.<br>
+to connect or lost connection with remote host, include file not found, or infinite loop detection.<br>
       <br>
 It may be tempting to turn off logging once a script is debugged.
 However, if the script is being run in an automated environment (like

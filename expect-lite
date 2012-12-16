@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d6"
+	variable version "4.4.0d7"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -398,6 +398,9 @@ namespace eval expectlite {
 
 
 		if {$_el_comment_color == "none"} {
+			# use no color
+			protect_puts $str	
+		} elseif {$l_color == ""} {
 			# use no color
 			protect_puts $str	
 		} elseif { $l_color != "" } {	
@@ -819,8 +822,8 @@ namespace eval expectlite {
 						# gobble as much return text as possible
 						expect -notransfer -re ".*\n+" { }
 						# print out debug info to help user 
-						puts "DEBUG: User Defined Prompt:<<$_el(prompt)>>"
-						puts "  Not Found in<<$expect_out(buffer)>>"
+						cputs "DEBUG: User Defined Prompt:<<$_el(prompt)>>"
+						cputs "  Not Found in<<$expect_out(buffer)>>"
 					}
 				}
 
@@ -1107,13 +1110,13 @@ namespace eval expectlite {
 		# Assign any Environment Variables starting with 'EL_' to Constants
 		# only show in Debug and not Library mode
 		if { $DEBUG && [info exists ::EL_LIBRARY] != 1} {
-			puts "expect-lite version $expectlite::version"
-			puts "Env Vars -> Constants:"
+			cputs "expect-lite version $expectlite::version"
+			cputs "Env Vars -> Constants:"
 		}
 		foreach key [array names env] {
 			if {[regexp {^EL_} $key] == 1 } {
 				if { $DEBUG && [info exists ::EL_LIBRARY] != 1} {
-					puts "$key=$env($key)"
+					cputs "$key=$env($key)"
 				}
 				set cli_namespace($key) $env($key)
 			}
@@ -1199,7 +1202,7 @@ namespace eval expectlite {
 				}
 				# validate include file
 				if { $DEBUG } {
-					puts "Checking include file exists: $include_path_file"
+					cputs "Checking include file exists: $include_path_file"
 				}
 				if {[file exists $include_path_file] == 0} {
 					cputs "$include_path_file   not found!" $_el_err_color
@@ -1570,12 +1573,12 @@ namespace eval expectlite {
 						"# " -
 						"$ " { 	set _prompt "\$ " 
 								protected_send "export PS1=\'$_prompt\'$_el_eols" 
-								if {$DEBUG} { puts "DEBUG: Setting sh prompt. \n" }
+								if {$DEBUG} { cputs "DEBUG: Setting sh prompt. \n" }
 							}
 						"% " -
 						"> " {	set _prompt "\$ " 
 								protected_send "set prompt = \"$_prompt\"$_el_eols" 
-								if {$DEBUG} { puts "DEBUG: Setting csh prompt. \n" } 
+								if {$DEBUG} { cputs "DEBUG: Setting csh prompt. \n" } 
 							}
 						}
 					}
@@ -1700,7 +1703,7 @@ namespace eval expectlite {
 		if {$INFO && !$DEBUG} {
 			cputs "\n\nINFO: FORK session is: $fork_id,	Active sessions are: $_el_fork_id_list\n" $_el_info_color
 		} elseif { $DEBUG } {
-			puts "\n\nDEBUG: FORK session is: $fork_id, Spawn_id=$spawn_id, fork_count:$_el(fork_count), active sessions:$_el_fork_id_list\n"
+			cputs "\n\nDEBUG: FORK session is: $fork_id, Spawn_id=$spawn_id, fork_count:$_el(fork_count), active sessions:$_el_fork_id_list\n"
 		}
 		set _el(fork_current) $fork_id
 		return $fork_id
@@ -1753,12 +1756,12 @@ namespace eval expectlite {
 
 		# show array
 		if { $DEBUG } {
-			puts "Printing session ids:"
+			cputs "Printing session ids:"
 			foreach keyitem [array names _el_fork] {
 				#filter out eols from session printout
 				if { [string match "*session*" $keyitem] == 1 } {
 					set session_name [lindex [split $keyitem ,] 0]
-					puts "	$session_name=$_el_fork($keyitem)"
+					cputs "	$session_name=$_el_fork($keyitem)"
 				}
 			}
 		}; #endif DEBUG
@@ -2705,7 +2708,7 @@ namespace eval expectlite {
 						log_file
 					}
 				}
-
+				
 				switch -- $LOG {
 					1 -
 					0	{ # open log file
@@ -2720,14 +2723,14 @@ namespace eval expectlite {
 						log_file
 						# make sure log file is writable
 						if {[ catch { log_file; log_file -noappend "$fname"}  error ]} {
-							cputs "ERROR: Expect: $error\n" $_el_err_color
+							cputs "expect-lite: ERROR: $error\n" $_el_err_color
 							return -1
 						}
 						set LOG 1
 					}
 					-1	{ # Log was already open, so just append to log file
 						if {[ catch { log_file -a "$fname"}  error ]} {
-							cputs "ERROR: Expect: $error\n" $_el_err_color
+							cputs "expect-lite: ERROR: $error\n" $_el_err_color
 							return -1
 						}
 						set LOG 1
@@ -2740,7 +2743,7 @@ namespace eval expectlite {
 					-10	{ #do nothing, overiden at CLI
 					}
 				} ; # end switch
-				cputs "\nexpect-lite directive: $g_dir_str to file: $fname" $_el_info_color
+				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				
 			}
 			"\\*NOLOG"	{	# Turn off LOG logging
@@ -2886,7 +2889,7 @@ namespace eval expectlite {
 					# disable timeout during function call
 					set timeout 0
 					if { $DEBUG } {
-						puts "EL TCL CMD>$::_el_tcl_cmd"
+						cputs "EL TCL CMD>$::_el_tcl_cmd"
 					}
 					# provide catch protection, and run tcl_cmd
 					if {[ catch { uplevel #0 {eval $::_el_tcl_cmd }}  error ]} {
@@ -3171,7 +3174,7 @@ namespace eval expectlite {
 
 				# join Expect lines		
 				set __el_cont_lines [join $__el_lines " ; "]
-				if {$DEBUG} {puts "EL-Expect: $__el_cont_lines \n"}
+				if {$DEBUG} {cputs "EL-Expect: $__el_cont_lines \n"}
 
 				if {[ catch { uplevel {eval $_el_cont_lines }}  error ]} {
 					regsub -all " ; " $__el_cont_lines "\n" __el_cont_lines
@@ -3324,10 +3327,10 @@ namespace eval expectlite {
 
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
-							puts "\nfind<<$teststr>>"
-							puts "  in<<$expect_out(buffer)>>"
+							cputs "\nfind<<$teststr>>"
+							cputs "  in<<$expect_out(buffer)>>"
 							#puts "  found_in<<$expect_out(0,string)>>"
-							puts "\n"
+							cputs "\n"
 						}
 						# show expect found string
 						if { $EXP_INFO && $DEBUG==0 && $_el(success)==1 } {
@@ -3377,10 +3380,10 @@ namespace eval expectlite {
 						}
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
-							puts "\nfind<<$teststr>>"
-							puts "  in<<$expect_out(buffer)>>"
+							cputs "\nfind<<$teststr>>"
+							cputs "  in<<$expect_out(buffer)>>"
 							#puts "  found_in<<$expect_out(0,string)>>"
-							puts "\n"
+							cputs "\n"
 						}
 						# show expect found string
 						if { $EXP_INFO && $DEBUG==0 && $_el(success)==1} {
@@ -3414,9 +3417,9 @@ namespace eval expectlite {
 							}
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
-							puts "\nNOT find<<$teststr>>"
-							puts "  in>>$expect_out(buffer)<<"
-							puts "\n"
+							cputs "\nNOT find<<$teststr>>"
+							cputs "  in>>$expect_out(buffer)<<"
+							cputs "\n"
 						}
 
 					}
@@ -3427,10 +3430,12 @@ namespace eval expectlite {
 						# execute expect lines if present
 						_el_exec_expect
 						if {([regexp \[^0-9\ \]+ [_el_strip_char $_el(line) $_timeout]])} {
-							cputs "ERROR: Bad Timeout Value: [_el_strip_char $_el(line) $_timeout] " $_el_err_color
-							send "quit$_el_eols"
-							# Stop the script Now!
-							exit 1
+							if {$WARN} {
+								cputs "WARN: Bad Timeout Value: [_el_strip_char $_el(line) $_timeout] " $_el_warn_color
+							}
+							#send "quit$_el_eols"
+							# Stop the script Now! - removed in 4.4.0
+							#exit 1
 						} else {
 							#puts "\nSetting Expect Timeout to: [_el_strip_char $_el(line) $_timeout] \n"
 							set timeout_int [_el_strip_char $_el(line) $_timeout]
@@ -3531,7 +3536,7 @@ namespace eval expectlite {
 						# check for unresolved Var
 						# Var is defined as in the set [a-zA-Z0-9_]
 						if { [regexp {\$[a-zA-Z0-9_]+} $_conditional] } {
-							if {$DEBUG} { puts "EL:Unresolved Var:$_conditional"}
+							if {$DEBUG} { cputs "EL:Unresolved Var:$_conditional"}
 							# replace all unresolved vars with ""
 							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
 							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
@@ -3766,8 +3771,8 @@ namespace eval expectlite {
 								# remove newlines from capture value
 								regsub -all {[\n\r]+} $capture_val "" capture_val
 								if { $DEBUG } {
-									puts "\nvar_found<<$capture_val>>"
-									puts "\nvar_in<<$expect_out(buffer)>>"
+									cputs "\nvar_found<<$capture_val>>"
+									cputs "\nvar_in<<$expect_out(buffer)>>"
 								}
 								if { $INFO } {
 									#puts "\nAssigned Var:$user_var=|$capture_val|\n"
@@ -3787,8 +3792,8 @@ namespace eval expectlite {
 								} elseif {$WARN} {
 									cputs "Warning: Expect-lite: Var Capture Timed Out! Recommend lengthening timeout, current timeout is: $timeout secs\n" $_el_warn_color
 									if { $DEBUG } {
-										puts "\nfound<<$capture_val>>"
-										puts "\nin<<$expect_out(buffer)>>"
+										cputs "\nfound<<$capture_val>>"
+										cputs "\nin<<$expect_out(buffer)>>"
 									}
 
 								}
@@ -3987,7 +3992,7 @@ namespace eval expectlite {
 						
 						# Var is defined as in the set [a-zA-Z0-9_]
 						if { [regexp {\$[a-zA-Z0-9_]+} $_conditional] } {
-							if {$DEBUG} { puts "EL:Unresolved Var:$_conditional"}
+							if {$DEBUG} { cputs "EL:Unresolved Var:$_conditional"}
 							# replace all unresolved vars with ""
 							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
 							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
@@ -4241,7 +4246,7 @@ namespace eval expectlite {
 		# initialize remote_host_init, fork session
 		session_init $cmd_file_ptr
 		
-		if { $DEBUG_LOG==1 } { log_file -noappend debug_output.txt }
+		#if { $DEBUG_LOG==1 } { log_file -noappend debug_output.txt } - removed in v4.4.0
 
 
 		# Send commands to remote host, and validate response
@@ -4280,7 +4285,7 @@ namespace eval expectlite {
 		}
 
 
-		if { $DEBUG_LOG==1 } { log_file }
+		#if { $DEBUG_LOG==1 } { log_file }
 
 		# exit with 0 to indicate that test passed
 		exit 0
