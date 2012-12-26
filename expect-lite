@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d9"
+	variable version "4.4.0d10"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -998,6 +998,12 @@ namespace eval expectlite {
 		if { $user_dir=="" } { catch { set user_dir $env(EL_USER_DIR)} }
 
 		if { [info exist env(EL_LOG_EXT) ]} { catch { set el_log_ext $env(EL_LOG_EXT)} }
+		# check for empty el_log_ext string
+		if { $el_log_ext == "" } {
+			cputs "expect-lte: ERROR: Environment var EL_LOG_EXT is blank, which could overwrite script file.\nSetting extension to \".log\"" $_el_err_color
+			set el_log_ext ".log"
+		}
+		
 		if { $user=="" } { catch { set user $env(EL_CONNECT_USER)} }
 		if { $pass=="" } { catch { set pass $env(EL_CONNECT_PASS)} }
 		if { [info exists env(EL_CONNECT_METHOD)] } { catch { set connect_method $env(EL_CONNECT_METHOD)} }

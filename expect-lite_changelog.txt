@@ -1130,6 +1130,12 @@ Released 21 Dec 2010 - 4.0.2
 	Added ENV Variable EL_LOG_EXT, which overides default extension ".log"
 		Is used on CLI and in script with *LOG
 	
+26 Dec 2012 - 4.4.0d10
+	Added script overwrite protection, if EL_LOG_EXT= then *LOG could overwrite script file
+		Detects, gives warning, and changes to el_log_ext to ".log"
+		
+
+
 
 ------------ Future Versions --------------------------
 		
@@ -1154,6 +1160,7 @@ o	add *LOG <file> *NOLOG - native logging directive
 			Use a second pass by ARG list to pick out Directives with args
 			Preserve Directives (for include files), and expire directives upon return
 			Read Env VARs first - looking for EL_LOG_EXT, default to ".log"
+				If EL_LOG_EXT="" don't allow overwrite of script
 		x CLI *LOG/*NOLOG should override script values
 		x Update MAN page, Documentation, self test
 		x Check *DEBUG is logged
