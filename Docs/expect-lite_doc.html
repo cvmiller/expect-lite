@@ -23,6 +23,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -88,7 +89,7 @@ host (supporting telnet, ssh with password, and ssh with keys)</li>
 showing complex actions easily scripted</li>
         <li><a style="font-weight: bold;" href="#ipv6_support">IPv6</a><span style="font-weight: bold;"> </span>Full Support <br>
 </li>
-        <li><span style="font-weight: bold;">Logging to a file</span>, native support for saving output <span style="background-color: yellow;">new in 4.4.0</span></li>
+        <li><a href="#directive_managing_logging"><span style="font-weight: bold;">Logging to a file</span></a>, native support for saving output to a file <span style="background-color: yellow;">new in 4.4.0</span></li>
 
 
       </ul>
@@ -163,8 +164,8 @@ native expect embedded in an expect-lite script</li>
         <li><a href="expect-lite_library.html"><span style="font-weight: bold;">Library mode</span></a> use expect-lite as
 a TCL package&nbsp;<span style="background-color: rgb(255, 255, 102);"></span> <br>
 </li>
-        <li><a href="#script_help"><span style="font-weight: bold;">User Defined Script Help</span></a> makes your script more user-friendly <span style="background-color: yellow;">new in 4.3.0</span></li>
-        <li><a href="#regression_example"><span style="font-weight: bold;">Simple Regression Support </span></a>enables combining scripts for faster testing <span style="background-color: yellow;">new in 4.3.0</span></li>
+        <li><a href="#script_help"><span style="font-weight: bold;">User Defined Script Help</span></a> makes your script more user-friendly&nbsp;<span style="background-color: yellow;"></span></li>
+        <li><a href="#regression_example"><span style="font-weight: bold;">Simple Regression Support </span></a>enables combining scripts for faster testing<span style="background-color: yellow;"></span></li>
 
 
       </ul>
@@ -285,6 +286,12 @@ Default is none</td>
 (telnet|ssh)</td>
               </tr>
               <tr>
+                <td style="vertical-align: top;">EL_LOG_EXT<br>
+                </td>
+                <td style="vertical-align: top;">The log file name extension string, default=".log" (see <a href="#directive_managing_logging">*LOG</a>)<br>
+                </td>
+              </tr>
+<tr>
                 <td>EL_DELAY_WAIT_FOR_HOST</td>
                 <td>Delay
 (in ms) to wait for host in Not Expect, and Dynamic Var Capture. 100 ms
@@ -2103,7 +2110,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">27 June 2012<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15 January 2013<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
@@ -2113,7 +2120,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.3.1 and above</span><br style="font-style: italic;">
+document for version 4.4.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

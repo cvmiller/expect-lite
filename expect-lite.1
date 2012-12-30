@@ -6,7 +6,7 @@
 .\" Updated Man Page for expect-lite - version 4.3.0	3/25/2012
 .\" Updated Man Page for expect-lite - version 4.4.0	12/16/2012
 .\"
-.TH EXPECT-LITE "1" "December 2012" "expect-lite version 4.4.0" "User Commands"
+.TH EXPECT-LITE "1" "January 2013" "expect-lite version 4.4.0" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -187,13 +187,13 @@ Controls end of line sequence sent to remote host, either line feed, or carriage
 .SS
 Logging
 .PP
-Logging encompases two operations: 1) writing to a log file, 2) controlling additional messages, such as info, exp_info and warnings. All logging commands when used on the CLI will override those inside the script
+Logging encompases two operations: 1) writing script output to a file, 2) controlling additional messages, such as info, exp_info and warnings. All logging commands when used on the CLI will override those inside the script
 .TP
 *LOG|*NOLOG
-Enable/disable logging of standard out and messages to a file. The log file name will be <script_name>.log saved in the script directory.
+Enable/disable logging of standard out and messages to a file. The log file name will be <script_name>.log saved in the script directory.(see Enviroment Variable EL_LOG_EXT below)
 .TP
 *LOG <file_name>|*LOGAPPEND <file_name>
-Enable logging to a user specified path/file_name. When invoked on the CLI, the specified file_name must end in ".log" to avoid ambiguity
+Enable logging to a user specified path/file_name. When invoked on the CLI, the specified file_name must end in ".log" to avoid ambiguity 
 .TP
 *INFO|*NOINFO
 Enable/disable informational messages
@@ -222,7 +222,7 @@ Disables timestamp printing
 .SS 
 Environment Variables 
 .PP
-It is no longer necessary to hand edit the expect-lite script itself. All parameters such as connect_method, login name and password are controlled via shell environment variables. This permits individual customization in a multi user environment. It is recommended to save these values in the .bashrc or .cshrc. If set, the following environment variables will be used:
+It is no longer necessary to hand edit the expect-lite script itself. All parameters such as connect_method, login name and password are controlled via shell environment variables. This permits individual customization in a multi user environment. It is recommended to save these values in \fI.expect-literc\fR and source it from .bashrc or .cshrc. If set, the following environment variables will be used:
 .TP
 EL_CONNECT_METHOD
 The method expect-lite uses to connect to remote host. Valid options are: none|telnet|ssh|ssh_key Default is none
@@ -244,6 +244,9 @@ Name of expect-lite script to run
 .TP
 EL_USER_DIR
 Change to this directory upon login before executing script
+.TP
+EL_LOG_EXT
+Set the log file name extension string (default=".log") which is appended to the script name when uusing *LOG without file name argument or used to detect a log file name on the command line.
 .TP
 EL_*
 Any other shell environment variables starting with EL_ will become constants
@@ -290,13 +293,12 @@ execute any typed expect-lite script line
 
 
 
-
 .SH AUTHOR
 Written by Craig Miller
 .SH "REPORTING BUGS"
 Report bugs to <cvmiller at gmail dot com>.
 .SH COPYRIGHT
-Copyright \(co 2008-2012 Craig Miller
+Copyright \(co 2008-2013 Craig Miller
 .br
 Copyright \(co 2005-2007 FreeScale Semiconductor and Craig Miller
 .br
