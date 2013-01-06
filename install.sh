@@ -11,6 +11,8 @@
 #
 #	11 Aug 2012 - added configure as non-privilaged user
 #
+#	5 Jan 2013 - fixed NFS mounted home install issues
+#
 
 
 function usage {
@@ -29,7 +31,7 @@ function usage {
 
 # Script Defaults	   
 numopts=0
-VERSION=1.0
+VERSION=1.1
 SSH_HOME=$HOME/.ssh
 
 PREFIX=""
@@ -40,6 +42,7 @@ MAN_DIR=/man/man1
 TOOLS_DIR=Tools
 BASHRC=$HOME/.bashrc
 ELRC=$HOME/.expect-literc
+START_PWD=$PWD
 
 OPTS=$*
 
@@ -119,10 +122,19 @@ function removeall {
 		mv -f $PREFIX$BIN_DIR/expect-lite.old $PREFIX$BIN_DIR/expect-lite
 	fi
 	# restore bashrc
+	if [ "$USER" == "root" ]; then
+		BASHRC=/home/$SUDO_USER/.bashrc
+		ELRC=/home/$SUDO_USER/.expect-literc
+	fi
 	mod_bash=$(grep expect-literc $BASHRC)
-	if [ "$mod_bash" == "source $HOME/.expect-literc" ]; then
+	if [ "$mod_bash" != "" ]; then
 		# remove source line in bashrc
-		sed -i -e "s;source $ELRC;;" $BASHRC
+		echo "updating bashrc"
+		if [ "$USER" == "root" ]; then
+			sudo -u $SUDO_USER sed -i -e "s;source $ELRC;;" $BASHRC
+		else
+			sed -i -e "s;source $ELRC;;" $BASHRC
+		fi
 	fi
 	echo "Done."
 	echo "==================="
@@ -200,19 +212,25 @@ if [ $configure_only ]; then
 else
 	# start actual install - Steps 1,2,3
 	installit expect-lite $PREFIX$BIN_DIR "1"
-	installit Examples $PREFIX$DOC_DIR "2"
+	installit examples $PREFIX$DOC_DIR "2"
 	cd man
 	installit expect-lite.1.gz $PREFIX$MAN_DIR "3"
 	cd - > /dev/null
+	cd $START_PWD
 fi
+
+
 
 # run configure section as non-privilaged user
 if [ "$USER" == "root" ]; then
 	echo "SU)	==================="
 	echo "	Calling install script as non-privilaged user $SUDO_USER for configuration"
 	sudo -u $SUDO_USER $SUDO_COMMAND -c
+	echo "=======================================" 
+	echo "SU) Installation Complete!"
+	echo "=======================================" 
+	exit
 fi
-
 
 # test if bashrc needs mod: Step 4
 mod_bash=$(grep expect-literc $BASHRC)
@@ -238,12 +256,13 @@ if [ "$mod_bash" == "" ]; then
 	fi
 fi
 
+
 # do the following for non-CYGWIN OSs
 if [ "$OS" == "" ]; then
 	#check if ssh keys already exist
 	if [ ! -e $SSH_HOME/id_rsa.pub ]; then
 		echo "==================="
-		echo "Creating ssh keys as user: $SUDO_USER"
+		echo "Creating ssh keys as user: $USER"
 		#su $SUDO_USER -c $TOOLS_DIR/setup_local_ssh.sh
 		$TOOLS_DIR/setup_local_ssh.sh
 	fi

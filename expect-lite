@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d10"
+	variable version "4.4.0d11"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -94,6 +94,10 @@ namespace eval expectlite {
 	#set connect_method "ssh" 
 	#set connect_method "ssh_key" 
 	variable connect_method "none" 
+
+	# Accept SSH host keys
+	variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no"
+
 
 	# Path to telnet (helps in cygwin environments)
 	variable _el_telnet "/usr/bin/telnet"
@@ -1315,7 +1319,9 @@ namespace eval expectlite {
 	#
 	proc zlogin { pass login_attempts } {
 		upvar expectlite::remote_host		remote_host
+		upvar expectlite::_el_warn_color			_el_warn_color
 		upvar expectlite::_el_eols			_el_eols
+		upvar expectlite::WARN					WARN
 		
 		set timeout 2
 		set MAXLOGINATTEMPT 10
@@ -1333,6 +1339,10 @@ namespace eval expectlite {
 				-re "Are you sure you want to continue connecting" {
 					send -- "yes$_el_eols"
 					#zlogin $pass $login_attempts
+					}
+				-re "Warning: Permanently added .* to the list of known hosts" {
+					if {$WARN} { cputs "Expect-lite: Warning: ssh added host key to known hosts" $_el_warn_color }
+					
 					}
 				-re "Last login" { return }
 				-re {.*[>#%$] $} { return }
@@ -1358,6 +1368,7 @@ namespace eval expectlite {
 		upvar expectlite::pass					pass
 		upvar expectlite::_el_timeout			_el_timeout
 		upvar expectlite::DEBUG					DEBUG
+		upvar expectlite::connect_ssh_accept_host_key	connect_ssh_accept_host_key	
 		
 		
 		# work around for older versions of expect
@@ -1373,7 +1384,7 @@ namespace eval expectlite {
 			# turn off stdout - suppress login banners - show with -vv
 			log_user 0
 		}
-		if { [catch { spawn ssh -l $user $remote_host  } error] } {
+		if { [catch { spawn ssh $connect_ssh_accept_host_key -l $user $remote_host  } error] } {
 			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
 			# Fail script?
 			exit 1
@@ -1406,6 +1417,7 @@ namespace eval expectlite {
 		upvar expectlite::DEBUG					DEBUG
 		upvar expectlite::delay_wait_for_host	delay_wait_for_host
 		upvar expectlite::_el_eols				_el_eols
+		upvar expectlite::connect_ssh_accept_host_key		connect_ssh_accept_host_key	
 		upvar expectlite::_el_timeout				_el_timeout
 		
 		
@@ -1424,7 +1436,7 @@ namespace eval expectlite {
 			log_user 0
 		}
 		#This spawns the ssh program - auto generates spawn_id var
-		if { [catch { spawn ssh $login_user$remote_host  } error] } {
+		if { [catch { spawn ssh $connect_ssh_accept_host_key $login_user$remote_host  } error] } {
 			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
 			# Fail script?
 			exit 1

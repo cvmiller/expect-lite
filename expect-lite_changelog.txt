@@ -1135,6 +1135,14 @@ Released 21 Dec 2010 - 4.0.2
 		Detects, gives warning, and changes to el_log_ext to ".log"
 		
 
+4 January 2013 - 4.4.0d11
+	Added 'spawn ssh -o StrictHostKeyChecking=no ...' to remove ssh hostkey question at login
+		Controlled by internal variable connect_ssh_accept_host_key
+
+5 January 2013 - 4.4.0d11
+	Updated install.sh to better deal with NFS mounted home and sudo
+		May still have ssh key issue
+
 
 
 ------------ Future Versions --------------------------
@@ -1172,7 +1180,7 @@ x	Harden "send" command against bad flag "-1"
 		use -- 
 
 o	Fix installer when using NFS home drive
-		Many errors
+		Many errors - make 2 installers, 1 to install, 1 to configure
 	
 x	Fix installer to do home directory stuff (.ssh, .bashrc) as unprivlaged user
 		Update docs to suggest umask 0 before untar-ing
