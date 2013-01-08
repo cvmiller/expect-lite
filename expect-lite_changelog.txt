@@ -1143,7 +1143,9 @@ Released 21 Dec 2010 - 4.0.2
 	Updated install.sh to better deal with NFS mounted home and sudo
 		May still have ssh key issue
 
-
+7 January 2013 - 4.4.0d12
+	Fixed error message el_exec_expect (embedded expect) - undefined var
+	
 
 ------------ Future Versions --------------------------
 		
@@ -1224,6 +1226,8 @@ b	Blog: describe "how I test" with loopback
 		run ./install -c to set this up
 		
 b	Logging (once 4.4.0 is out)
+
+b	Quoting - or lack there of
 
 k	Embedding Env Vars
 

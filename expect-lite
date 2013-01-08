@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d11"
+	variable version "4.4.0d12"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3206,6 +3206,7 @@ namespace eval expectlite {
 			#global cli_namespace user_namespace timeout remote_host user_dir 
 			global errorInfo 
 			upvar expectlite::_el_debug_color		_el_debug_color
+			upvar expectlite::_el_err_color		_el_err_color
 			upvar  expectlite::DEBUG 					DEBUG
 
 			upvar _el(_el_lines) __el_lines _el_cont_lines __el_cont_lines 
