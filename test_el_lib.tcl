@@ -95,7 +95,7 @@ exit 0
 $IP=2001::DEAD
 ~junk
 >date
-<2012
+<20[12][3-9]
 >pwd
 #*FORK
 >

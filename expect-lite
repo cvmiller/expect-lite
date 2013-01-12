@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d12"
+	variable version "4.4.0d14"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -876,6 +876,7 @@ namespace eval expectlite {
 		puts "   EL_CONNECT_METHOD            telnet|ssh|ssh_key|none"
 		puts "   EL_CONNECT_USER              username for telnet|ssh"
 		puts "   EL_CONNECT_PASS              password for telnet|ssh"
+		puts "   EL_LOG_EXT                   log file extension (default \".log\""
 		puts "   EL_DELAY_WAIT_FOR_HOST       default=100"
 		puts "   EL_*                         user defined constants"
 		puts " "
@@ -966,6 +967,7 @@ namespace eval expectlite {
 	#		EL_CONNECT_METHOD
 	#		EL_CONNECT_USER
 	#		EL_CONNECT_PASS
+	#		EL_LOG_EXT
 	#		EL_DELAY_WAIT_FOR_HOST
 	#
 	proc _el_read_args { argc argv } {
@@ -993,6 +995,9 @@ namespace eval expectlite {
 
 		# default timeout_multiplier multiplier to 1
 		set cli_namespace($timeout_multiplier) 1
+
+		# command file (aka script name) counter
+		set cmd_file_counter 0
 
 		# If needed read parameters from Env Vars
 		catch { set remote_host $env(EL_REMOTE_HOST)}
@@ -1037,6 +1042,7 @@ namespace eval expectlite {
 					#puts ">>>$optarg>>>$optargval"
 					set cmd_file $optarg
 					set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file]
+					incr cmd_file_counter
 				}
 				# look for help & debug options which overide script options
 				# added -r and -c for remote_host & cmd_file respectively
@@ -1088,18 +1094,15 @@ namespace eval expectlite {
 				}
 				#cli-based directives (in form *DIRECTIVE)
 				if [ regexp {\*[A-Z_]+} $optarg] {
-					# switch statement doesn't work with regexp and glob in same statement	
-#					switch $optargval {
-#						-regexp {^[-*]|[=]} { # next arg is -,*DIR, or var=value
-#							_el_global_directive $optarg
-#						}
-#						-glob "*.log" { # next arg is *LOG <filename>							
-#							_el_global_directive "$optarg $optargval"
-#							# increment loop to skip optargval
-#							incr x
-#						}
-#					}; #end switch
-					if { [regexp {^[-*]|[=]}  $optargval ] } {
+					#puts "===>got $optarg|$optargval"
+
+					# check if optargval is just a word
+					set chk_word ""
+					regsub {[a-zA-Z./]+} $optargval {} chk_word
+					if { [string length $chk_word] == 0 } {
+						# just *LOG on the cli
+						_el_global_directive $optarg 
+					} elseif { [regexp {^[-*]|[=]}  $optargval ] } {
 						# next arg is -,*DIR, or var=value
 						_el_global_directive $optarg
 					} elseif { [string match "*$el_log_ext" $optargval ] } {
@@ -1131,6 +1134,12 @@ namespace eval expectlite {
 				cputs "Error: Missing cmd_file"  $_el_err_color
 				usage
 				}
+			# check that only 1 script name was on the CLI
+			if { $cmd_file_counter != 1  &&  $LOG != 0} {
+				puts stderr "Error: Can't determine cmd_file name with *LOG, please use log file with extension:$el_log_ext" 
+				exit 1
+			}
+			
 		}
 
 		# Assign any Environment Variables starting with 'EL_' to Constants
@@ -2730,6 +2739,7 @@ namespace eval expectlite {
 				# remove excess spaces in log string
 				regsub {[ ]+} $g_dir_str " " g_dir_str
 				set log_list [split $g_dir_str]
+
 				
 				if { [llength $log_list] > 2 } {
 					if {$WARN} {
@@ -2738,6 +2748,7 @@ namespace eval expectlite {
 					# invalid *LOG command, exit this function
 					return 1
 				} elseif {[llength $log_list] == 2 } {
+					set LOG 1
 					# get log filename
 					set fname [lindex $log_list 1]
 					# check for *LOGAPPEND
@@ -2746,6 +2757,8 @@ namespace eval expectlite {
 						# close any running log
 						log_file
 					}
+				} elseif {[llength $log_list] == 1 } {
+					set LOG 1
 				}
 				
 				switch -- $LOG {

@@ -1146,6 +1146,13 @@ Released 21 Dec 2010 - 4.0.2
 7 January 2013 - 4.4.0d12
 	Fixed error message el_exec_expect (embedded expect) - undefined var
 	
+8 January 2013 - 4.4.0d13
+	Added EL_LOG_EXT to usage
+
+12 Jsnuary 2013 - 4.4.0d14
+	Added check for rouge word on CLI after *LOG
+		e.g. expect-lite this *LOG that
+
 
 ------------ Future Versions --------------------------
 		
