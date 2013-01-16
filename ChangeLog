@@ -1,6 +1,13 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 21 January 2013 v4.4.0
+	Added native logging to file with directives *LOG *NOLOG *LOGAPPEND
+		Includes new Env Var: EL_LOG_EXT to control log file extesion (default=".log")
+		CLI *LOG or *LOG <log file name> overides *LOG inside script
+	Updated ssh login to always accept host key
+	Improved install.sh for NFS mounted home drives
+	expect-lite turns 8!
 
 Released 4 December 2012 v4.3.3
 	Fixed "send" bug "bad flag -1"

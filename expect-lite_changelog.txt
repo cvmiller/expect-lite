@@ -1134,7 +1134,6 @@ Released 21 Dec 2010 - 4.0.2
 	Added script overwrite protection, if EL_LOG_EXT= then *LOG could overwrite script file
 		Detects, gives warning, and changes to el_log_ext to ".log"
 		
-
 4 January 2013 - 4.4.0d11
 	Added 'spawn ssh -o StrictHostKeyChecking=no ...' to remove ssh hostkey question at login
 		Controlled by internal variable connect_ssh_accept_host_key
@@ -1152,6 +1151,14 @@ Released 21 Dec 2010 - 4.0.2
 12 Jsnuary 2013 - 4.4.0d14
 	Added check for rouge word on CLI after *LOG
 		e.g. expect-lite this *LOG that
+
+15 January 2013 - 4.4.d16
+	Fixed bug when using *FORK $var
+	Fixed *LOG/*NOLOG/*LOG append function (was overwriting log)
+	
+
+
+
 
 
 ------------ Future Versions --------------------------

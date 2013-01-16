@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d14"
+	variable version "4.4.0d16"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -2739,7 +2739,6 @@ namespace eval expectlite {
 				# remove excess spaces in log string
 				regsub {[ ]+} $g_dir_str " " g_dir_str
 				set log_list [split $g_dir_str]
-
 				
 				if { [llength $log_list] > 2 } {
 					if {$WARN} {
@@ -2748,7 +2747,7 @@ namespace eval expectlite {
 					# invalid *LOG command, exit this function
 					return 1
 				} elseif {[llength $log_list] == 2 } {
-					set LOG 1
+					#if { $LOG == 0 } { set LOG 1 }
 					# get log filename
 					set fname [lindex $log_list 1]
 					# check for *LOGAPPEND
@@ -2759,7 +2758,7 @@ namespace eval expectlite {
 					}
 				} elseif {[llength $log_list] == 1 } {
 					set LOG 1
-				}
+				}				
 				
 				switch -- $LOG {
 					1 -
@@ -2890,7 +2889,7 @@ namespace eval expectlite {
 			}
 			"\\*FORK*"	{	# Spawn/Switch to a new session
 				set fork_list [split $g_dir_str]
-				
+
 				if { [llength $fork_list] > 2 } {
 					if {$WARN} {
 						cputs "\n\nWarning: FORK: Too Many Names: $g_dir_str\n" $_el_warn_color
@@ -4007,7 +4006,8 @@ namespace eval expectlite {
 						print_comment_line
 						# trim off white space
 						set _el(line) [string trimright $_el(line)]
-						#regsub -all {([ ]*)([^ ]*)([ ]*)} $_el(line) {\2} _el(line)
+						# remove any multiple spaces
+						regsub -all {[ ]+} $_el(line) " " _el(line)
 						# Process the directive - return 0 to fail
 						set _el(success) [_el_global_directive $_el(line)]
 
