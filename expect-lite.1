@@ -193,7 +193,7 @@ Logging encompases two operations: 1) writing script output to a file, 2) contro
 Enable/disable logging of standard out and messages to a file. The log file name will be <script_name>.log saved in the script directory.(see Enviroment Variable EL_LOG_EXT below)
 .TP
 *LOG <file_name>|*LOGAPPEND <file_name>
-Enable logging to a user specified path/file_name. When invoked on the CLI, the specified file_name must end in ".log" to avoid ambiguity 
+Enable logging to a user specified path/file_name. When invoked on the CLI, the specified file_name must end in ".log" (or as defined by EL_LOG_EXT) to avoid ambiguity 
 .TP
 *INFO|*NOINFO
 Enable/disable informational messages
