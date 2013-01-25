@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0"
+	variable version "4.4.1d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1094,12 +1094,14 @@ namespace eval expectlite {
 				}
 				#cli-based directives (in form *DIRECTIVE)
 				if [ regexp {\*[A-Z_]+} $optarg] {
-					#puts "===>got $optarg|$optargval"
 
 					# check if optargval is just a word
 					set chk_word ""
-					regsub {[a-zA-Z./]+} $optargval {} chk_word
-					if { [string length $chk_word] == 0 } {
+					#regsub {[a-zA-Z./]+} $optargval {} chk_word
+					regsub {(^[-*]|[^*=]+)} $optargval {} chk_word
+					#puts "===>got $optarg|$optargval|$el_log_ext|$chk_word|"
+					
+					if { [string length $chk_word] != 0 } {
 						# just *LOG on the cli
 						_el_global_directive $optarg 
 					} elseif { [regexp {^[-*]|[=]}  $optargval ] } {
@@ -1135,7 +1137,8 @@ namespace eval expectlite {
 				usage
 				}
 			# check that only 1 script name was on the CLI
-			if { $cmd_file_counter != 1  &&  $LOG != 0} {
+			#puts "========>$cmd_file_counter|$LOG|$cmd_file"
+			if { $cmd_file_counter > 1  &&  $LOG != 0} {
 				puts stderr "Error: Can't determine cmd_file name with *LOG, please use log file with extension:$el_log_ext" 
 				exit 1
 			}

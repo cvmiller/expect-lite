@@ -1,6 +1,6 @@
 ##################################################################################
 #
-#  Copyright (C) Craig Miller 2008-2012
+#  Copyright (C) Craig Miller 2008-2013
 #
 #  Copyright (C) Freescale Semiconductor, Inc. 2005-2007
 #
@@ -1156,6 +1156,11 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed bug when using *FORK $var
 	Fixed *LOG/*NOLOG/*LOG append function (was overwriting log)
 	
+20 January 2013 - 4.4.0 - Released
+
+
+23 January 2013 - 4.4.1d1
+	Fixed nasty bug when using *LOG <filename> on CLI
 
 
 
@@ -1174,7 +1179,7 @@ o	Add code block for if-else statement
 		]::[
 		]
 
-o	add *LOG <file> *NOLOG - native logging directive
+x	add *LOG <file> *NOLOG - native logging directive
 		x try: exp_internal -f <log file> 0 - doesn't work, used log_file instead
 		*LOG <no fnam> starts log in current dir with test name+log
 		*NOLOG stops logging
@@ -1195,7 +1200,7 @@ x	Include el_shell.elt in examples of next release 4.3.3
 x	Harden "send" command against bad flag "-1" 
 		use -- 
 
-o	Fix installer when using NFS home drive
+x	Fix installer when using NFS home drive
 		Many errors - make 2 installers, 1 to install, 1 to configure
 	
 x	Fix installer to do home directory stuff (.ssh, .bashrc) as unprivlaged user
@@ -1220,7 +1225,7 @@ o	Change *PASS to invoke return (pass) from include script, or term with PASS if
 
 o	Unset a variable - useful for starting a regression test with pseudo-arrays
 
-o	unknown host - ssh_key_login should answer "yes" when needed during login (like zlogin)
+x	unknown host - ssh_key_login should answer "yes" when needed during login (like zlogin)
 		
 o	list processing - foreach loop [ $x=item1 item2 item3		 ]
 		Requested by Tao
