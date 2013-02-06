@@ -1158,12 +1158,18 @@ Released 21 Dec 2010 - 4.0.2
 	
 20 January 2013 - 4.4.0 - Released
 
-
 23 January 2013 - 4.4.1d1
 	Fixed nasty bug when using *LOG <filename> on CLI
 
+27 January 2013 - 4.4.1 - Released
 
+30 January 2013 - 4.4.2d1
+	Added term type web|www to give color output when called from web
+		Use el-web-runner el_run.php to web-ize expect-lite
 
+5 February 2013 - 4.4.2d2
+	Moved check term type earlier to correct color output of early lines
+	
 
 
 ------------ Future Versions --------------------------
@@ -1179,6 +1185,11 @@ o	Add code block for if-else statement
 		]::[
 		]
 
+o	Add TERM type=web
+		In this mode, colors would be html "colors"
+		e.g. <span sytle="color:blue"> stuff </span>
+		
+		
 x	add *LOG <file> *NOLOG - native logging directive
 		x try: exp_internal -f <log file> 0 - doesn't work, used log_file instead
 		*LOG <no fnam> starts log in current dir with test name+log

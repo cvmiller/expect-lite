@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.1"
+	variable version "4.4.2.d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -344,7 +344,7 @@ namespace eval expectlite {
 		if { [lsearch [array names el_color] $_el_comment_color] == -1 } {
 			set _el_comment_color none
 		}
-
+		
 		if { [catch { switch -glob -- $env(TERM) {
 			"xterm"		-
 			"xterm-color"		-
@@ -353,6 +353,26 @@ namespace eval expectlite {
 			"ansi"		-
 			"cygwin"	{ 
 				# keep colors as set globally
+				set el_color(left_angle) "<"
+			 }
+			 "www"		-
+			 "web"		-
+			 "WEB"		-
+			 "Web"		{
+			 	# set colors to HTML values
+				set el_color(red) "<span style=\"color:red\">"
+				set el_color(blue) "<span style=\"color:blue\">"
+				set el_color(ltblue) "<span style=\"color:aqua\">"
+				set el_color(black) "<span style=\"color:black\">"
+				set el_color(cyan) "<span style=\"color:#00FFFF\">"
+				set el_color(gray) "<span style=\"color:gray\">"
+				set el_color(ltgray) "<span style=\"color:silver\">"
+				set el_color(green) "<span style=\"color:green\">"
+				set el_color(yellow) "<span style=\"color:yellow\">"
+				set el_color(purple) "<span style=\"color:purple\">"
+				set el_color(pink) "<span style=\"color:#FF69B4\">"
+				set el_color(nocolor) "</span>"
+				set el_color(left_angle) "&#60;"
 			 }
 			 default {
 				# set INFO color
@@ -375,6 +395,7 @@ namespace eval expectlite {
 			set _el_err_color none
 			# set global color
 			set _el_comment_color none		 	
+			set el_color(left_angle) "<"
 
 		}
 	}
@@ -3044,6 +3065,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_err_color 			_el_err_color
 		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::_el_eols					_el_eols
+		upvar expectlite::el_color					el_color
 #		upvar expectlite::_el_fork_context			_el_fork_context
 		upvar expectlite::_el_buf					_el_buf
 		upvar expectlite::EXP_INFO					EXP_INFO
@@ -3391,7 +3413,7 @@ namespace eval expectlite {
 						}
 						# show expect found string
 						if { $EXP_INFO && $DEBUG==0 && $_el(success)==1 } {
-							cputs "<<$expect_out(0,string)" $_el_info_color
+							cputs "$el_color(left_angle)$el_color(left_angle)$expect_out(0,string)" $_el_info_color
 						}
 					}
 				^\<	{ 	# Expect teststr or set success to 0 and fail test	'<'=use regex
@@ -3445,7 +3467,7 @@ namespace eval expectlite {
 						# show expect found string
 						if { $EXP_INFO && $DEBUG==0 && $_el(success)==1} {
 							regsub ".*($teststr)" $expect_out(buffer) {\1} foundstr
-							cputs "<$foundstr" $_el_info_color
+							cputs "$el_color(left_angle)$foundstr" $_el_info_color
 						}
 
 					}
@@ -4276,6 +4298,9 @@ namespace eval expectlite {
 
 		_el_init_globals
 
+		# check terminal type for use of colors
+		check_term_type 
+		
 		_el_read_args $::argc $::argv
 
 		# Check Expect Version, warn if old
@@ -4286,9 +4311,6 @@ namespace eval expectlite {
 			cputs "\nWarning: $msg\n" $_el_err_color
 		}
 		
-		# check terminal type for use of colors
-		check_term_type 
-
 		# read in cmd file and return handle to buffer
 		set cmd_file_ptr [ read_cmd_file ]
 
