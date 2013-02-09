@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.2.d2"
+	variable version "4.4.2.d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -527,10 +527,10 @@ namespace eval expectlite {
 					exit 
 					}
 				-reset \007	{ # ^G show lines with meta-data
-					#puts "Current Stack---->$_el_buf(stack)"
-					#_el_buffer_show 20 $_el_buf(stack) 1
-					#send "\n"
-					puts "Infinite loop count: $expectlite::_el_infinite_loop"
+					puts "Current Stack---->$_el_buf(stack)"
+					_el_buffer_show 20 $_el_buf(stack) 1
+					send "\n"
+					#puts "Infinite loop count: $expectlite::_el_infinite_loop"
 					return 
 					}
 				-re {(^\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
@@ -2342,23 +2342,30 @@ namespace eval expectlite {
 				# remove leading white space on line (permitting indentation
 				regsub {\\$} $buf_line {\\ } buf_line
 			}
-
+			
 			# process block lines ] pop
 			if { [regexp {^[\]]} $buf_line ] } {
 				set meta_line [_el_buffer_block_pop ]
 				# update meta-line of '[' line
 				# preserve line-data
 				set t_line_data [lindex $line_buffer $meta_line 0]
-				#puts "======>$meta_line|$t_line_data"
+				#puts "======>$meta_line|$t_line_data|$buf_line"
 				# update [ line meta-data with valid line number (read: not -1)
 				if { $meta_line > 0 } {
 					lset line_buffer $meta_line "{$t_line_data} {[llength $line_buffer]}"
 				}
 				# is the popped line an if statement?
-				if { [regexp {^\?.+\?[ ]*\[} $t_line_data ] || [regexp {^\?.+\?.+::[ ]*\[} $t_line_data ]} {
+				if { [regexp {^\?.+\?[ ]*\[} $t_line_data ] || [regexp {^\?.+\?.+::[ ]*\[} $t_line_data ] || [regexp {^\][ ]*::[ ]*\[} $t_line_data ]  } {
 					set meta_line [expr [llength $line_buffer] + 1]
 				}
+				# process block lines "else" ]::[ pop then push
+				if { [regexp {^\][ ]*::[ ]*\[$} $buf_line ] } {
+					# then push "else"
+					_el_buffer_block_push [llength $line_buffer] 
+
+				}
 			}
+
 			
 			# process block lines [ push
 			if { [regexp {^[\[]} $buf_line ] } {

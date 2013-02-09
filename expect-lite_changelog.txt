@@ -1170,7 +1170,9 @@ Released 21 Dec 2010 - 4.0.2
 5 February 2013 - 4.4.2d2
 	Moved check term type earlier to correct color output of early lines
 	
-
+8 February 2013 - 4.4.2d3
+	Added ]::[ else code block to _el_buffer
+	
 
 ------------ Future Versions --------------------------
 		
@@ -1184,11 +1186,14 @@ o	Add code block for if-else statement
 		if [
 		]::[
 		]
+	Support nested code blocks (for if & else blocks)
 
 o	Add TERM type=web
 		In this mode, colors would be html "colors"
 		e.g. <span sytle="color:blue"> stuff </span>
-		
+
+o	Add Env Var for INFINITE_LOOP
+		Update help to move Env Vars to Man page		
 		
 x	add *LOG <file> *NOLOG - native logging directive
 		x try: exp_internal -f <log file> 0 - doesn't work, used log_file instead
