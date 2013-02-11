@@ -989,6 +989,7 @@ namespace eval expectlite {
 	#		EL_CONNECT_USER
 	#		EL_CONNECT_PASS
 	#		EL_LOG_EXT
+	#		EL_INFINITE_LOOP
 	#		EL_DELAY_WAIT_FOR_HOST
 	#
 	proc _el_read_args { argc argv } {
@@ -1000,6 +1001,7 @@ namespace eval expectlite {
 		upvar expectlite::user					user
 		upvar expectlite::pass					pass
 		upvar expectlite::delay_wait_for_host 	delay_wait_for_host
+		upvar expectlite::_el_infinite_loop 	_el_infinite_loop
 		upvar expectlite::cli_namespace			cli_namespace
 		upvar expectlite::timeout_multiplier	timeout_multiplier
 		upvar expectlite::arg0					arg0
@@ -1034,6 +1036,13 @@ namespace eval expectlite {
 			set el_log_ext ".log"
 		}
 		
+		if { [info exist env(EL_INFINITE_LOOP) ]} { catch { set infinite_loop $env(EL_INFINITE_LOOP)} }
+		# check for number el_infinite_loop string
+		if { [string is integer -strict $infinite_loop] } {
+			set _el_infinite_loop $infinite_loop
+		} else {
+			cputs "expect-lte: ERROR: Environment var EL_INFINITE_LOOP is blank or not a number.\nSetting INFINITE_LOOP to: $_el_infinite_loop" $_el_err_color
+		}
 		if { $user=="" } { catch { set user $env(EL_CONNECT_USER)} }
 		if { $pass=="" } { catch { set pass $env(EL_CONNECT_PASS)} }
 		if { [info exists env(EL_CONNECT_METHOD)] } { catch { set connect_method $env(EL_CONNECT_METHOD)} }
@@ -2345,23 +2354,27 @@ namespace eval expectlite {
 			
 			# process block lines ] pop
 			if { [regexp {^[\]]} $buf_line ] } {
-				set meta_line [_el_buffer_block_pop ]
+				#set meta_line [_el_buffer_block_pop ]
+				set meta_line_blob [join [_el_buffer_block_pop ]]
+				set meta_line [lindex $meta_line_blob 0]
+				set meta_line_type [lindex $meta_line_blob 1]
+				#puts "===meta===>$meta_line_blob | $meta_line | $meta_line_type"
 				# update meta-line of '[' line
 				# preserve line-data
 				set t_line_data [lindex $line_buffer $meta_line 0]
-				#puts "======>$meta_line|$t_line_data|$buf_line"
+				#puts "======>$buf_line | $meta_line | $t_line_data | $meta_line_type"
 				# update [ line meta-data with valid line number (read: not -1)
 				if { $meta_line > 0 } {
 					lset line_buffer $meta_line "{$t_line_data} {[llength $line_buffer]}"
 				}
 				# is the popped line an if statement?
-				if { [regexp {^\?.+\?[ ]*\[} $t_line_data ] || [regexp {^\?.+\?.+::[ ]*\[} $t_line_data ] || [regexp {^\][ ]*::[ ]*\[} $t_line_data ]  } {
+				if { $meta_line_type == "if" } {
 					set meta_line [expr [llength $line_buffer] + 1]
 				}
 				# process block lines "else" ]::[ pop then push
-				if { [regexp {^\][ ]*::[ ]*\[$} $buf_line ] } {
+				if { $meta_line_type == "if" && [regexp {^\][ ]*::[ ]*\[$} $buf_line ]} {
 					# then push "else"
-					_el_buffer_block_push [llength $line_buffer] 
+					_el_buffer_block_push [llength $line_buffer] $meta_line_type
 
 				}
 			}
@@ -2369,11 +2382,11 @@ namespace eval expectlite {
 			
 			# process block lines [ push
 			if { [regexp {^[\[]} $buf_line ] } {
-				_el_buffer_block_push [llength $line_buffer]
+				_el_buffer_block_push [llength $line_buffer] "while"
 			}
 			# process ?if block lines [ push
 			if { [regexp {^\?.+\?[ ]*\[} $buf_line ] ||[regexp {^\?.+\?.*::[ ]*\[} $buf_line ]} {
-				_el_buffer_block_push [llength $line_buffer]
+				_el_buffer_block_push [llength $line_buffer] "if"
 			}
 
 			# check if help lines are in file
@@ -2585,11 +2598,11 @@ namespace eval expectlite {
 	#	Pushes '[' line in buffer 
 	#	
 	#
-	proc _el_buffer_block_push { line_no} {
+	proc _el_buffer_block_push { line_no type} {
 		upvar expectlite::_el_buf_block_stack		stack
 
-		#puts "=====>$line_no | $stack "
-		lappend stack $line_no
+		#puts "=====>$line_no | $type | $stack "
+		lappend stack [concat "$line_no $type"]
 	}
 
 	#
@@ -2601,8 +2614,11 @@ namespace eval expectlite {
 
 		if { [llength $stack ] != 0 } {
 			set line_no [lindex $stack end]
-			set stack [lrange $stack 0 end-1]
-			return $line_no
+			#puts "====stack==>$stack | $line_no"
+			# delete last item (most recent) in stack
+			set stack [lreplace $stack end end]
+			#puts "====stack==>$stack"
+			return  $line_no
 		} else {
 			return -1
 		}

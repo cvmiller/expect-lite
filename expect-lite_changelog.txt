@@ -1173,6 +1173,10 @@ Released 21 Dec 2010 - 4.0.2
 8 February 2013 - 4.4.2d3
 	Added ]::[ else code block to _el_buffer
 	
+10 February 2013 - 4.4.2.d4
+	Added better meta data for "if" and "while" lines
+	Added Environment Var EL_INFINITE_LOOP
+
 
 ------------ Future Versions --------------------------
 		
