@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.2.d3"
+	variable version "4.4.2.d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1036,6 +1036,8 @@ namespace eval expectlite {
 			set el_log_ext ".log"
 		}
 		
+		# preset local var
+		set infinite_loop $_el_infinite_loop
 		if { [info exist env(EL_INFINITE_LOOP) ]} { catch { set infinite_loop $env(EL_INFINITE_LOOP)} }
 		# check for number el_infinite_loop string
 		if { [string is integer -strict $infinite_loop] } {
@@ -2354,11 +2356,10 @@ namespace eval expectlite {
 			
 			# process block lines ] pop
 			if { [regexp {^[\]]} $buf_line ] } {
-				#set meta_line [_el_buffer_block_pop ]
 				set meta_line_blob [join [_el_buffer_block_pop ]]
-				set meta_line [lindex $meta_line_blob 0]
-				set meta_line_type [lindex $meta_line_blob 1]
-				#puts "===meta===>$meta_line_blob | $meta_line | $meta_line_type"
+				# poor man's lassign (8.5 feature) - unpack list into vars
+				foreach {meta_line meta_line_type} $meta_line_blob {break}
+				
 				# update meta-line of '[' line
 				# preserve line-data
 				set t_line_data [lindex $line_buffer $meta_line 0]

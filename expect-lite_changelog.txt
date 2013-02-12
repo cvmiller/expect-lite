@@ -1178,6 +1178,11 @@ Released 21 Dec 2010 - 4.0.2
 	Added Environment Var EL_INFINITE_LOOP
 
 
+11 February 2013 - 4.4.2d5
+	Fixed EL_INFINITE_LOOP if not defined
+	Cleaned up list handling code in _el_buffer
+	
+
 ------------ Future Versions --------------------------
 		
 Future
@@ -1191,6 +1196,7 @@ o	Add code block for if-else statement
 		]::[
 		]
 	Support nested code blocks (for if & else blocks)
+	Use lassign & lvarpop/lvarpush for meta data
 
 o	Add TERM type=web
 		In this mode, colors would be html "colors"
