@@ -1181,6 +1181,11 @@ Released 21 Dec 2010 - 4.0.2
 11 February 2013 - 4.4.2d5
 	Fixed EL_INFINITE_LOOP if not defined
 	Cleaned up list handling code in _el_buffer
+
+12 February 2013 - 4.4.2d6
+	Continued to Clean up list handling code in _el_buffer
+	Shortened expect-lite help, removed old style c=command_script
+		old style still accepted on CLI
 	
 
 ------------ Future Versions --------------------------
@@ -1196,9 +1201,9 @@ o	Add code block for if-else statement
 		]::[
 		]
 	Support nested code blocks (for if & else blocks)
-	Use lassign & lvarpop/lvarpush for meta data
+	x Use lassign & lvarpop/lvarpush for meta data
 
-o	Add TERM type=web
+x	Add TERM type=web
 		In this mode, colors would be html "colors"
 		e.g. <span sytle="color:blue"> stuff </span>
 
@@ -1237,9 +1242,10 @@ x	Fix bug in remote_host_init - does not detect shell before setting prompt
 		See Ubuntu BUG #994386 Crash using 'default' shell prompt setting
 
 o	Add named functions
-		Something like _name [
+		Something like %name [
 				...
-				]
+				]=value
+		The "=value" would be the return value of the function
 		Frederic Perras would also like to have a "library include file of functions"
 			Think of a persistant include file (not flushed after exiting, and searchable
 		

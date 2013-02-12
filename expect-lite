@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.2.d5"
+	variable version "4.4.2.d6"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -876,30 +876,20 @@ namespace eval expectlite {
 		puts " "
 		puts "usage: expect-lite -c <command_file> \[ -r <remote_host_IP>\] \[-d <user_dir>\] \\ "
 		puts "              \[const1=value1\] \[*DIRECTIVE\]"
-		puts "   or: expect-lite c=<command_file> r=<remote_host_IP>  \[d=<user_dir>\]      \\ "
-		puts "              \[const1=value1\] \[*DIRECTIVE\]"
 		puts "   eg. ./expect-lite -c pm_alt.elt -r host8 -d /home/sw myvar=myvalue *NOFAIL"
 		puts " "
-		puts "   additional login options: user_name=<username>  user_password=<password>"
-		puts "   eg. ./expect-lite c=pm_alternation.elt r=host-008 u=superuser p=mysecret"
+		puts "   additional login options: -u <username>  -p <password>"
+		puts "   eg. ./expect-lite -c pm_alternation.elt -r host-008 -u superuser -p mysecret"
 		puts " "
-		puts "   additional logging options: -V|-v|-vv|--verbose"
-		puts "        -V        prints \'expected\' lines (i.e lines beginning with < & << )"
-		puts "        -v        prints warnings, and infos (i.e. conditionals,  "
-		puts "                                   dynamic var assignments)"
-		puts "        -vv|--verbose   prints warnings and debug (i.e. expect match info) "
-		puts "   eg. ./expect-lite -vv r=host8  c=pm_alt.elt "
+		puts "   additional logging options: -V|-v|-vv|-vvv"
+		puts "        -V    prints \'expected\' lines   (i.e lines beginning with < & << )"
+		puts "        -v    prints info and warnings  (i.e. conditionals,dynamic vars)"
+		puts "        -vv   prints warnings and debug (i.e. expect match info) "
+		puts "        -vvv  prints info, warnings and debug "
+		puts "   eg. ./expect-lite -vv -r host8  -c pm_alt.elt "
 		puts " "
-		puts "If set, the following environment variables will be used: "
-		puts "   EL_REMOTE_HOST               remote host to connect, default=none"
-		puts "   EL_CMD_FILE                  name of expect-lite script"
-		puts "   EL_USER_DIR                  change to this dir upon login"
-		puts "   EL_CONNECT_METHOD            telnet|ssh|ssh_key|none"
-		puts "   EL_CONNECT_USER              username for telnet|ssh"
-		puts "   EL_CONNECT_PASS              password for telnet|ssh"
-		puts "   EL_LOG_EXT                   log file extension (default \".log\""
-		puts "   EL_DELAY_WAIT_FOR_HOST       default=100"
-		puts "   EL_*                         user defined constants"
+		puts "If set, environment variables starting with EL_ will be used "
+		puts "   See man page or documentation for full list of env vars"
 		puts " "
 		puts "   Version $version by Craig Miller"
 		exit 0
@@ -2371,23 +2361,23 @@ namespace eval expectlite {
 				# is the popped line an if statement?
 				if { $meta_line_type == "if" } {
 					set meta_line [expr [llength $line_buffer] + 1]
-				}
-				# process block lines "else" ]::[ pop then push
-				if { $meta_line_type == "if" && [regexp {^\][ ]*::[ ]*\[$} $buf_line ]} {
-					# then push "else"
-					_el_buffer_block_push [llength $line_buffer] $meta_line_type
-
-				}
+					
+					# if block lines is "else" ]::[  then push
+					if { [regexp {^\][ ]*::[ ]*\[$} $buf_line ]} {
+						# then push "else"
+						_el_buffer_block_push [concat "[llength $line_buffer] $meta_line_type"]
+					}
+				}; #if meta-if
 			}
 
 			
 			# process block lines [ push
 			if { [regexp {^[\[]} $buf_line ] } {
-				_el_buffer_block_push [llength $line_buffer] "while"
+				_el_buffer_block_push [concat "[llength $line_buffer] \"while\" "]
 			}
 			# process ?if block lines [ push
 			if { [regexp {^\?.+\?[ ]*\[} $buf_line ] ||[regexp {^\?.+\?.*::[ ]*\[} $buf_line ]} {
-				_el_buffer_block_push [llength $line_buffer] "if"
+				_el_buffer_block_push [concat "[llength $line_buffer] \"if\" "]
 			}
 
 			# check if help lines are in file
@@ -2599,27 +2589,28 @@ namespace eval expectlite {
 	#	Pushes '[' line in buffer 
 	#	
 	#
-	proc _el_buffer_block_push { line_no type} {
+	proc _el_buffer_block_push { meta_blob} {
 		upvar expectlite::_el_buf_block_stack		stack
 
 		#puts "=====>$line_no | $type | $stack "
-		lappend stack [concat "$line_no $type"]
+		# meta_blob is line_no + type
+		lappend stack $meta_blob
 	}
 
 	#
-	#	pops '[' line in buffer and returns line number
+	#	pops '[' line in buffer and returns line number + type
 	#	
 	#
 	proc _el_buffer_block_pop { } {
 		upvar expectlite::_el_buf_block_stack		stack
 
 		if { [llength $stack ] != 0 } {
-			set line_no [lindex $stack end]
-			#puts "====stack==>$stack | $line_no"
+			set meta_blob [lindex $stack end]
+			#puts "====stack==>$stack | $meta_blob"
 			# delete last item (most recent) in stack
 			set stack [lreplace $stack end end]
 			#puts "====stack==>$stack"
-			return  $line_no
+			return  $meta_blob
 		} else {
 			return -1
 		}
