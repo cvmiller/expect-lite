@@ -5,8 +5,9 @@
 .\" Updated Man Page for expect-lite - version 4.0.2	10/8/2011
 .\" Updated Man Page for expect-lite - version 4.3.0	3/25/2012
 .\" Updated Man Page for expect-lite - version 4.4.0	12/16/2012
+.\" Updated Man Page for expect-lite - version 4.5.0	2/18/2013
 .\"
-.TH EXPECT-LITE "1" "January 2013" "expect-lite version 4.4.0" "User Commands"
+.TH EXPECT-LITE "1" "March 2013" "expect-lite version 4.5.0" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -115,7 +116,7 @@ math functions, perform bitwise and arithmetic operations:  << >> & | ^ * / % + 
 indicates an embedded expect line 
 .TP
 ?
-c-style if/then/else in the format ?cond?action::else_action. code block are also supported in the action or else_action statements. e.g. 
+c-style if/then/else in the format ?cond?action::else_action. code block are also supported in the action and else_action statements. e.g. 
 .br
 .RS 10
 ?if $i < $n ? [
@@ -123,6 +124,11 @@ c-style if/then/else in the format ?cond?action::else_action. code block are als
    >send string
 .br
    <expect string
+.br
+]::[
+  >send else string
+.br
+  <expect else string
 .br
 ]
 .RE
@@ -232,6 +238,9 @@ User name to use for login on remote host (telnet|ssh)
 .TP
 EL_CONNECT_PASS
 Password to use for login on remote host (telnet|ssh)
+.TP
+EL_INFINITE_LOOP=N
+Infinite loop protection value, sets N to user's default value
 .TP
 EL_DELAY_WAIT_FOR_HOST
 Delay (in ms) to wait for host in Not Expect, and Dynamic Var Capture. 100 ms is a good value for a local LAN, 200 ms if running across high speed internet

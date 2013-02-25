@@ -1187,6 +1187,9 @@ Released 21 Dec 2010 - 4.0.2
 	Shortened expect-lite help, removed old style c=command_script
 		old style still accepted on CLI
 	
+14 February 2013 - 4.4.2d7
+	Fixed color bug using *DEBUG
+
 
 ------------ Future Versions --------------------------
 		
@@ -1195,19 +1198,22 @@ Future
 o	use Math function to do string operations e.g. + to cat strings...
 		May need to use another construct
 		Support concat(+), trim(-), replace
+		
+o	implement "case" statement - Peter Fang
+
 
 o	Add code block for if-else statement
 		if [
 		]::[
 		]
-	Support nested code blocks (for if & else blocks)
+	x Support nested code blocks (for if & else blocks)
 	x Use lassign & lvarpop/lvarpush for meta data
 
 x	Add TERM type=web
 		In this mode, colors would be html "colors"
 		e.g. <span sytle="color:blue"> stuff </span>
 
-o	Add Env Var for INFINITE_LOOP
+x	Add Env Var for INFINITE_LOOP
 		Update help to move Env Vars to Man page		
 		
 x	add *LOG <file> *NOLOG - native logging directive
@@ -1278,7 +1284,7 @@ b	Blog: describe "how I test" with loopback
 		
 b	Logging (once 4.4.0 is out)
 
-b	Quoting - or lack there of
+k	Quoting - or lack there of
 
 k	Embedding Env Vars
 

@@ -24,6 +24,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -89,7 +90,7 @@ host (supporting telnet, ssh with password, and ssh with keys)</li>
 showing complex actions easily scripted</li>
         <li><a style="font-weight: bold;" href="#ipv6_support">IPv6</a><span style="font-weight: bold;"> </span>Full Support <br>
 </li>
-        <li><a href="#directive_managing_logging"><span style="font-weight: bold;">Logging to a file</span></a>, native support for saving output to a file <span style="background-color: yellow;">new in 4.4.0</span></li>
+        <li><a href="#directive_managing_logging"><span style="font-weight: bold;">Logging to a file</span></a>, native support for saving output to a file&nbsp;<span style="background-color: yellow;"></span></li>
 
 
       </ul>
@@ -137,7 +138,7 @@ looping</span></a>
 using
 conditional branching, a repeat loop can be constructed with infinite
 loop protection</li>
-        <li><a style="font-weight: bold;" href="#code_blocks">Code Blocks</a> group lines of script for conditionals and while loops&nbsp;<span style="background-color: yellow;"></span></li>
+        <li><a style="font-weight: bold;" href="#code_blocks">Code Blocks</a> group lines of script for while loops and conditionals with then and else blocks <span style="background-color: yellow;">new in 4.5.0</span>  <span style="background-color: yellow;"></span></li>
 
       </ul>
       <span style="font-weight: bold;">Advanced</span><br>
@@ -289,6 +290,12 @@ Default is none</td>
                 <td style="vertical-align: top;">EL_LOG_EXT<br>
                 </td>
                 <td style="vertical-align: top;">The log file name extension string, default=".log" (see <a href="#directive_managing_logging">*LOG</a>)<br>
+                </td>
+              </tr>
+              <tr>
+                <td style="vertical-align: top;">EL_INFINITE_LOOP=N<br>
+                </td>
+                <td style="vertical-align: top;">Infinite Loop protection value, set N to user's default value (default=5000) (see <a href="#infinite_loop">*INFINITE_LOOP</a>)<br>
                 </td>
               </tr>
 <tr>
@@ -1212,7 +1219,7 @@ the following would be printed:<br>
       <h2><a name="looping"></a>Looping with
 Conditionals &amp; Labels<br>
       </h2>
-Simple looping is now supported by allowing <span style="font-style: italic;">jump to label</span>
+Simple looping is supported by allowing <span style="font-style: italic;">jump to label</span>
 backwards in the script. The Repeat
 Loop is the easiest loop to implement:<br>
       <pre>; ======== Incrementing Loop ========<br>$max=5<br>$count=3<br>%REPEAT_INC_LOOP<br>	&gt;echo $count<br>	# increment variable<br>	+$count<br>?if $count &lt;= $max ?%REPEAT_INC_LOOP<br></pre>
@@ -1236,7 +1243,9 @@ The maximum amount of looping is&nbsp;defined with the directive
 each iteration of all loops for the entire script. Typically this would
 be in the range of 1000 to 10000 to be safe. For example, if a complex
 expect-lite script had 4 loops each with 100 iterations, the
-_el_infinite_loop should be set larger than 400.<br>
+directive *INFINITE_LOOP should be set larger than 400. As of version
+4.5.0, the environment variable EL_INFINITE_LOOP is used to override
+the default value.<br>
       <br>
       <h2><a name="code_blocks"></a>Using
 Code Blocks with Conditionals and While Loops<br>
@@ -1253,9 +1262,10 @@ square bracket). When used with an if statement, it allows more than
 one "line" to be executed based on the evaluation of the if statement.<br>
       <br>
 Conditionals with code blocks also support the else construct, such as:<br>
-      <pre>; === Conditional using code block as else statement<br>? $case == true ? &gt;echo "true" :: [<br>	&gt;echo "false 1"<br>	&gt;echo "false 2"<br>	&gt;echo "false 3"<br>]<br>      </pre>
-Code blocks are <span style="font-weight: bold;">not</span> supported in both the then <span style="font-style: italic;">and</span> the else statements, since it appears ambiguous:<br>
-      <pre>; === NOT SUPPORTED Conditional using code block then and else statement<br>? $case == true ? [ :: [<br>	&gt;echo " 1"<br>	&gt;echo " 2"<br>	&gt;echo " 3"<br>] <br></pre>
+      <pre>; === Conditional using code block as else statement<br>? $case == true ? &gt;echo "true" :: [<br>	&gt;echo "false 1"<br>	&gt;echo "false 2"<br>	&gt;echo "false 3"<br>]<br>      </pre>As of version 4.5.0 Code blocks <span style="font-style: italic;">are</span> supported in both the then <span style="font-style: italic;">and</span> the else sections of a conditional: <br>
+      <pre>; === Conditional using code block then and another code block else statement<br>? $case == true ? [ :: [<br>	&gt;echo " 1"<br>	&gt;echo " 2"<br>	&gt;echo " 3"<br>]::[<br>	; else code block<br>	&gt;echo " 4"<br>	&gt;echo " 5"<br>	&gt;echo " 6"<br>]<br></pre>
+However, using the square brackets on the same line is still not supported, since it appears ambiguous:<br>
+      <pre>; === NOT SUPPORTED Conditional using code block then and else statement<br>? $case == true ? [ :: [<br>	&gt;echo " 1"<br>] <br></pre>
 Nested code blocks can also be used. In the following example each if
 statement is using a code block for the then statement, and a non-code
 block for the else statement:<br>
@@ -1837,7 +1847,7 @@ quick regression.<br>
 Run the regression script and log it using the unix/linux 'tee'
 command. By defining 'start' as a constant on the command line, it is
 possible to start the regression with the second test.<br>
-      <pre>./regression.elt start=1 | tee regression.log</pre>
+      <pre>./regression.elt start=1 *LOG</pre>
       <br>
       <h2><a name="test_failure"></a>Test
 Failure?!?</h2>
@@ -2110,7 +2120,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15 January 2013<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">10 March 2013<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
@@ -2120,7 +2130,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.4.0 and above</span><br style="font-style: italic;">
+document for version 4.5.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
 
