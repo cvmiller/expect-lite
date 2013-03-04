@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.0d4"
+	variable version "4.6.0.d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -94,6 +94,10 @@ namespace eval expectlite {
 	#set connect_method "ssh" 
 	#set connect_method "ssh_key" 
 	variable connect_method "none" 
+
+	# Accept SSH host keys
+	variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no"
+
 
 	# Path to telnet (helps in cygwin environments)
 	variable _el_telnet "/usr/bin/telnet"
@@ -242,6 +246,8 @@ namespace eval expectlite {
 		variable remote_host "none"
 		variable cmd_file ""
 		variable user_dir ""
+		# default logging extension
+		variable el_log_ext ".log"
 
 		# set ::expectlite::the default user configurable prompt to something sane
 		set ::expectlite::_el(default_prompt) ".*\$ $"
@@ -267,6 +273,8 @@ namespace eval expectlite {
 		variable _el_warn_color yellow
 		# set ::expectlite::ERROR color
 		variable _el_err_color red
+		# set ::expectlite::debug color
+		variable _el_debug_color gray
 
 		# el_exec vars
 		variable comment_line ""
@@ -336,7 +344,7 @@ namespace eval expectlite {
 		if { [lsearch [array names el_color] $_el_comment_color] == -1 } {
 			set _el_comment_color none
 		}
-
+		
 		if { [catch { switch -glob -- $env(TERM) {
 			"xterm"		-
 			"xterm-color"		-
@@ -345,6 +353,26 @@ namespace eval expectlite {
 			"ansi"		-
 			"cygwin"	{ 
 				# keep colors as set globally
+				set el_color(left_angle) "<"
+			 }
+			 "www"		-
+			 "web"		-
+			 "WEB"		-
+			 "Web"		{
+			 	# set colors to HTML values
+				set el_color(red) "<span style=\"color:red\">"
+				set el_color(blue) "<span style=\"color:blue\">"
+				set el_color(ltblue) "<span style=\"color:aqua\">"
+				set el_color(black) "<span style=\"color:black\">"
+				set el_color(cyan) "<span style=\"color:#00FFFF\">"
+				set el_color(gray) "<span style=\"color:gray\">"
+				set el_color(ltgray) "<span style=\"color:silver\">"
+				set el_color(green) "<span style=\"color:green\">"
+				set el_color(yellow) "<span style=\"color:yellow\">"
+				set el_color(purple) "<span style=\"color:purple\">"
+				set el_color(pink) "<span style=\"color:#FF69B4\">"
+				set el_color(nocolor) "</span>"
+				set el_color(left_angle) "&#60;"
 			 }
 			 default {
 				# set INFO color
@@ -367,6 +395,7 @@ namespace eval expectlite {
 			set _el_err_color none
 			# set global color
 			set _el_comment_color none		 	
+			set el_color(left_angle) "<"
 
 		}
 	}
@@ -498,10 +527,10 @@ namespace eval expectlite {
 					exit 
 					}
 				-reset \007	{ # ^G show lines with meta-data
-					#puts "Current Stack---->$_el_buf(stack)"
-					#_el_buffer_show 20 $_el_buf(stack) 1
-					#send "\n"
-					puts "Infinite loop count: $expectlite::_el_infinite_loop"
+					puts "Current Stack---->$_el_buf(stack)"
+					_el_buffer_show 20 $_el_buf(stack) 1
+					send "\n"
+					#puts "Infinite loop count: $expectlite::_el_infinite_loop"
 					return 
 					}
 				-re {(^\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
@@ -793,6 +822,7 @@ namespace eval expectlite {
 	proc wait_for_prompt { } {
 		global timeout expect_out
 		upvar expectlite::_el_warn_color		_el_warn_color
+		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::WARN					WARN
 		upvar expectlite::DEBUG					DEBUG
 		upvar expectlite::_el					_el
@@ -819,8 +849,8 @@ namespace eval expectlite {
 						# gobble as much return text as possible
 						expect -notransfer -re ".*\n+" { }
 						# print out debug info to help user 
-						puts "DEBUG: User Defined Prompt:<<$_el(prompt)>>"
-						puts "  Not Found in<<$expect_out(buffer)>>"
+						cputs "DEBUG: User Defined Prompt:<<$_el(prompt)>>" $_el_debug_color
+						cputs "  Not Found in<<$expect_out(buffer)>>" $_el_debug_color
 					}
 				}
 
@@ -846,29 +876,20 @@ namespace eval expectlite {
 		puts " "
 		puts "usage: expect-lite -c <command_file> \[ -r <remote_host_IP>\] \[-d <user_dir>\] \\ "
 		puts "              \[const1=value1\] \[*DIRECTIVE\]"
-		puts "   or: expect-lite c=<command_file> r=<remote_host_IP>  \[d=<user_dir>\]      \\ "
-		puts "              \[const1=value1\] \[*DIRECTIVE\]"
 		puts "   eg. ./expect-lite -c pm_alt.elt -r host8 -d /home/sw myvar=myvalue *NOFAIL"
 		puts " "
-		puts "   additional login options: user_name=<username>  user_password=<password>"
-		puts "   eg. ./expect-lite c=pm_alternation.elt r=host-008 u=superuser p=mysecret"
+		puts "   additional login options: -u <username>  -p <password>"
+		puts "   eg. ./expect-lite -c pm_alternation.elt -r host-008 -u superuser -p mysecret"
 		puts " "
-		puts "   additional logging options: -V|-v|-vv|--verbose"
-		puts "        -V        prints \'expected\' lines (i.e lines beginning with < & << )"
-		puts "        -v        prints warnings, and infos (i.e. conditionals,  "
-		puts "                                   dynamic var assignments)"
-		puts "        -vv|--verbose   prints warnings and debug (i.e. expect match info) "
-		puts "   eg. ./expect-lite -vv r=host8  c=pm_alt.elt "
+		puts "   additional logging options: -V|-v|-vv|-vvv"
+		puts "        -V    prints \'expected\' lines   (i.e lines beginning with < & << )"
+		puts "        -v    prints info and warnings  (i.e. conditionals,dynamic vars)"
+		puts "        -vv   prints warnings and debug (i.e. expect match info) "
+		puts "        -vvv  prints info, warnings and debug "
+		puts "   eg. ./expect-lite -vv -r host8  -c pm_alt.elt "
 		puts " "
-		puts "If set, the following environment variables will be used: "
-		puts "   EL_REMOTE_HOST               remote host to connect, default=none"
-		puts "   EL_CMD_FILE                  name of expect-lite script"
-		puts "   EL_USER_DIR                  change to this dir upon login"
-		puts "   EL_CONNECT_METHOD            telnet|ssh|ssh_key|none"
-		puts "   EL_CONNECT_USER              username for telnet|ssh"
-		puts "   EL_CONNECT_PASS              password for telnet|ssh"
-		puts "   EL_DELAY_WAIT_FOR_HOST       default=100"
-		puts "   EL_*                         user defined constants"
+		puts "If set, environment variables starting with EL_ will be used "
+		puts "   See man page or documentation for full list of env vars"
 		puts " "
 		puts "   Version $version by Craig Miller"
 		exit 0
@@ -957,6 +978,8 @@ namespace eval expectlite {
 	#		EL_CONNECT_METHOD
 	#		EL_CONNECT_USER
 	#		EL_CONNECT_PASS
+	#		EL_LOG_EXT
+	#		EL_INFINITE_LOOP
 	#		EL_DELAY_WAIT_FOR_HOST
 	#
 	proc _el_read_args { argc argv } {
@@ -968,6 +991,7 @@ namespace eval expectlite {
 		upvar expectlite::user					user
 		upvar expectlite::pass					pass
 		upvar expectlite::delay_wait_for_host 	delay_wait_for_host
+		upvar expectlite::_el_infinite_loop 	_el_infinite_loop
 		upvar expectlite::cli_namespace			cli_namespace
 		upvar expectlite::timeout_multiplier	timeout_multiplier
 		upvar expectlite::arg0					arg0
@@ -978,10 +1002,15 @@ namespace eval expectlite {
 		upvar expectlite::EXP_INFO				EXP_INFO
 		upvar expectlite::_el_warn_color		_el_warn_color
 		upvar expectlite::_el_err_color			_el_err_color
+		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::SHOW_HELP				SHOW_HELP
+		upvar expectlite::el_log_ext			el_log_ext
 
 		# default timeout_multiplier multiplier to 1
 		set cli_namespace($timeout_multiplier) 1
+
+		# command file (aka script name) counter
+		set cmd_file_counter 0
 
 		# If needed read parameters from Env Vars
 		catch { set remote_host $env(EL_REMOTE_HOST)}
@@ -990,6 +1019,22 @@ namespace eval expectlite {
 		if { $cmd_file=="" } { catch { set cmd_file $env(EL_CMD_FILE)} }
 		if { $user_dir=="" } { catch { set user_dir $env(EL_USER_DIR)} }
 
+		if { [info exist env(EL_LOG_EXT) ]} { catch { set el_log_ext $env(EL_LOG_EXT)} }
+		# check for empty el_log_ext string
+		if { $el_log_ext == "" } {
+			cputs "expect-lte: ERROR: Environment var EL_LOG_EXT is blank, which could overwrite script file.\nSetting extension to \".log\"" $_el_err_color
+			set el_log_ext ".log"
+		}
+		
+		# preset local var
+		set infinite_loop $_el_infinite_loop
+		if { [info exist env(EL_INFINITE_LOOP) ]} { catch { set infinite_loop $env(EL_INFINITE_LOOP)} }
+		# check for number el_infinite_loop string
+		if { [string is integer -strict $infinite_loop] } {
+			set _el_infinite_loop $infinite_loop
+		} else {
+			cputs "expect-lte: ERROR: Environment var EL_INFINITE_LOOP is blank or not a number.\nSetting INFINITE_LOOP to: $_el_infinite_loop" $_el_err_color
+		}
 		if { $user=="" } { catch { set user $env(EL_CONNECT_USER)} }
 		if { $pass=="" } { catch { set pass $env(EL_CONNECT_PASS)} }
 		if { [info exists env(EL_CONNECT_METHOD)] } { catch { set connect_method $env(EL_CONNECT_METHOD)} }
@@ -1012,13 +1057,14 @@ namespace eval expectlite {
 					# no optargval, set to a sane value
 					set optargval "--"
 				}
-				puts "=====>$x|$optarg|$optargval|"
+				#puts "=====>$x|$optarg|$optargval|"
 				# Check that last parameter is command file name
 				# script name cannot have '=', which would be interpretted as a constant
 				if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
 					#puts ">>>$optarg>>>$optargval"
 					set cmd_file $optarg
 					set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file]
+					incr cmd_file_counter
 				}
 				# look for help & debug options which overide script options
 				# added -r and -c for remote_host & cmd_file respectively
@@ -1070,15 +1116,26 @@ namespace eval expectlite {
 				}
 				#cli-based directives (in form *DIRECTIVE)
 				if [ regexp {\*[A-Z_]+} $optarg] {
-					if {[regexp {^[-*]|[=]} $optargval] == 1 } {
-						# next item (optargval) is a - or *DIR
+
+					# check if optargval is just a word
+					set chk_word ""
+					#regsub {[a-zA-Z./]+} $optargval {} chk_word
+					regsub {(^[-*]|[^*=]+)} $optargval {} chk_word
+					#puts "===>got $optarg|$optargval|$el_log_ext|$chk_word|"
+					
+					if { [string length $chk_word] != 0 } {
+						# just *LOG on the cli
+						_el_global_directive $optarg 
+					} elseif { [regexp {^[-*]|[=]}  $optargval ] } {
+						# next arg is -,*DIR, or var=value
 						_el_global_directive $optarg
-					} elseif { [regexp {.+\.log} $optargval] == 1 } {
-						# accept *LOG <filename>
+					} elseif { [string match "*$el_log_ext" $optargval ] } {
+						# next arg is *LOG <filename>
 						_el_global_directive "$optarg $optargval"
 						# increment loop to skip optargval
 						incr x
-					}
+					} ; # end if
+						
 				}
 			} ; # for loop
 			# assign over riding directives
@@ -1101,18 +1158,25 @@ namespace eval expectlite {
 				cputs "Error: Missing cmd_file"  $_el_err_color
 				usage
 				}
+			# check that only 1 script name was on the CLI
+			#puts "========>$cmd_file_counter|$LOG|$cmd_file"
+			if { $cmd_file_counter > 1  &&  $LOG != 0} {
+				puts stderr "Error: Can't determine cmd_file name with *LOG, please use log file with extension:$el_log_ext" 
+				exit 1
+			}
+			
 		}
 
 		# Assign any Environment Variables starting with 'EL_' to Constants
 		# only show in Debug and not Library mode
 		if { $DEBUG && [info exists ::EL_LIBRARY] != 1} {
-			puts "expect-lite version $expectlite::version"
-			puts "Env Vars -> Constants:"
+			cputs "expect-lite version $expectlite::version" $_el_debug_color
+			cputs "Env Vars -> Constants:" $_el_debug_color
 		}
 		foreach key [array names env] {
 			if {[regexp {^EL_} $key] == 1 } {
 				if { $DEBUG && [info exists ::EL_LIBRARY] != 1} {
-					puts "$key=$env($key)"
+					cputs "$key=$env($key)" $_el_debug_color
 				}
 				set cli_namespace($key) $env($key)
 			}
@@ -1170,6 +1234,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_buf				_el_buf
 		upvar expectlite::_include				_include
 		upvar expectlite::_el_err_color 			_el_err_color
+		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::DEBUG 					DEBUG
 		upvar expectlite::_el 					_el
 
@@ -1198,7 +1263,7 @@ namespace eval expectlite {
 				}
 				# validate include file
 				if { $DEBUG } {
-					puts "Checking include file exists: $include_path_file"
+					cputs "Checking include file exists: $include_path_file" $_el_debug_color
 				}
 				if {[file exists $include_path_file] == 0} {
 					cputs "$include_path_file   not found!" $_el_err_color
@@ -1288,7 +1353,9 @@ namespace eval expectlite {
 	#
 	proc zlogin { pass login_attempts } {
 		upvar expectlite::remote_host		remote_host
+		upvar expectlite::_el_warn_color			_el_warn_color
 		upvar expectlite::_el_eols			_el_eols
+		upvar expectlite::WARN					WARN
 		
 		set timeout 2
 		set MAXLOGINATTEMPT 10
@@ -1306,6 +1373,10 @@ namespace eval expectlite {
 				-re "Are you sure you want to continue connecting" {
 					send -- "yes$_el_eols"
 					#zlogin $pass $login_attempts
+					}
+				-re "Warning: Permanently added .* to the list of known hosts" {
+					if {$WARN} { cputs "Expect-lite: Warning: ssh added host key to known hosts" $_el_warn_color }
+					
 					}
 				-re "Last login" { return }
 				-re {.*[>#%$] $} { return }
@@ -1331,6 +1402,7 @@ namespace eval expectlite {
 		upvar expectlite::pass					pass
 		upvar expectlite::_el_timeout			_el_timeout
 		upvar expectlite::DEBUG					DEBUG
+		upvar expectlite::connect_ssh_accept_host_key	connect_ssh_accept_host_key	
 		
 		
 		# work around for older versions of expect
@@ -1346,7 +1418,7 @@ namespace eval expectlite {
 			# turn off stdout - suppress login banners - show with -vv
 			log_user 0
 		}
-		if { [catch { spawn ssh -l $user $remote_host  } error] } {
+		if { [catch { spawn ssh $connect_ssh_accept_host_key -l $user $remote_host  } error] } {
 			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
 			# Fail script?
 			exit 1
@@ -1379,6 +1451,7 @@ namespace eval expectlite {
 		upvar expectlite::DEBUG					DEBUG
 		upvar expectlite::delay_wait_for_host	delay_wait_for_host
 		upvar expectlite::_el_eols				_el_eols
+		upvar expectlite::connect_ssh_accept_host_key		connect_ssh_accept_host_key	
 		upvar expectlite::_el_timeout				_el_timeout
 		
 		
@@ -1397,7 +1470,7 @@ namespace eval expectlite {
 			log_user 0
 		}
 		#This spawns the ssh program - auto generates spawn_id var
-		if { [catch { spawn ssh $login_user$remote_host  } error] } {
+		if { [catch { spawn ssh $connect_ssh_accept_host_key $login_user$remote_host  } error] } {
 			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
 			# Fail script?
 			exit 1
@@ -1518,6 +1591,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_timeout			_el_timeout
 		upvar expectlite::connect_method		connect_method
 		upvar expectlite::delay_wait_for_host	delay_wait_for_host
+		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::_el_eols				_el_eols
 		
 		set timeout 5
@@ -1540,14 +1614,14 @@ namespace eval expectlite {
 		# wait for echo to appear when starting a shell
 		if { $remote_shell != "" } {
 			expect {
-				-re ".+\[%>#$\] $remote_shell.+" { if {$DEBUG} { puts "DEBUG: Starting Shell: $remote_shell\n" } }
-				timeout { if {$DEBUG} { puts "DEBUG: Unable to detect Shell Start\n" } }
+				-re ".+\[%>#$\] $remote_shell.+" { if {$DEBUG} { cputs "DEBUG: Starting Shell: $remote_shell\n" $_el_debug_color} }
+				timeout { if {$DEBUG} { puts "DEBUG: Unable to detect Shell Start\n"  $_el_debug_color} }
 			}
 		}
 		# attempt to detect shell by prompt
 		protected_send "$_el_eols"
 		expect -re {([%>#$]) $} {
-			if {$DEBUG} { puts "<<$expect_out(0,string)>>" }
+			if {$DEBUG} { cputs "<<$expect_out(0,string)>>"  $_el_debug_color}
 			#puts "<<$expect_out(buffer)>>" 
 			set detected_prompt $expect_out(0,string)
 		}
@@ -1569,12 +1643,12 @@ namespace eval expectlite {
 						"# " -
 						"$ " { 	set _prompt "\$ " 
 								protected_send "export PS1=\'$_prompt\'$_el_eols" 
-								if {$DEBUG} { puts "DEBUG: Setting sh prompt. \n" }
+								if {$DEBUG} { cputs "DEBUG: Setting sh prompt. \n"  $_el_debug_color}
 							}
 						"% " -
 						"> " {	set _prompt "\$ " 
 								protected_send "set prompt = \"$_prompt\"$_el_eols" 
-								if {$DEBUG} { puts "DEBUG: Setting csh prompt. \n" } 
+								if {$DEBUG} { cputs "DEBUG: Setting csh prompt. \n"  $_el_debug_color} 
 							}
 						}
 					}
@@ -1637,6 +1711,7 @@ namespace eval expectlite {
 		upvar expectlite::user_dir			user_dir
 		upvar expectlite::_el_info_color	_el_info_color
 		upvar expectlite::_el_warn_color	_el_warn_color
+		upvar expectlite::_el_debug_color	_el_debug_color
 		upvar expectlite::_el_eols			_el_eols
 
 		
@@ -1699,7 +1774,7 @@ namespace eval expectlite {
 		if {$INFO && !$DEBUG} {
 			cputs "\n\nINFO: FORK session is: $fork_id,	Active sessions are: $_el_fork_id_list\n" $_el_info_color
 		} elseif { $DEBUG } {
-			puts "\n\nDEBUG: FORK session is: $fork_id, Spawn_id=$spawn_id, fork_count:$_el(fork_count), active sessions:$_el_fork_id_list\n"
+			cputs "\n\nDEBUG: FORK session is: $fork_id, Spawn_id=$spawn_id, fork_count:$_el(fork_count), active sessions:$_el_fork_id_list\n" $_el_debug_color
 		}
 		set _el(fork_current) $fork_id
 		return $fork_id
@@ -1717,6 +1792,7 @@ namespace eval expectlite {
 		upvar expectlite::INFO				INFO
 		upvar expectlite::DEBUG 			DEBUG
 		upvar expectlite::_el_info_color	_el_info_color
+		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::_el_err_color		_el_err_color
 		upvar expectlite::_el_eols			_el_eols
 
@@ -1752,12 +1828,12 @@ namespace eval expectlite {
 
 		# show array
 		if { $DEBUG } {
-			puts "Printing session ids:"
+			cputs "Printing session ids:" $_el_debug_color
 			foreach keyitem [array names _el_fork] {
 				#filter out eols from session printout
 				if { [string match "*session*" $keyitem] == 1 } {
 					set session_name [lindex [split $keyitem ,] 0]
-					puts "	$session_name=$_el_fork($keyitem)"
+					cputs "	$session_name=$_el_fork($keyitem)" $_el_debug_color
 				}
 			}
 		}; #endif DEBUG
@@ -2268,31 +2344,41 @@ namespace eval expectlite {
 				# remove leading white space on line (permitting indentation
 				regsub {\\$} $buf_line {\\ } buf_line
 			}
-
+			
 			# process block lines ] pop
 			if { [regexp {^[\]]} $buf_line ] } {
-				set meta_line [_el_buffer_block_pop ]
+				set meta_line_blob [join [_el_buffer_block_pop ]]
+				# poor man's lassign (8.5 feature) - unpack list into vars
+				foreach {meta_line meta_line_type} $meta_line_blob {break}
+				
 				# update meta-line of '[' line
 				# preserve line-data
 				set t_line_data [lindex $line_buffer $meta_line 0]
-				#puts "======>$meta_line|$t_line_data"
+				#puts "======>$buf_line | $meta_line | $t_line_data | $meta_line_type"
 				# update [ line meta-data with valid line number (read: not -1)
 				if { $meta_line > 0 } {
 					lset line_buffer $meta_line "{$t_line_data} {[llength $line_buffer]}"
 				}
 				# is the popped line an if statement?
-				if { [regexp {^\?.+\?[ ]*\[} $t_line_data ] || [regexp {^\?.+\?.+::[ ]*\[} $t_line_data ]} {
+				if { $meta_line_type == "if" } {
 					set meta_line [expr [llength $line_buffer] + 1]
-				}
+					
+					# if block lines is "else" ]::[  then push
+					if { [regexp {^\][ ]*::[ ]*\[$} $buf_line ]} {
+						# then push "else"
+						_el_buffer_block_push [concat "[llength $line_buffer] $meta_line_type"]
+					}
+				}; #if meta-if
 			}
+
 			
 			# process block lines [ push
 			if { [regexp {^[\[]} $buf_line ] } {
-				_el_buffer_block_push [llength $line_buffer]
+				_el_buffer_block_push [concat "[llength $line_buffer] \"while\" "]
 			}
 			# process ?if block lines [ push
 			if { [regexp {^\?.+\?[ ]*\[} $buf_line ] ||[regexp {^\?.+\?.*::[ ]*\[} $buf_line ]} {
-				_el_buffer_block_push [llength $line_buffer]
+				_el_buffer_block_push [concat "[llength $line_buffer] \"if\" "]
 			}
 
 			# check if help lines are in file
@@ -2504,24 +2590,28 @@ namespace eval expectlite {
 	#	Pushes '[' line in buffer 
 	#	
 	#
-	proc _el_buffer_block_push { line_no} {
+	proc _el_buffer_block_push { meta_blob} {
 		upvar expectlite::_el_buf_block_stack		stack
 
-		#puts "=====>$line_no | $stack "
-		lappend stack $line_no
+		#puts "=====>$line_no | $type | $stack "
+		# meta_blob is line_no + type
+		lappend stack $meta_blob
 	}
 
 	#
-	#	pops '[' line in buffer and returns line number
+	#	pops '[' line in buffer and returns line number + type
 	#	
 	#
 	proc _el_buffer_block_pop { } {
 		upvar expectlite::_el_buf_block_stack		stack
 
 		if { [llength $stack ] != 0 } {
-			set line_no [lindex $stack end]
-			set stack [lrange $stack 0 end-1]
-			return $line_no
+			set meta_blob [lindex $stack end]
+			#puts "====stack==>$stack | $meta_blob"
+			# delete last item (most recent) in stack
+			set stack [lreplace $stack end end]
+			#puts "====stack==>$stack"
+			return  $meta_blob
 		} else {
 			return -1
 		}
@@ -2644,6 +2734,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_warn_color		_el_warn_color
 		upvar expectlite::_el_err_color 		_el_err_color
 		upvar expectlite::_el_comment_color 	_el_comment_color
+		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::_el_eols				_el_eols
 		upvar expectlite::_el_fork				_el_fork
 		upvar expectlite::_el_current_session	_el_current_session
@@ -2655,6 +2746,7 @@ namespace eval expectlite {
 		upvar expectlite::LOG					LOG
 		upvar expectlite::arg0					arg0
 		upvar expectlite::cli_namespace			cli_namespace
+		upvar expectlite::el_log_ext			el_log_ext
 
 
 
@@ -2676,12 +2768,12 @@ namespace eval expectlite {
 				set DEBUG 1
 			}
 			"\\*LOG*"	{	# Turn on LOG logging
-				# set default log file name to script name+.log
+				# set default log file name to script name+.log (e.g. $el_log_ext)
 				if { [info exist cli_namespace($arg0)] } {
-					set fname "$cli_namespace($arg0).log"
+					set fname "$cli_namespace($arg0)$el_log_ext"
 				} else {
 					# use a default name
-					set fname "expect-lite.log"
+					set fname "expect-lite$el_log_ext"
 				}
 				
 				# remove excess spaces in log string
@@ -2695,32 +2787,54 @@ namespace eval expectlite {
 					# invalid *LOG command, exit this function
 					return 1
 				} elseif {[llength $log_list] == 2 } {
+					#if { $LOG == 0 } { set LOG 1 }
 					# get log filename
 					set fname [lindex $log_list 1]
-				}
-
+					# check for *LOGAPPEND
+					if { [regexp {LOGA} [lindex $log_list 0]] == 1 } {
+						set LOG -1
+						# close any running log
+						log_file
+					}
+				} elseif {[llength $log_list] == 1 } {
+					set LOG 1
+				}				
+				
 				switch -- $LOG {
+					1 -
 					0	{ # open log file
+						# check of log file exists, and issue warning
+						if {[file exists $fname] == 1} {
+							if {$WARN} {
+							cputs "expect-lite: Warning: Overwriting $fname " $_el_warn_color
+							}
+						}
+					
+						# close running log
+						log_file
 						# make sure log file is writable
 						if {[ catch { log_file; log_file -noappend "$fname"}  error ]} {
-							cputs "ERROR: Expect: $error\n" $_el_err_color
+							cputs "expect-lite: ERROR: $error\n" $_el_err_color
 							return -1
 						}
 						set LOG 1
 					}
 					-1	{ # Log was already open, so just append to log file
-						if {[ catch { log_file; log_file -a "$fname"}  error ]} {
-							cputs "ERROR: Expect: $error\n" $_el_err_color
+						if {[ catch { log_file -a "$fname"}  error ]} {
+							cputs "expect-lite: ERROR: $error\n" $_el_err_color
 							return -1
 						}
 						set LOG 1
+						if {$INFO} {
+							cputs "\nexpect-lite: Appending to log file: $fname" $_el_info_color
+						}
 					}
 					10	{ #do nothing, overiden at CLI
 					}
 					-10	{ #do nothing, overiden at CLI
 					}
 				} ; # end switch
-				cputs "\nexpect-lite directive: $g_dir_str to file: $fname" $_el_info_color
+				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				
 			}
 			"\\*NOLOG"	{	# Turn off LOG logging
@@ -2815,7 +2929,7 @@ namespace eval expectlite {
 			}
 			"\\*FORK*"	{	# Spawn/Switch to a new session
 				set fork_list [split $g_dir_str]
-				
+
 				if { [llength $fork_list] > 2 } {
 					if {$WARN} {
 						cputs "\n\nWarning: FORK: Too Many Names: $g_dir_str\n" $_el_warn_color
@@ -2866,11 +2980,11 @@ namespace eval expectlite {
 					# disable timeout during function call
 					set timeout 0
 					if { $DEBUG } {
-						puts "EL TCL CMD>$::_el_tcl_cmd"
+						cputs "EL TCL CMD>$::_el_tcl_cmd" $_el_debug_color
 					}
 					# provide catch protection, and run tcl_cmd
 					if {[ catch { uplevel #0 {eval $::_el_tcl_cmd }}  error ]} {
-						puts "ERROR: Expect: \'\n$::_el_tcl_cmd\' \n$error\n"
+						cputs "ERROR: Expect: \'\n$::_el_tcl_cmd\' \n$error\n" $_el_err_color
 					}
 					# restore timeout
 					set timeout $el_timeout
@@ -2965,7 +3079,9 @@ namespace eval expectlite {
 		upvar expectlite::_el_info_color			_el_info_color
 		upvar expectlite::_el_warn_color			_el_warn_color
 		upvar expectlite::_el_err_color 			_el_err_color
+		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::_el_eols					_el_eols
+		upvar expectlite::el_color					el_color
 #		upvar expectlite::_el_fork_context			_el_fork_context
 		upvar expectlite::_el_buf					_el_buf
 		upvar expectlite::EXP_INFO					EXP_INFO
@@ -2980,7 +3096,9 @@ namespace eval expectlite {
 		set timeout_line ""
 		set _el_fail_script ""
 		set teststr ""
-		
+
+		set _foreach_list ""
+				
 		# used in if and while lines
 		set _test_result 0
 		
@@ -3004,8 +3122,9 @@ namespace eval expectlite {
 				# Detect the use of a user_var
 				#puts "l0>$_el(line)"
 				switch -regexp -- $_el(line) {
+					{^\[[ ]*\$[a-zA-Z0-9_]+[ ]?[=][ a-zA-Z0-9]+ .*} -
 					{^\$.*} -				
-					{^\+\$.*} {
+					{^\+\$.*} { # repeat variable line, variable line, dyn var line
 						# this is a dyn var definition line - remove leading '+'
 						if { [regexp -line {^\+\$.*} $_el(line)] == 1} {
 							set prepend "+"
@@ -3142,6 +3261,8 @@ namespace eval expectlite {
 			#Allow embedded Expect access to only the following internal vars
 			#global cli_namespace user_namespace timeout remote_host user_dir 
 			global errorInfo 
+			upvar expectlite::_el_debug_color		_el_debug_color
+			upvar expectlite::_el_err_color		_el_err_color
 			upvar  expectlite::DEBUG 					DEBUG
 
 			upvar _el(_el_lines) __el_lines _el_cont_lines __el_cont_lines 
@@ -3151,11 +3272,11 @@ namespace eval expectlite {
 
 				# join Expect lines		
 				set __el_cont_lines [join $__el_lines " ; "]
-				if {$DEBUG} {puts "EL-Expect: $__el_cont_lines \n"}
+				if {$DEBUG} {cputs "EL-Expect: $__el_cont_lines \n" $_el_debug_color}
 
 				if {[ catch { uplevel {eval $_el_cont_lines }}  error ]} {
 					regsub -all " ; " $__el_cont_lines "\n" __el_cont_lines
-					puts "ERROR: Expect: \'\n$__el_cont_lines\' \n$errorInfo\n"
+					cputs "ERROR: Expect: \'\n$__el_cont_lines\' \n$errorInfo\n" $_el_err_color
 				}
 
 				# clear cont lines
@@ -3304,14 +3425,14 @@ namespace eval expectlite {
 
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
-							puts "\nfind<<$teststr>>"
-							puts "  in<<$expect_out(buffer)>>"
+							cputs "\nfind<<$teststr>>" $_el_debug_color
+							cputs "  in<<$expect_out(buffer)>>" $_el_debug_color
 							#puts "  found_in<<$expect_out(0,string)>>"
-							puts "\n"
+							cputs "\n" $_el_debug_color
 						}
 						# show expect found string
 						if { $EXP_INFO && $DEBUG==0 && $_el(success)==1 } {
-							cputs "<<$expect_out(0,string)" $_el_info_color
+							cputs "$el_color(left_angle)$el_color(left_angle)$expect_out(0,string)" $_el_info_color
 						}
 					}
 				^\<	{ 	# Expect teststr or set success to 0 and fail test	'<'=use regex
@@ -3357,15 +3478,15 @@ namespace eval expectlite {
 						}
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
-							puts "\nfind<<$teststr>>"
-							puts "  in<<$expect_out(buffer)>>"
+							cputs "\nfind<<$teststr>>" $_el_debug_color
+							cputs "  in<<$expect_out(buffer)>>" $_el_debug_color
 							#puts "  found_in<<$expect_out(0,string)>>"
-							puts "\n"
+							cputs "\n" $_el_debug_color
 						}
 						# show expect found string
 						if { $EXP_INFO && $DEBUG==0 && $_el(success)==1} {
 							regsub ".*($teststr)" $expect_out(buffer) {\1} foundstr
-							cputs "<$foundstr" $_el_info_color
+							cputs "$el_color(left_angle)$foundstr" $_el_info_color
 						}
 
 					}
@@ -3394,9 +3515,9 @@ namespace eval expectlite {
 							}
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
-							puts "\nNOT find<<$teststr>>"
-							puts "  in>>$expect_out(buffer)<<"
-							puts "\n"
+							cputs "\nNOT find<<$teststr>>" $_el_debug_color
+							cputs "  in>>$expect_out(buffer)<<" $_el_debug_color
+							cputs "\n" $_el_debug_color
 						}
 
 					}
@@ -3407,10 +3528,12 @@ namespace eval expectlite {
 						# execute expect lines if present
 						_el_exec_expect
 						if {([regexp \[^0-9\ \]+ [_el_strip_char $_el(line) $_timeout]])} {
-							cputs "ERROR: Bad Timeout Value: [_el_strip_char $_el(line) $_timeout] " $_el_err_color
-							send "quit$_el_eols"
-							# Stop the script Now!
-							exit 1
+							if {$WARN} {
+								cputs "WARN: Bad Timeout Value: [_el_strip_char $_el(line) $_timeout] " $_el_warn_color
+							}
+							#send "quit$_el_eols"
+							# Stop the script Now! - removed in 4.4.0
+							#exit 1
 						} else {
 							#puts "\nSetting Expect Timeout to: [_el_strip_char $_el(line) $_timeout] \n"
 							set timeout_int [_el_strip_char $_el(line) $_timeout]
@@ -3511,7 +3634,7 @@ namespace eval expectlite {
 						# check for unresolved Var
 						# Var is defined as in the set [a-zA-Z0-9_]
 						if { [regexp {\$[a-zA-Z0-9_]+} $_conditional] } {
-							if {$DEBUG} { puts "EL:Unresolved Var:$_conditional"}
+							if {$DEBUG} { cputs "EL:Unresolved Var:$_conditional" $_el_debug_color}
 							# replace all unresolved vars with ""
 							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
 							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
@@ -3746,8 +3869,8 @@ namespace eval expectlite {
 								# remove newlines from capture value
 								regsub -all {[\n\r]+} $capture_val "" capture_val
 								if { $DEBUG } {
-									puts "\nvar_found<<$capture_val>>"
-									puts "\nvar_in<<$expect_out(buffer)>>"
+									cputs "\nvar_found<<$capture_val>>" $_el_debug_color
+									cputs "\nvar_in<<$expect_out(buffer)>>" $_el_debug_color
 								}
 								if { $INFO } {
 									#puts "\nAssigned Var:$user_var=|$capture_val|\n"
@@ -3767,8 +3890,8 @@ namespace eval expectlite {
 								} elseif {$WARN} {
 									cputs "Warning: Expect-lite: Var Capture Timed Out! Recommend lengthening timeout, current timeout is: $timeout secs\n" $_el_warn_color
 									if { $DEBUG } {
-										puts "\nfound<<$capture_val>>"
-										puts "\nin<<$expect_out(buffer)>>"
+										cputs "\nfound<<$capture_val>>" $_el_debug_color
+										cputs "\nin<<$expect_out(buffer)>>" $_el_debug_color
 									}
 
 								}
@@ -3927,11 +4050,12 @@ namespace eval expectlite {
 						print_comment_line
 						# trim off white space
 						set _el(line) [string trimright $_el(line)]
-						#regsub -all {([ ]*)([^ ]*)([ ]*)} $_el(line) {\2} _el(line)
+						# remove any multiple spaces
+						regsub -all {[ ]+} $_el(line) " " _el(line)
 						# Process the directive - return 0 to fail
 						set _el(success) [_el_global_directive $_el(line)]
 
-					}
+					}						
 				^\\\[	{	# start block of lines
 
 						# execute expect lines if present
@@ -3943,96 +4067,149 @@ namespace eval expectlite {
 						#puts "====>start block lines|$_cond_line|$_el(line_meta)"
 						
 						set _conditional [string trimright $_cond_line]
-												
-						# define list of supported conditional operators
-						set _cond_oper_list { == != <= >= < > }
 
-						# find conditional operator
-						set _cond_oper "@"
-						foreach k $_cond_oper_list {
-							if { [regexp $k $_conditional] } {
-								set _cond_oper $k
-								break
-							}
-						}
-
-						 # parse around conditional operator
-						set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
-						set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
-						# clean up white space
-						regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg1 {\2} _cond_arg1
-						regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg2 {\2} _cond_arg2
-						
-						#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2|"
-						
-						# Var is defined as in the set [a-zA-Z0-9_]
-						if { [regexp {\$[a-zA-Z0-9_]+} $_conditional] } {
-							if {$DEBUG} { puts "EL:Unresolved Var:$_conditional"}
-							# replace all unresolved vars with ""
-							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
-							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
-						} 
-						
-						# allow _cond_arg2 to be blank, test against blank
-						if {( $_cond_oper == "==" || $_cond_oper == "!=" ) && ($_cond_arg2 == "" ) } {
-							# build special test line against blank arg2
-							set _test " expr { \"$_cond_arg1\" $_cond_oper \"\" } "
-						} else {
-							# build test line
-							if { $_cond_arg1 == "" || $_cond_arg2 == "" } {
-								# something is wrong, one of the conditions is blank break the eval
-								set _test " expr { $_cond_arg1 $_cond_oper $_cond_arg2 } "
-							} else {
-								set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
-							}
-						}
-						# check for syntax errors and evaluate result of test line
-						if {[catch { eval  $_test  } error ] } {
-							if {$WARN} {
-								cputs "\nWarning: Expect-lite: $error: Unable to detect conditional operator\n" $_el_warn_color
-								cputs "	Evaluating line:$_test" $_el_warn_color
-							}
-							#skip block lines, don't jump if bad line-meta value
-							if { $_el(line_meta) != -1 } {
-								#set _el_buf($buf_stack,ptr) [expr $_el(line_meta) + 1]
-								_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
-							}
+						if { [regexp {^\[[ ]*\$[a-zA-Z0-9_]=} $_el(line)] } {
+							### foreach loop
 							
-						} else {
-							# Show user the if statement, action and result
-							set _test_result [eval  $_test ]
-							if {$_test_result} {
-								set _test_result "TRUE"
-							} else {
-								set _test_result "FALSE"
-							}
-							if {$INFO} {
-								cputs "\nWhile:$_test|result=$_test_result\n" $_el_info_color
-							};#if INFO
-								
-							# no syntax error, go ahead and eval the conditional action or else action
-							# skip to label if present in action or else_action
-							if { [eval  $_test ] } {
-								# continue loop
-								
-								# test for infinite loop
-								set retcode [_el_check_infinite_loop]
-								if { $retcode == -2 } {
-									# infinite loop failed (-2)
-									# signal to fail script - something is wrong
-									set _el(success) 0
-									# tell the user why this failed
-									set prev_line "Infinite Loop Detected!"
-									set _test_result -2
-								}							
-								
-							} elseif { $_el(line_meta) != -1 } {
-								# stop loop, jump to bottom of loop + 1
-								_el_buffer_goto [expr $_el(line_meta)] $_el_buf(stack)
-							}
-							
-						};#if Catch
+							set _cond_oper "="
 
+							# parse around conditional operator
+							set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
+							set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
+							# clean up white space
+							regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg1 {\2} _cond_arg1
+							#regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg2 {\2} _cond_arg2
+
+							set user_var $_cond_arg1
+							# remove '$' in front of the Var
+							regsub {\$} $user_var "" user_var
+
+							# create foreach list
+							set line_meta $_el(line_meta)
+							if { [info exists _el($line_meta,$user_var)] == 0 } {
+								set _foreach_list [split $_cond_arg2]
+								# add extra item to allow last user item to be executed
+								lappend _foreach_list "END"
+							} else {
+								# restore list - hashed based on meta line and var name
+								set _foreach_list $_el($line_meta,$user_var)
+							}
+
+							set user_value [lindex $_foreach_list 0]
+
+							# Assign the Var
+							set user_namespace($user_var) $user_value
+
+							#puts "====>repeat lines|$_foreach_list|[llength $_foreach_list]|$user_var|$user_value"
+
+							# delete first item in list
+							set _foreach_list [ lreplace $_foreach_list 0 0]
+							if { [llength $_foreach_list] == 0 } {
+								set _foreach_list ""
+								if { $_el(line_meta) != -1 } {
+									# stop loop, jump to bottom of loop + 1
+									#_el_buffer_goto [expr $_el(line_meta)] $_el_buf(stack)
+									_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
+								}
+							} else {
+								#Loop back, don't jump if bad line-meta value
+								# save list info
+								set _el($line_meta,$user_var) $_foreach_list
+							}
+
+						} else {
+							### While Loop
+
+							# define list of supported conditional operators
+							set _cond_oper_list { == != <= >= < > }
+
+							# find conditional operator
+							set _cond_oper "@"
+							foreach k $_cond_oper_list {
+								if { [regexp $k $_conditional] } {
+									set _cond_oper $k
+									break
+								}
+							}
+
+							 # parse around conditional operator
+							set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
+							set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
+							# clean up white space
+							regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg1 {\2} _cond_arg1
+							regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg2 {\2} _cond_arg2
+
+							#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2|"
+
+							# Var is defined as in the set [a-zA-Z0-9_]
+							if { [regexp {\$[a-zA-Z0-9_]+} $_conditional] } {
+								if {$DEBUG} { cputs "EL:Unresolved Var:$_conditional" $_el_debug_color}
+								# replace all unresolved vars with ""
+								regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
+								regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
+							} 
+
+							# allow _cond_arg2 to be blank, test against blank
+							if {( $_cond_oper == "==" || $_cond_oper == "!=" ) && ($_cond_arg2 == "" ) } {
+								# build special test line against blank arg2
+								set _test " expr { \"$_cond_arg1\" $_cond_oper \"\" } "
+							} else {
+								# build test line
+								if { $_cond_arg1 == "" || $_cond_arg2 == "" } {
+									# something is wrong, one of the conditions is blank break the eval
+									set _test " expr { $_cond_arg1 $_cond_oper $_cond_arg2 } "
+								} else {
+									set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
+								}
+							}
+
+							# check for syntax errors and evaluate result of test line
+							if {[catch { eval  $_test  } error ] } {
+								if {$WARN} {
+									cputs "\nWarning: Expect-lite: $error: Unable to detect conditional operator\n" $_el_warn_color
+									cputs "	Evaluating line:$_test" $_el_warn_color
+								}
+								#skip block lines, don't jump if bad line-meta value
+								if { $_el(line_meta) != -1 } {
+									#set _el_buf($buf_stack,ptr) [expr $_el(line_meta) + 1]
+									_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
+								}
+
+							} else {
+								# Show user the if statement, action and result
+								set _test_result [eval  $_test ]
+								if {$_test_result} {
+									set _test_result "TRUE"
+								} else {
+									set _test_result "FALSE"
+								}
+								if {$INFO} {
+									cputs "\nWhile:$_test|result=$_test_result\n" $_el_info_color
+								};#if INFO
+
+								# no syntax error, go ahead and eval the conditional action or else action
+								# skip to label if present in action or else_action
+								if { [eval  $_test ] } {
+									# continue loop
+
+									# test for infinite loop
+									set retcode [_el_check_infinite_loop]
+									if { $retcode == -2 } {
+										# infinite loop failed (-2)
+										# signal to fail script - something is wrong
+										set _el(success) 0
+										# tell the user why this failed
+										set prev_line "Infinite Loop Detected!"
+										set _test_result -2
+									}							
+
+								} elseif { $_el(line_meta) != -1 } {
+									# stop loop, jump to bottom of loop + 1
+									_el_buffer_goto [expr $_el(line_meta)] $_el_buf(stack)
+								}
+
+							};#if Catch
+						}; #else While loop
 					}
 				^\\\]	{	# end block of lines
 
@@ -4193,6 +4370,9 @@ namespace eval expectlite {
 
 		_el_init_globals
 
+		# check terminal type for use of colors
+		check_term_type 
+		
 		_el_read_args $::argc $::argv
 
 		# Check Expect Version, warn if old
@@ -4203,9 +4383,6 @@ namespace eval expectlite {
 			cputs "\nWarning: $msg\n" $_el_err_color
 		}
 		
-		# check terminal type for use of colors
-		check_term_type 
-
 		# read in cmd file and return handle to buffer
 		set cmd_file_ptr [ read_cmd_file ]
 
@@ -4221,7 +4398,7 @@ namespace eval expectlite {
 		# initialize remote_host_init, fork session
 		session_init $cmd_file_ptr
 		
-		if { $DEBUG_LOG==1 } { log_file -noappend debug_output.txt }
+		#if { $DEBUG_LOG==1 } { log_file -noappend debug_output.txt } - removed in v4.4.0
 
 
 		# Send commands to remote host, and validate response
@@ -4260,7 +4437,7 @@ namespace eval expectlite {
 		}
 
 
-		if { $DEBUG_LOG==1 } { log_file }
+		#if { $DEBUG_LOG==1 } { log_file }
 
 		# exit with 0 to indicate that test passed
 		exit 0

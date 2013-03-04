@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.2.d6"
+	variable version "4.4.2.d7"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1711,6 +1711,7 @@ namespace eval expectlite {
 		upvar expectlite::user_dir			user_dir
 		upvar expectlite::_el_info_color	_el_info_color
 		upvar expectlite::_el_warn_color	_el_warn_color
+		upvar expectlite::_el_debug_color	_el_debug_color
 		upvar expectlite::_el_eols			_el_eols
 
 		

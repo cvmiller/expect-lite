@@ -1177,7 +1177,6 @@ Released 21 Dec 2010 - 4.0.2
 	Added better meta data for "if" and "while" lines
 	Added Environment Var EL_INFINITE_LOOP
 
-
 11 February 2013 - 4.4.2d5
 	Fixed EL_INFINITE_LOOP if not defined
 	Cleaned up list handling code in _el_buffer
@@ -1191,6 +1190,13 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed color bug using *DEBUG
 
 
+3 March 2013 - Created 2expect-lite as 4.6.0d1 
+	Added foreach loops in format 
+		[ $x=item1 item2 item3		 ]
+		Needs testing - nested loops, etc.
+
+
+
 ------------ Future Versions --------------------------
 		
 Future
@@ -1201,8 +1207,11 @@ o	use Math function to do string operations e.g. + to cat strings...
 		
 o	implement "case" statement - Peter Fang
 
+o	list processing - foreach loop [ $x=item1 item2 item3		 ]
+		Requested by Tao
+		x placed into 2expect for 4.6.0
 
-o	Add code block for if-else statement
+o	Add code block for if-else statement - in 4.5.0
 		if [
 		]::[
 		]
@@ -1265,9 +1274,6 @@ o	Unset a variable - useful for starting a regression test with pseudo-arrays
 
 x	unknown host - ssh_key_login should answer "yes" when needed during login (like zlogin)
 		
-o	list processing - foreach loop [ $x=item1 item2 item3		 ]
-		Requested by Tao
-
 o	Add && and || to if statements
 
 o	instant_interact_sig proc, needs to check el_exec return code
