@@ -1195,7 +1195,10 @@ Released 21 Dec 2010 - 4.0.2
 		[ $x=item1 item2 item3		 ]
 		Needs testing - nested loops, etc.
 
-
+4 March 2013 - 2expect-lite 4.6.0.d2
+	Fixed parsing of foreach loop when spaces were around the '='
+		e.g. [ $myvar = abc def hig
+		
 
 ------------ Future Versions --------------------------
 		

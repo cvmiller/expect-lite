@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.0.d1"
+	variable version "4.6.0.d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3122,7 +3122,7 @@ namespace eval expectlite {
 				# Detect the use of a user_var
 				#puts "l0>$_el(line)"
 				switch -regexp -- $_el(line) {
-					{^\[[ ]*\$[a-zA-Z0-9_]+[ ]?[=][ a-zA-Z0-9]+ .*} -
+					{^\[[ ]*\$[a-zA-Z0-9_]+[ ]?[=][ a-zA-Z0-9$]+.*} -
 					{^\$.*} -				
 					{^\+\$.*} { # repeat variable line, variable line, dyn var line
 						# this is a dyn var definition line - remove leading '+'
@@ -4068,7 +4068,7 @@ namespace eval expectlite {
 						
 						set _conditional [string trimright $_cond_line]
 
-						if { [regexp {^\[[ ]*\$[a-zA-Z0-9_]=} $_el(line)] } {
+						if { [regexp {^\[[ ]*\$[a-zA-Z0-9_]+[ ]?[=]} $_el(line)] } {
 							### foreach loop
 							
 							set _cond_oper "="
@@ -4094,16 +4094,14 @@ namespace eval expectlite {
 								# restore list - hashed based on meta line and var name
 								set _foreach_list $_el($line_meta,$user_var)
 							}
-
+							# set value from first item in foreach list
 							set user_value [lindex $_foreach_list 0]
-
-							# Assign the Var
-							set user_namespace($user_var) $user_value
 
 							#puts "====>repeat lines|$_foreach_list|[llength $_foreach_list]|$user_var|$user_value"
 
 							# delete first item in list
 							set _foreach_list [ lreplace $_foreach_list 0 0]
+							# is list empty, then stop loop
 							if { [llength $_foreach_list] == 0 } {
 								set _foreach_list ""
 								if { $_el(line_meta) != -1 } {
@@ -4112,9 +4110,11 @@ namespace eval expectlite {
 									_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
 								}
 							} else {
-								#Loop back, don't jump if bad line-meta value
+								#List not empty, Loop back
 								# save list info
 								set _el($line_meta,$user_var) $_foreach_list
+								# Assign the Var
+								set user_namespace($user_var) $user_value
 							}
 
 						} else {
