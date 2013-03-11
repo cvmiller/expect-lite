@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.0.d2"
+	variable version "4.6.0.d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3097,7 +3097,7 @@ namespace eval expectlite {
 		set _el_fail_script ""
 		set teststr ""
 
-		set _foreach_list ""
+		array set _foreach {}
 				
 		# used in if and while lines
 		set _test_result 0
@@ -3954,26 +3954,87 @@ namespace eval expectlite {
 						_el_exec_expect
 						print_comment_line
 
-						# supports oper: << >> & | ^ + = * / % pow(x,y)
-
 						# strip math_var symbol from beginning of line
 						regsub {^=\$} $_el(line) "" _tmp_var
+						# normalize spaces
+						regsub -all {[ ]+} $_tmp_var " " _tmp_var
 						set _el_parse_list [split $_tmp_var " "]
 						set var [lindex $_el_parse_list 0]
 						# remove $var from list
 						set _el_parse_list [lreplace $_el_parse_list 0 0]
 						set _el_predicate [join $_el_parse_list " "]
+						
 						# check if math variable exists
 						if { [info exists user_namespace($var)] == 0 } {
 							# if not, set to blank
-							set user_namespace($var) ""
+							set user_namespace($var) 0
 						}
-						if { [catch { set user_namespace($var) [expr $user_namespace($var)$_el_predicate] } error]} {
-							if {$WARN} {
-								cputs "\nWarning: Expect-lite: Unable to interpret $_el(line) \n	$error" $_el_warn_color
+						if { [string is integer $user_namespace($var) ] || [string is double $user_namespace($var) ]} {
+							#$var is a number
+							# supports oper: << >> & | ^ + = * / % pow(x,y)
+							if { [catch { set user_namespace($var) [expr $user_namespace($var)$_el_predicate] } error]} {
+								if {$WARN} {
+									cputs "\nWarning: Expect-lite: Unable to interpret $_el(line) \n	$error" $_el_warn_color
+								}
 							}
-						}
+						} else {
+							#$var is a string 
+							# get operator
+							set _operator [lindex $_el_parse_list 0]
+							# pop operator off front
+							set _el_parse_list [lreplace $_el_parse_list 0 0]
+							puts "===strmath==>$_operator|$_el_parse_list|"
+							set show_error 0
+							switch -re $_operator {
+								"%"	{ # slice/ordinal e.g. % 5-9
+										set _el_predicate [join $_el_parse_list " "]
+										set _el_parse_list [split $_el_predicate "-"]
+										foreach {start end} $_el_parse_list {break}
+										# decrement range to zero-base
+										catch {incr start -1; incr end -1}
+										if { [catch { set user_namespace($var) [string range $user_namespace($var) $start $end] } error]} {
+											set show_error 1 
+										}
+									}
+								 {^/}	{ # search/replace - no regex
+										set replacelist [ split $_el_predicate "/" ]
+										#puts "===strmath2==>$replacelist|$_el_predicate|"
+										# resulting list is: null search replace null
 
+										# remove nulls in list
+										regsub  -all "{}" $replacelist "" replacelist
+										
+										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
+										if { [catch { set user_namespace($var) [string map $replacelist $user_namespace($var) ]} error]} {
+											set show_error 2 
+										}
+									}
+								 {^;}	{ # regex search/replace 
+										set replacelist [ split $_el_predicate ";" ]
+										#puts "===strmath3==>$replacelist|$_el_predicate|"
+										# resulting list is: null search replace null
+										# remove nulls in list
+										regsub  -all "{}" $replacelist "" replacelist
+										foreach {search replace} $replacelist {break}
+										
+										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
+										if { [catch { regsub -all $search $user_namespace($var) $replace user_namespace($var)} error]} {
+											set show_error 3
+										}
+								 	
+										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
+									}
+								default {
+										set show_error 9 
+									}
+							}; #swicth
+							if { $show_error } {
+								if {$WARN} {
+									cputs "\nWarning:$show_error Expect-lite: Unable to interpret $_el(line) \n	$error" $_el_warn_color
+								}
+							}
+						
+						}; #else
 					}
 				^\!	{	# Run an Embedded Expect Line(s) (limited support)
 
@@ -4086,13 +4147,13 @@ namespace eval expectlite {
 
 							# create foreach list
 							set line_meta $_el(line_meta)
-							if { [info exists _el($line_meta,$user_var)] == 0 } {
+							if { [info exists _foreach($line_meta,$user_var)] == 0 } {
 								set _foreach_list [split $_cond_arg2]
 								# add extra item to allow last user item to be executed
 								lappend _foreach_list "END"
 							} else {
 								# restore list - hashed based on meta line and var name
-								set _foreach_list $_el($line_meta,$user_var)
+								set _foreach_list $_foreach($line_meta,$user_var)
 							}
 							# set value from first item in foreach list
 							set user_value [lindex $_foreach_list 0]
@@ -4106,13 +4167,12 @@ namespace eval expectlite {
 								set _foreach_list ""
 								if { $_el(line_meta) != -1 } {
 									# stop loop, jump to bottom of loop + 1
-									#_el_buffer_goto [expr $_el(line_meta)] $_el_buf(stack)
 									_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
 								}
 							} else {
 								#List not empty, Loop back
 								# save list info
-								set _el($line_meta,$user_var) $_foreach_list
+								set _foreach($line_meta,$user_var) $_foreach_list
 								# Assign the Var
 								set user_namespace($user_var) $user_value
 							}

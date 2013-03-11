@@ -8,10 +8,29 @@
 //   Added defaults, and dir listing
 // 
 
+
+//	CAUTION: this code is still experimental
+//
+//	It provides a method to run expect-lite scripts via a web interface with colour output
+//		based on setting the terminal type to 'web'
+//	It has the following limitations
+//		o $path must be an absolute path to this script, and expect-lite scripts
+//		o $el_app must be runable script
+//		o $el_args can be any valid expect-lite cli argument, constants, directives, etc
+//		o This script has only been tested with an Apache webserver with PHP enabled
+//			It can be a HUGE security hole, don't allow external access to this script
+//
+
+
+// ===== Change these vars to valid values in your environment ====
+// path to this script and expect-lite scripts
 $path="/home/cmiller/public_html";
 // default test
 $el_app="simple.elt";
 $el_args="IP=3930-184";
+// ================================================================
+
+
 
 function read_dir($path) {
      // Load up array with file names!

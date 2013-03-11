@@ -1199,22 +1199,43 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed parsing of foreach loop when spaces were around the '='
 		e.g. [ $myvar = abc def hig
 		
+7 March 2013 - 2expect-lite 4.6.0.d3
+	Changed storage of foreach list to prevent collisions with include files (using local array)
+
+10 March 2013 - 2expect-lite 4.6.0.d4
+	Added string search/replace
+		e.g. =myvar /search/replace/
+	Added regex search/replace
+		e.g. =myvar ;regex_search;replace;
+		
+10 March 2013 - released 4.5.0 (was 4.4.2.d7)
+
 
 ------------ Future Versions --------------------------
 		
 Future
 
 o	use Math function to do string operations e.g. + to cat strings...
-		May need to use another construct
-		Support concat(+), trim(-), replace
+		May need to use another construct - do typing checking on $var, if string, do string operations
+		Support concat(+), trim(-), 
+		replace		=$var/search/replace/
+		slice or ordinal	 =$var % 5-9		(using range 5-9)
+		Other operations to consider
+			Compression of spaces
+			Case translations (aka folding)
+			split a string into a pseudo-array
+			return string length
+			
 		
 o	implement "case" statement - Peter Fang
+
+o	Look at improving ^\ when in an expect long time out period
 
 o	list processing - foreach loop [ $x=item1 item2 item3		 ]
 		Requested by Tao
 		x placed into 2expect for 4.6.0
 
-o	Add code block for if-else statement - in 4.5.0
+x	Add code block for if-else statement - in 4.5.0
 		if [
 		]::[
 		]
@@ -1242,6 +1263,7 @@ x	add *LOG <file> *NOLOG - native logging directive
 		x CLI *LOG/*NOLOG should override script values
 		x Update MAN page, Documentation, self test
 		x Check *DEBUG is logged
+
 		
 		
 x	Include el_shell.elt in examples of next release 4.3.3

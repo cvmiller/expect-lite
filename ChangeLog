@@ -1,6 +1,18 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 10 March 2013 v4.5.0 (dog bone release)
+	Added else code block ]::[
+		e.g.  ?if this == $that ? [
+				do this
+			  ]::[
+			  	else do that
+			  ]
+	Added Environment Var EL_INFINITE_LOOP
+	Shortened expect-lite help, removed old style c=command_script
+		old style still accepted on CLI
+	Added experimental web front end - el_run.php
+
 Released 27 January 2013 v4.4.1
 	Fixed nasty bug when using *LOG <filename> on CLI
 

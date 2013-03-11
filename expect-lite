@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.4.2.d7"
+	variable version "4.5.0"
 
 	#set starting expect timeout 
 	set ::timeout 10 

@@ -118,6 +118,12 @@ $i=2
 	+$i
 ]
 %BREAK_LOOP
+
+?if $i == 5 ? [
+	;; while loop got to 5
+]::[
+	;; while loop stopped correctly at 4
+]
 ; === test IPv6 addressing
 $platform=ppc
 ? $platform == i386 ? $my_addr=2001:db8::f00d :: $my_addr=2001:db8::feed
