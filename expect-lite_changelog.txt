@@ -1209,7 +1209,7 @@ Released 21 Dec 2010 - 4.0.2
 		e.g. =myvar ;regex_search;replace;
 		
 10 March 2013 - released 4.5.0 (was 4.4.2.d7)
-
+	Updated git for release
 
 ------------ Future Versions --------------------------
 		
