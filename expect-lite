@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.5.0"
+	variable version "4.6.0.d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3096,7 +3096,9 @@ namespace eval expectlite {
 		set timeout_line ""
 		set _el_fail_script ""
 		set teststr ""
-		
+
+		array set _foreach {}
+				
 		# used in if and while lines
 		set _test_result 0
 		
@@ -3120,8 +3122,9 @@ namespace eval expectlite {
 				# Detect the use of a user_var
 				#puts "l0>$_el(line)"
 				switch -regexp -- $_el(line) {
+					{^\[[ ]*\$[a-zA-Z0-9_]+[ ]?[=][ a-zA-Z0-9$]+.*} -
 					{^\$.*} -				
-					{^\+\$.*} {
+					{^\+\$.*} { # repeat variable line, variable line, dyn var line
 						# this is a dyn var definition line - remove leading '+'
 						if { [regexp -line {^\+\$.*} $_el(line)] == 1} {
 							set prepend "+"
@@ -3951,26 +3954,96 @@ namespace eval expectlite {
 						_el_exec_expect
 						print_comment_line
 
-						# supports oper: << >> & | ^ + = * / % pow(x,y)
-
 						# strip math_var symbol from beginning of line
 						regsub {^=\$} $_el(line) "" _tmp_var
+						# normalize spaces
+						regsub -all {[ ]+} $_tmp_var " " _tmp_var
 						set _el_parse_list [split $_tmp_var " "]
 						set var [lindex $_el_parse_list 0]
 						# remove $var from list
 						set _el_parse_list [lreplace $_el_parse_list 0 0]
 						set _el_predicate [join $_el_parse_list " "]
+						
 						# check if math variable exists
 						if { [info exists user_namespace($var)] == 0 } {
 							# if not, set to blank
-							set user_namespace($var) ""
+							set user_namespace($var) 0
 						}
-						if { [catch { set user_namespace($var) [expr $user_namespace($var)$_el_predicate] } error]} {
-							if {$WARN} {
-								cputs "\nWarning: Expect-lite: Unable to interpret $_el(line) \n	$error" $_el_warn_color
+						if { [string is integer $user_namespace($var) ] || [string is double $user_namespace($var) ]} {
+							#$var is a number
+							# supports oper: << >> & | ^ + = * / % pow(x,y)
+							if { [catch { set user_namespace($var) [expr $user_namespace($var)$_el_predicate] } error]} {
+								if {$WARN} {
+									cputs "\nWarning: Expect-lite: Unable to interpret $_el(line) \n	$error" $_el_warn_color
+								}
 							}
-						}
+						} else {
+							#$var is a string 
+							# get operator
+							set _operator [lindex $_el_parse_list 0]
+							# pop operator off front
+							set _el_parse_list [lreplace $_el_parse_list 0 0]
+							puts "===strmath==>$_operator|$_el_parse_list|"
+							set show_error 0
+							switch -re $_operator {
+								"%"	{ # slice/ordinal e.g. % 5-9
+										set _el_predicate [join $_el_parse_list " "]
+										set _el_parse_list [split $_el_predicate "-"]
+										foreach {start end} $_el_parse_list {break}
+										# decrement range to zero-base
+										catch {incr start -1; incr end -1}
+										if { [catch { set user_namespace($var) [string range $user_namespace($var) $start $end] } error]} {
+											set show_error 1 
+										}
+									}
+								"\\\+"	{ # concat e.g. + string
 
+										if { [catch { set user_namespace($var)  "$user_namespace($var)$_el_parse_list" } error]} {
+											set show_error 2 
+										}
+									}
+								 {^/}	{ # search/replace - no regex
+										set replacelist [ split $_el_predicate "/" ]
+										#puts "===strmath2==>$replacelist|$_el_predicate|"
+										# resulting list is: null search replace null
+
+										# remove nulls in list
+										regsub  -all "{}" $replacelist "" replacelist
+										
+										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
+										if { [catch { set user_namespace($var) [string map $replacelist $user_namespace($var) ]} error]} {
+											set show_error 3
+										}
+									}
+								 {^;}	{ # regex search/replace 
+										set replacelist [ split $_el_predicate ";" ]
+										#puts "===strmath3==>$replacelist|$_el_predicate|"
+										# resulting list is: null search replace null
+										# remove nulls in list
+										regsub  -all "{}" $replacelist "" replacelist
+										foreach {search replace} $replacelist {break}
+										
+										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
+										if { [catch { regsub -all $search $user_namespace($var) $replace user_namespace($var)} error]} {
+											set show_error 4
+										}
+								 	
+										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
+									}
+								default {
+										set show_error 9 
+									}
+							}; #swicth
+							if { $show_error } {
+								if {$DEBUG} {
+									cputs "\nWarning:$show_error Expect-lite: Unable to interpret $_el(line) \n	$error" $_el_debug_color
+								} elseif {$WARN} {
+									cputs "\nWarning:$show_error Expect-lite: Unable to interpret $_el(line)" $_el_warn_color
+								} 
+								
+							}
+						
+						}; #else
 					}
 				^\!	{	# Run an Embedded Expect Line(s) (limited support)
 
@@ -4052,7 +4125,7 @@ namespace eval expectlite {
 						# Process the directive - return 0 to fail
 						set _el(success) [_el_global_directive $_el(line)]
 
-					}
+					}						
 				^\\\[	{	# start block of lines
 
 						# execute expect lines if present
@@ -4064,96 +4137,148 @@ namespace eval expectlite {
 						#puts "====>start block lines|$_cond_line|$_el(line_meta)"
 						
 						set _conditional [string trimright $_cond_line]
-												
-						# define list of supported conditional operators
-						set _cond_oper_list { == != <= >= < > }
 
-						# find conditional operator
-						set _cond_oper "@"
-						foreach k $_cond_oper_list {
-							if { [regexp $k $_conditional] } {
-								set _cond_oper $k
-								break
-							}
-						}
-
-						 # parse around conditional operator
-						set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
-						set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
-						# clean up white space
-						regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg1 {\2} _cond_arg1
-						regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg2 {\2} _cond_arg2
-						
-						#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2|"
-						
-						# Var is defined as in the set [a-zA-Z0-9_]
-						if { [regexp {\$[a-zA-Z0-9_]+} $_conditional] } {
-							if {$DEBUG} { cputs "EL:Unresolved Var:$_conditional" $_el_debug_color}
-							# replace all unresolved vars with ""
-							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
-							regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
-						} 
-						
-						# allow _cond_arg2 to be blank, test against blank
-						if {( $_cond_oper == "==" || $_cond_oper == "!=" ) && ($_cond_arg2 == "" ) } {
-							# build special test line against blank arg2
-							set _test " expr { \"$_cond_arg1\" $_cond_oper \"\" } "
-						} else {
-							# build test line
-							if { $_cond_arg1 == "" || $_cond_arg2 == "" } {
-								# something is wrong, one of the conditions is blank break the eval
-								set _test " expr { $_cond_arg1 $_cond_oper $_cond_arg2 } "
-							} else {
-								set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
-							}
-						}
-						# check for syntax errors and evaluate result of test line
-						if {[catch { eval  $_test  } error ] } {
-							if {$WARN} {
-								cputs "\nWarning: Expect-lite: $error: Unable to detect conditional operator\n" $_el_warn_color
-								cputs "	Evaluating line:$_test" $_el_warn_color
-							}
-							#skip block lines, don't jump if bad line-meta value
-							if { $_el(line_meta) != -1 } {
-								#set _el_buf($buf_stack,ptr) [expr $_el(line_meta) + 1]
-								_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
-							}
+						if { [regexp {^\[[ ]*\$[a-zA-Z0-9_]+[ ]?[=]} $_el(line)] } {
+							### foreach loop
 							
-						} else {
-							# Show user the if statement, action and result
-							set _test_result [eval  $_test ]
-							if {$_test_result} {
-								set _test_result "TRUE"
-							} else {
-								set _test_result "FALSE"
-							}
-							if {$INFO} {
-								cputs "\nWhile:$_test|result=$_test_result\n" $_el_info_color
-							};#if INFO
-								
-							# no syntax error, go ahead and eval the conditional action or else action
-							# skip to label if present in action or else_action
-							if { [eval  $_test ] } {
-								# continue loop
-								
-								# test for infinite loop
-								set retcode [_el_check_infinite_loop]
-								if { $retcode == -2 } {
-									# infinite loop failed (-2)
-									# signal to fail script - something is wrong
-									set _el(success) 0
-									# tell the user why this failed
-									set prev_line "Infinite Loop Detected!"
-									set _test_result -2
-								}							
-								
-							} elseif { $_el(line_meta) != -1 } {
-								# stop loop, jump to bottom of loop + 1
-								_el_buffer_goto [expr $_el(line_meta)] $_el_buf(stack)
-							}
-							
-						};#if Catch
+							set _cond_oper "="
 
+							# parse around conditional operator
+							set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
+							set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
+							# clean up white space
+							regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg1 {\2} _cond_arg1
+							#regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg2 {\2} _cond_arg2
+
+							set user_var $_cond_arg1
+							# remove '$' in front of the Var
+							regsub {\$} $user_var "" user_var
+
+							# create foreach list
+							set line_meta $_el(line_meta)
+							if { [info exists _foreach($line_meta,$user_var)] == 0 } {
+								set _foreach_list [split $_cond_arg2]
+								# add extra item to allow last user item to be executed
+								lappend _foreach_list "END"
+							} else {
+								# restore list - hashed based on meta line and var name
+								set _foreach_list $_foreach($line_meta,$user_var)
+							}
+							# set value from first item in foreach list
+							set user_value [lindex $_foreach_list 0]
+
+							#puts "====>repeat lines|$_foreach_list|[llength $_foreach_list]|$user_var|$user_value"
+
+							# delete first item in list
+							set _foreach_list [ lreplace $_foreach_list 0 0]
+							# is list empty, then stop loop
+							if { [llength $_foreach_list] == 0 } {
+								set _foreach_list ""
+								if { $_el(line_meta) != -1 } {
+									# stop loop, jump to bottom of loop + 1
+									_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
+								}
+							} else {
+								#List not empty, Loop back
+								# save list info
+								set _foreach($line_meta,$user_var) $_foreach_list
+								# Assign the Var
+								set user_namespace($user_var) $user_value
+							}
+
+						} else {
+							### While Loop
+
+							# define list of supported conditional operators
+							set _cond_oper_list { == != <= >= < > }
+
+							# find conditional operator
+							set _cond_oper "@"
+							foreach k $_cond_oper_list {
+								if { [regexp $k $_conditional] } {
+									set _cond_oper $k
+									break
+								}
+							}
+
+							 # parse around conditional operator
+							set _cond_arg1 [string range $_conditional 0 [expr [string first $_cond_oper $_conditional] - 1]]
+							set _cond_arg2 [string range $_conditional [expr [string first $_cond_oper $_conditional] + [string length $_cond_oper] ] [string length $_conditional]]
+							# clean up white space
+							regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg1 {\2} _cond_arg1
+							regsub -all {([ ]*)([^ ]*)([ ]*)} $_cond_arg2 {\2} _cond_arg2
+
+							#puts "\n#@@|$_cond_oper|$_conditional|$_cond_arg1|$_cond_arg2|"
+
+							# Var is defined as in the set [a-zA-Z0-9_]
+							if { [regexp {\$[a-zA-Z0-9_]+} $_conditional] } {
+								if {$DEBUG} { cputs "EL:Unresolved Var:$_conditional" $_el_debug_color}
+								# replace all unresolved vars with ""
+								regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg1 {} _cond_arg1
+								regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
+							} 
+
+							# allow _cond_arg2 to be blank, test against blank
+							if {( $_cond_oper == "==" || $_cond_oper == "!=" ) && ($_cond_arg2 == "" ) } {
+								# build special test line against blank arg2
+								set _test " expr { \"$_cond_arg1\" $_cond_oper \"\" } "
+							} else {
+								# build test line
+								if { $_cond_arg1 == "" || $_cond_arg2 == "" } {
+									# something is wrong, one of the conditions is blank break the eval
+									set _test " expr { $_cond_arg1 $_cond_oper $_cond_arg2 } "
+								} else {
+									set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
+								}
+							}
+
+							# check for syntax errors and evaluate result of test line
+							if {[catch { eval  $_test  } error ] } {
+								if {$WARN} {
+									cputs "\nWarning: Expect-lite: $error: Unable to detect conditional operator\n" $_el_warn_color
+									cputs "	Evaluating line:$_test" $_el_warn_color
+								}
+								#skip block lines, don't jump if bad line-meta value
+								if { $_el(line_meta) != -1 } {
+									#set _el_buf($buf_stack,ptr) [expr $_el(line_meta) + 1]
+									_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
+								}
+
+							} else {
+								# Show user the if statement, action and result
+								set _test_result [eval  $_test ]
+								if {$_test_result} {
+									set _test_result "TRUE"
+								} else {
+									set _test_result "FALSE"
+								}
+								if {$INFO} {
+									cputs "\nWhile:$_test|result=$_test_result\n" $_el_info_color
+								};#if INFO
+
+								# no syntax error, go ahead and eval the conditional action or else action
+								# skip to label if present in action or else_action
+								if { [eval  $_test ] } {
+									# continue loop
+
+									# test for infinite loop
+									set retcode [_el_check_infinite_loop]
+									if { $retcode == -2 } {
+										# infinite loop failed (-2)
+										# signal to fail script - something is wrong
+										set _el(success) 0
+										# tell the user why this failed
+										set prev_line "Infinite Loop Detected!"
+										set _test_result -2
+									}							
+
+								} elseif { $_el(line_meta) != -1 } {
+									# stop loop, jump to bottom of loop + 1
+									_el_buffer_goto [expr $_el(line_meta)] $_el_buf(stack)
+								}
+
+							};#if Catch
+						}; #else While loop
 					}
 				^\\\]	{	# end block of lines
 

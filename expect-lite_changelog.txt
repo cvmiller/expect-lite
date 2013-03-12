@@ -1204,12 +1204,16 @@ Released 21 Dec 2010 - 4.0.2
 
 10 March 2013 - 2expect-lite 4.6.0.d4
 	Added string search/replace
-		e.g. =myvar /search/replace/
+		e.g. =$myvar /search/replace/
 	Added regex search/replace
-		e.g. =myvar ;regex_search;replace;
+		e.g. =$myvar ;regex_search;replace;
 		
 10 March 2013 - released 4.5.0 (was 4.4.2.d7)
 	Updated git for release
+
+11 March 2013 - merged 2expect-lite to expect-lite 4.6.0d5
+	Added string concat operator "+"
+		e.g. =$myvar + $other_string
 
 ------------ Future Versions --------------------------
 		
@@ -1242,14 +1246,14 @@ x	Add code block for if-else statement - in 4.5.0
 	x Support nested code blocks (for if & else blocks)
 	x Use lassign & lvarpop/lvarpush for meta data
 
-x	Add TERM type=web
+x	Add TERM type=web - in 4.5.0
 		In this mode, colors would be html "colors"
 		e.g. <span sytle="color:blue"> stuff </span>
 
-x	Add Env Var for INFINITE_LOOP
+x	Add Env Var for INFINITE_LOOP - in 4.5.0
 		Update help to move Env Vars to Man page		
 		
-x	add *LOG <file> *NOLOG - native logging directive
+x	add *LOG <file> *NOLOG - native logging directive - in 4.4.0
 		x try: exp_internal -f <log file> 0 - doesn't work, used log_file instead
 		*LOG <no fnam> starts log in current dir with test name+log
 		*NOLOG stops logging
@@ -1263,9 +1267,7 @@ x	add *LOG <file> *NOLOG - native logging directive
 		x CLI *LOG/*NOLOG should override script values
 		x Update MAN page, Documentation, self test
 		x Check *DEBUG is logged
-
-		
-		
+	
 x	Include el_shell.elt in examples of next release 4.3.3
 
 x	Harden "send" command against bad flag "-1" 
