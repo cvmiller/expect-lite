@@ -1215,6 +1215,8 @@ Released 21 Dec 2010 - 4.0.2
 	Added string concat operator "+"
 		e.g. =$myvar + $other_string
 
+
+
 ------------ Future Versions --------------------------
 		
 Future
@@ -1229,11 +1231,15 @@ o	use Math function to do string operations e.g. + to cat strings...
 			Case translations (aka folding)
 			split a string into a pseudo-array
 			return string length
-			
+
+o 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no"
+		User wants to put additional options, and it doesn't work in tcl 8.6/expect 5.45
+			variable connect_ssh_accept_host_key [list -oGlobalKnownHostsFile=/dev/null -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no]
+					
 		
 o	implement "case" statement - Peter Fang
 
-o	Look at improving ^\ when in an expect long time out period
+o	Look at improving ^\ when in an expect long time out period (and no prompt)
 
 o	list processing - foreach loop [ $x=item1 item2 item3		 ]
 		Requested by Tao
