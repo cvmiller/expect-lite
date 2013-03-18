@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.0.d5"
+	variable version "4.6.0.d7"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -97,6 +97,7 @@ namespace eval expectlite {
 
 	# Accept SSH host keys
 	variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no"
+	variable connect_ssh_accept_host_key ""
 
 
 	# Path to telnet (helps in cygwin environments)
@@ -1351,7 +1352,7 @@ namespace eval expectlite {
 	#	Subroutine used by ssh user/password method
 	#	If this is not your access method use one of the other login methods
 	#
-	proc zlogin { pass login_attempts } {
+	proc zlogin { {pass ""} {login_attempts 2} } {
 		upvar expectlite::remote_host		remote_host
 		upvar expectlite::_el_warn_color			_el_warn_color
 		upvar expectlite::_el_eols			_el_eols
@@ -1418,7 +1419,12 @@ namespace eval expectlite {
 			# turn off stdout - suppress login banners - show with -vv
 			log_user 0
 		}
-		if { [catch { spawn ssh $connect_ssh_accept_host_key -l $user $remote_host  } error] } {
+		
+		# create ssh command line
+		set connect_cmd [concat ssh $connect_ssh_accept_host_key -l $user $remote_host]
+		
+		#This spawns the ssh program - auto generates spawn_id var
+		if { [catch "spawn $connect_cmd" error] } {
 			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
 			# Fail script?
 			exit 1
@@ -1470,13 +1476,19 @@ namespace eval expectlite {
 			log_user 0
 		}
 		#This spawns the ssh program - auto generates spawn_id var
-		if { [catch { spawn ssh $connect_ssh_accept_host_key $login_user$remote_host  } error] } {
+		set connect_cmd [concat ssh $connect_ssh_accept_host_key $login_user$remote_host]
+		if { [catch  "spawn $connect_cmd" error] } {
 			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
 			# Fail script?
 			exit 1
 		}
 		# TODO:Auto update ~/.ssh/known_hosts if needed
-
+		#better way of logging in (and catch any errors)
+		if { [ catch {zlogin} error] } {
+			puts stderr "CONNECTION ERROR to $remote_host \n   $error"
+			exit 1
+		}
+	
 		# Test the connection by sending a return
 		if { [catch { send -- "$_el_eols"   } error] } {
 			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error"
@@ -3979,32 +3991,41 @@ namespace eval expectlite {
 							}
 						} else {
 							#$var is a string 
-							# get operator
-							set _operator [lindex $_el_parse_list 0]
-							# pop operator off front
-							set _el_parse_list [lreplace $_el_parse_list 0 0]
-							puts "===strmath==>$_operator|$_el_parse_list|"
+							# get operator. % + / ; // ;; -
+							regsub {([%+/;-]|[/;][/;]).*} $_el_predicate {\1} _operator
+							
+							#puts "===strmath==>$_operator#$_el_parse_list#"
+							
 							set show_error 0
 							switch -re $_operator {
 								"%"	{ # slice/ordinal e.g. % 5-9
+										# pop operator off front
+										set _el_parse_list [lreplace $_el_parse_list 0 0]
 										set _el_predicate [join $_el_parse_list " "]
 										set _el_parse_list [split $_el_predicate "-"]
 										foreach {start end} $_el_parse_list {break}
+										#puts "===strmath1==>$start#$end#$_el_parse_list"
+										
 										# decrement range to zero-base
 										catch {incr start -1; incr end -1}
 										if { [catch { set user_namespace($var) [string range $user_namespace($var) $start $end] } error]} {
 											set show_error 1 
 										}
 									}
-								"\\\+"	{ # concat e.g. + string
+								{[+]}	{ # concat e.g. + string
 
+										# pop operator off front
+										set _el_parse_list [lreplace $_el_parse_list 0 0]
+										#puts "===strmath2==>$_el_parse_list#"
 										if { [catch { set user_namespace($var)  "$user_namespace($var)$_el_parse_list" } error]} {
 											set show_error 2 
 										}
 									}
-								 {^/}	{ # search/replace - no regex
-										set replacelist [ split $_el_predicate "/" ]
-										#puts "===strmath2==>$replacelist|$_el_predicate|"
+								 {^[/;][/;]}	{ # search/replace - no regex
+								 		# determine parsing char
+								 		regsub {([/;]).*} $_operator {\1} splitchar 
+										set replacelist [ split $_el_predicate "$splitchar" ]
+										#puts "===strmath3==>$replacelist#$_el_predicate#"
 										# resulting list is: null search replace null
 
 										# remove nulls in list
@@ -4015,9 +4036,11 @@ namespace eval expectlite {
 											set show_error 3
 										}
 									}
-								 {^;}	{ # regex search/replace 
-										set replacelist [ split $_el_predicate ";" ]
-										#puts "===strmath3==>$replacelist|$_el_predicate|"
+								 {^[;/]}	{ # regex search/replace 
+								 		# determine parsing char
+								 		regsub {([/;]).*} $_operator {\1} splitchar 
+										set replacelist [ split $_el_predicate "$splitchar" ]
+										#puts "===strmath4==>$replacelist#$_el_predicate#"
 										# resulting list is: null search replace null
 										# remove nulls in list
 										regsub  -all "{}" $replacelist "" replacelist
@@ -4029,6 +4052,21 @@ namespace eval expectlite {
 										}
 								 	
 										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
+									}
+								{[-]}	{ # subtract or remove e.g. - string
+
+										#reparse parse_list
+										set _el_predicate [join $_el_parse_list " "]
+										set _el_parse_list [split $_el_predicate "-"]
+										# pop operator off front
+										set _el_parse_list [lreplace $_el_parse_list 0 0]
+										# create replace_map
+										set replacelist [list $_el_parse_list {} ]
+										#puts "===strmath5==>$replacelist#$_el_parse_list#"
+										if { [catch { set user_namespace($var) [string map $replacelist $user_namespace($var) ]} error]} {
+											set show_error 5
+										}
+
 									}
 								default {
 										set show_error 9 

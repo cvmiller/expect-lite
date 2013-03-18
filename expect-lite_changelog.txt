@@ -1215,6 +1215,19 @@ Released 21 Dec 2010 - 4.0.2
 	Added string concat operator "+"
 		e.g. =$myvar + $other_string
 
+14 March 2013 - 4.6.0.d6
+	Fixed spawn ssh $connect_ssh_accept_host_key issue (in 4.4.1), as per patch request on sourceforge
+		Will back port to 4.5.0
+	
+14 March 2013 - 4.6.0.d7
+	Reworked string manipulation i.e. string math
+		% m-n		slice
+		+			concat
+		-			remove/subtract
+		/this/that/	regex search and replace
+		//this/that	non-regex search and replace
+			search and replace / can use alternate char ;
+
 
 
 ------------ Future Versions --------------------------
@@ -1232,9 +1245,15 @@ o	use Math function to do string operations e.g. + to cat strings...
 			split a string into a pseudo-array
 			return string length
 
-o 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no"
+o 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no" - target 4.6.0
 		User wants to put additional options, and it doesn't work in tcl 8.6/expect 5.45
 			variable connect_ssh_accept_host_key [list -oGlobalKnownHostsFile=/dev/null -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no]
+		Solution - use concat to create correct string for spawn
+			# create ssh command line
+			set connect_cmd [concat ssh $connect_ssh_accept_host_key -l $user $remote_host]
+
+			#This spawns the ssh program - auto generates spawn_id var
+			if { [catch "spawn $connect_cmd" error] } { ...
 					
 		
 o	implement "case" statement - Peter Fang
