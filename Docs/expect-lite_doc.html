@@ -25,6 +25,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -102,12 +103,15 @@ and
 Dynamic
 Variables</a> <span style="font-weight: normal;">with
 math
-functions and pseudo arrays</span><br>
-        </li>
+functions and pseudo arrays</span></li>
+        <ul>
+          <li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#string_math_variables"><span style="font-weight: bold;">String Math</span></a> allows manipulation of strings: search/replace, +, - </span><span style="background-color: yellow; font-weight: normal;">new in 4.6.0</span></li>
+        </ul>
+
         <li><a href="expect-lite_doc.html#constants"><span style="font-weight: bold;">Constants</span></a>,
 passed on the
 command line or set as environment variables, which override variables
-in the script. Powerful feature allows any variable to be changed on the command line<br>
+in the script. Powerful feature allows any variable to be passed on the command line<br>
 </li>
         <li style="font-weight: bold;"><a href="expect-lite_doc.html#bash_shell">Leverages
 Bash
@@ -138,7 +142,11 @@ looping</span></a>
 using
 conditional branching, a repeat loop can be constructed with infinite
 loop protection</li>
-        <li><a style="font-weight: bold;" href="#code_blocks">Code Blocks</a> group lines of script for while loops and conditionals with then and else blocks <span style="background-color: yellow;">new in 4.5.0</span>  <span style="background-color: yellow;"></span></li>
+        <li><a style="font-weight: bold;" href="#code_blocks">Code Blocks</a> group lines of script for while loops and conditionals with then and else blocks&nbsp;<span style="background-color: yellow;"></span></li>
+        <ul>
+          <li><span style="background-color: yellow;"></span><a href="#foreach_loop"><span style="font-weight: bold;">Foreach loops</span></a> Iterate through a list <span style="background-color: yellow;">new in 4.6.0</span> <span style="background-color: yellow;"></span></li>
+        </ul>
+
 
       </ul>
       <span style="font-weight: bold;">Advanced</span><br>
@@ -464,6 +472,12 @@ bitwise and arithmetic operations:&nbsp; &lt;&lt;
                 </td>
               </tr>
               <tr>
+                <td style="vertical-align: top;">=$string<br>
+                </td>
+                <td style="vertical-align: top;">string math functions, maniuplate strings: + - / // (see <a href="#string_math_variables">string math functions</a>)<br>
+                </td>
+              </tr>
+<tr>
                 <td style="vertical-align: top;">!<br>
                 </td>
                 <td style="vertical-align: top;">indicates
@@ -485,6 +499,13 @@ format ?cond?action::else_action (see <a href="#conditional">conditionals</a> an
 ]<br>
                 </td>
                 <td style="vertical-align: top;">while loop (see <a href="#while_loop">code blocks</a>)<br>
+                </td>
+              </tr>
+              <tr>
+                <td style="vertical-align: top;">[ $var=list<br>
+]<br>
+                </td>
+                <td style="vertical-align: top;">foreach loop (see <a href="#foreach_loop">code blocks</a>)<br>
                 </td>
               </tr>
 <tr>
@@ -1047,6 +1068,76 @@ have the result of 3:<br>
       <br>
 Math functions can be used with static and dynamic variables.<br>
       <br>
+      <h3><a name="string_math_variables"></a>String Math
+Functions with Variables<br>
+      </h3>
+With the introduction of version 4.6.0, String Math functions have been
+added. The functions which enable simple manipulation of strings are:<br>
+      <ul>
+        <li>Concatenation using +</li>
+        <li>Removal using -</li>
+        <li>Search and Replace using / or //<br>
+        </li>
+      </ul>
+In order to use string math functions, the variable must already be
+defined as a string (think: non-numeric). The following is an example
+of concatenation:<br>
+      <pre>$mylist=abc,def,hig<br>$lmnvar=,lmn<br>=$mylist + $lmnvar</pre>
+This will result in $mylist being equal to abc,def,hig,lmn<br>
+      <br>
+String removal will remove all instances of the substring<br>
+      <pre>$mylist=abc,def,hig<br>$lmnvar=,def<br>=$mylist - $lmnvar</pre>
+
+The result of $mylist will be abc,hig<br>
+      <br>
+      <span style="font-weight: bold;">Search and Replace</span><br>
+      <br>
+Search and replace is the most powerful of functions and uses the slash '/' operator. The form is as follows:<br>
+      <pre>=$myvar /search/replace/</pre>
+
+There is a regex / and non-regex // form.<br>
+      <br>
+
+      
+      <table style="text-align: left; width: 616px; height: 66px;" border="1" cellpadding="2" cellspacing="2">
+
+        <tbody>
+          <tr>
+            <td style="vertical-align: top;">Regex<br>
+            </td>
+            <td style="vertical-align: top;">=$var /search/replace/<br>
+ </td>
+            <td style="vertical-align: top;">Regex support for search and replace,<br>
+includes char class, meta chars, capture<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">Non-regex</td>
+            <td style="vertical-align: top;">=$var //search/replace/<br>
+            </td>
+            <td style="vertical-align: top;">Literal search and replace<br>
+            </td>
+          </tr>
+        </tbody>
+      
+      </table>
+
+      <br>
+The non-regex is straight forward, in the following example, one might
+want to replace commas with spaces (to be used in foreach loop list):<br>
+      <pre>$mylist=abc,def,hig<br>=$mylist //,/ /</pre>
+
+The result would be: abc def hig<br>
+      <br>
+The regex version can do more complex operations such as removal of the subnet for IPv4:<br>
+      <pre>$myip=192.168.0.50<br>=$myip /\d+\.\d+\.\d+\.(\d+)/\1/</pre>
+
+The above example searches for a string of digits, dot, digits, dot,
+digits, dot, then lastly captures the last set of digits. It then
+replaces the entire IP address with captured value (using the \1),
+resulting in $myip equaling 50.<br>
+      <br>
+<br>
       <h3><a name="pseudo_arrays"></a>Pseudo
 Arrays</h3>
 Expect-lite supports pseudo arrays, which are different from a real
@@ -1248,7 +1339,7 @@ directive *INFINITE_LOOP should be set larger than 400. As of version
 the default value.<br>
       <br>
       <h2><a name="code_blocks"></a>Using
-Code Blocks with Conditionals and While Loops<br>
+Code Blocks with Conditionals, While Loops and Foreach Loops<br>
       </h2>
 expect-lite is a line oriented scripting language, but there are times
 when it is convenient to group lines together. As of version 4.2.0, the
@@ -1280,15 +1371,72 @@ inside the code block will be executed. The expression (e.g. $i &lt; 3)
 will be evaluated each time the code block has completed execution.
 Once the
 expression evaluates false (in the example $i is equal to 3), the
-script will continue on the line after the bottom of the code block.<br>
+script will continue on the line after the bottom of the code block. The &lt;test&gt; operators are:<br>
+      <table style="text-align: left; width: 80%;" border="1" cellpadding="2" cellspacing="2">
+<tbody><tr><td style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Test<br>
+                </td><td style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Action<br>
+                </td></tr><tr>
+            <td style="vertical-align: top;">==<br>
+            </td>
+            <td style="vertical-align: top;">equal<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">!=<br>
+            </td>
+            <td style="vertical-align: top;">non equal<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">&lt;=<br>
+            </td>
+            <td style="vertical-align: top;">less than or equal<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">&gt;=<br>
+            </td>
+            <td style="vertical-align: top;">greater than or equal<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">&lt;<br>
+            </td>
+            <td style="vertical-align: top;">less than<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">&gt;<br>
+            </td>
+            <td style="vertical-align: top;">greater than<br>
+            </td>
+          </tr>
+</tbody>
+      </table>
+      <br>
+The following example tests if $i is less than 3, and continues to loop until $i is equal or greater than 3:<br>
       <pre>; === while loop<br>$i=0<br>[ $i &lt; 3<br>	&gt;echo "hello $i"<br>	&lt;hello $i<br>	+$i<br>]     </pre>
 Nesting of while loops are also supported:<br>
-      <pre>;; == Nested while loops, should repeat "hello ken" 3 times<br>;; == with 2 "bye now's inside each outer loop<br>&gt;<br>$i=0<br>[ $i &lt; 3<br>	&gt;echo "hello ken"<br>	&lt;ken<br>	$j=0<br>	[ $j &lt; 2 <br>		&gt;echo "bye now"<br>		&gt;<br>		+$j<br>	]<br>	+$i<br>]<br></pre>
+      <pre>;; == Nested while loops, should repeat "hello ken" 3 times<br>;; == with 2 "bye now's inside each outer loop<br>&gt;<br>$i=0<br>[ $i &lt; 3<br>	&gt;echo "hello ken"<br>	&lt;ken<br>	$j=0<br>	[ $j &lt; 2 <br>		&gt;echo "bye now"<br>		&gt;<br>		+$j<br>	]<br>	+$i<br>]<br></pre><a name="foreach_loop"></a><span style="font-weight: bold;">Foreach Loops</span><br>
+      <br>
+Code blocks also support foreach loops, where a loop will iterate of a
+known number of items. Each iteration, the variable will be set to the
+next item in the list. Items in a list must be separated by spaces. Use
+string math functions to create a list of items separated by spaces.<br>
+      <br>
+In the following example, a list of network connected devices are named
+after planets. The variable $planet will be set to mercury, then ping
+it. Next time through the loop, $planet will be set to venus, then ping
+it, and so on. After the last item, neptune, the loop will complete and
+the script will continue after the bottom of the code block.<br>
+      <pre>; === foreach loop<br>[ $planet=mercury venus earth mars jupiter saturn uranus neptune<br>	&gt;ping -c1 $planet<br>]<br></pre>
+Of course, foreach loops can be nested with other foreach loops, or while loops.<br>
+      <br>
 Infinite loop protection applies both the "jump-to-label" method as
-well as to the "while-loop" method, each iteration of the loop
+well as to the "while-loop" and "foreach-loop" methods, each iteration of the loop
 decrements the infinite loop counter (default is 5000). It may
 be a good idea to set the infinite loop value to something low, when
-first writing while loops, just in case:<br>
+first writing code block loops, just in case:<br>
       <pre>*INFINITE_LOOP 20<br></pre>
       <br>
       <h2><a name="script_help"></a>Script Help with --help -h</h2>
@@ -1369,7 +1517,7 @@ command:<br>
 Now the expect-lite script can be run my typing the following:<br>
       <pre>$ ./my_expect-lite_script.elt -r host-15 -u craig max_loop_count=100<br></pre>
 The old bash scriptlet method can be found in
-expect-lite.proj/Examples/test_masquerade.txt<br>
+expect-lite.proj/examples/test_masquerade.txt<br>
       <br>
       <h2><a name="include_files"></a>Include
 Files</h2>
@@ -2120,7 +2268,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">10 March 2013<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15 April 2013<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
@@ -2130,7 +2278,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.5.0 and above</span><br style="font-style: italic;">
+document for version 4.6.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

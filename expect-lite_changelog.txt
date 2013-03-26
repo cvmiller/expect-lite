@@ -1219,7 +1219,7 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed spawn ssh $connect_ssh_accept_host_key issue (in 4.4.1), as per patch request on sourceforge
 		Will back port to 4.5.0
 	
-14 March 2013 - 4.6.0.d7
+17 March 2013 - 4.6.0.d7
 	Reworked string manipulation i.e. string math
 		% m-n		slice
 		+			concat
@@ -1227,6 +1227,12 @@ Released 21 Dec 2010 - 4.0.2
 		/this/that/	regex search and replace
 		//this/that	non-regex search and replace
 			search and replace / can use alternate char ;
+
+
+25 March 2013 - 4.6.0d7
+	Update Man page with foreach loop & string math functions
+
+
 
 
 
@@ -1244,8 +1250,9 @@ o	use Math function to do string operations e.g. + to cat strings...
 			Case translations (aka folding)
 			split a string into a pseudo-array
 			return string length
+		x Documentation
 
-o 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no" - target 4.6.0
+x 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no" - target 4.6.0
 		User wants to put additional options, and it doesn't work in tcl 8.6/expect 5.45
 			variable connect_ssh_accept_host_key [list -oGlobalKnownHostsFile=/dev/null -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no]
 		Solution - use concat to create correct string for spawn
@@ -1260,7 +1267,7 @@ o	implement "case" statement - Peter Fang
 
 o	Look at improving ^\ when in an expect long time out period (and no prompt)
 
-o	list processing - foreach loop [ $x=item1 item2 item3		 ]
+x	list processing - foreach loop [ $x=item1 item2 item3		 ] - target 4.6.0
 		Requested by Tao
 		x placed into 2expect for 4.6.0
 
