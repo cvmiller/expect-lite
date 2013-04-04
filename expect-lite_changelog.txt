@@ -1233,7 +1233,9 @@ Released 21 Dec 2010 - 4.0.2
 	Update Man page with foreach loop & string math functions
 
 
-
+29 March 2013 - 4.6.0d8
+	Cleaned up INFO - timeout should only be displayd with INFO on
+	
 
 
 ------------ Future Versions --------------------------

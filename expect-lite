@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.0.d7"
+	variable version "4.6.0.d8"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -2061,6 +2061,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_comment_color	_el_comment_color
 		upvar expectlite::timeout_line		timeout_line
 		upvar expectlite::comment_line		comment_line
+		upvar expectlite::INFO				INFO
 
 
 		# initialize font color
@@ -2080,7 +2081,7 @@ namespace eval expectlite {
 			} 
 		# print new expect timeout value (if needed)
 		if { $timeout_line != "" } {
-			cputs "\n$timeout_line\n" $_el_info_color
+			if {$INFO} { cputs "\n$timeout_line\n" $_el_info_color }
 			set timeout_line ""
 			} 
 
@@ -3071,7 +3072,6 @@ namespace eval expectlite {
 		upvar expectlite::comment_line				comment_line
 		upvar expectlite::timeout_line				timeout_line
 		upvar expectlite::timeout_multiplier		timeout_multiplier
-#		upvar expectlite::_el_lines 				_el_lines
 		upvar expectlite::WARN						WARN
 		upvar expectlite::delay_wait_for_host		delay_wait_for_host
 		upvar expectlite::cli_namespace 			cli_namespace
@@ -3080,9 +3080,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_infinite_loop 		_el_infinite_loop
 		upvar expectlite::_incr_var 				_incr_var
 		upvar expectlite::_decr_var 				_decr_var
-#		upvar expectlite::_math_var 				_math_var
 		upvar expectlite::connect_method			connect_method
-#		upvar expectlite::send_slow					send_slow
 		upvar expectlite::_el_fork					_el_fork
 		upvar expectlite::DEBUG 					DEBUG
 		upvar expectlite::INFO						INFO
@@ -3091,10 +3089,9 @@ namespace eval expectlite {
 		upvar expectlite::_el_info_color			_el_info_color
 		upvar expectlite::_el_warn_color			_el_warn_color
 		upvar expectlite::_el_err_color 			_el_err_color
-		upvar expectlite::_el_debug_color		_el_debug_color
+		upvar expectlite::_el_debug_color			_el_debug_color
 		upvar expectlite::_el_eols					_el_eols
 		upvar expectlite::el_color					el_color
-#		upvar expectlite::_el_fork_context			_el_fork_context
 		upvar expectlite::_el_buf					_el_buf
 		upvar expectlite::EXP_INFO					EXP_INFO
 		upvar expectlite::_el_current_session		_el_current_session
@@ -3562,7 +3559,9 @@ namespace eval expectlite {
 						}
 						# print new timeout value if one_line is set (e.g. from IDE)
 						if { $_one_line == 1 } {
-							cputs $timeout_line $_el_info_color
+							if {$INFO} {
+								cputs $timeout_line $_el_info_color
+							}
 						}
 					}
 				^\\\?[iI]?[fF]?	{	# Conditional processing - ?cond?action::else_action
