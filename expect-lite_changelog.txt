@@ -1236,6 +1236,14 @@ Released 21 Dec 2010 - 4.0.2
 29 March 2013 - 4.6.0d8
 	Cleaned up INFO - timeout should only be displayd with INFO on
 	
+12 April 2013 - 4.6.0d9
+	Fixed foreach bugs
+		Would not run foreach loop after first time
+		Ignores line right after foreach loop
+	Fixed colour bug
+		left_angle was undefined when TERM=screen
+	
+
 
 
 ------------ Future Versions --------------------------

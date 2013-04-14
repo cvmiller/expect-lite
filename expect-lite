@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.0.d8"
+	variable version "4.6.0.d9"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -266,6 +266,7 @@ namespace eval expectlite {
 		set ::expectlite::el_color(purple) "\033\[0;35m"
 		set ::expectlite::el_color(pink) "\033\[1;35m"
 		set ::expectlite::el_color(nocolor) "\033\[0m"
+		set ::expectlite::el_color(left_angle) "<"
 		set ::expectlite::el_color(none) ""
 
 		# set ::expectlite::INFO color
@@ -4196,6 +4197,10 @@ namespace eval expectlite {
 							if { [info exists _foreach($line_meta,$user_var)] == 0 } {
 								set _foreach_list [split $_cond_arg2]
 								# add extra item to allow last user item to be executed
+								if {$INFO} {
+									cputs "\nForeach:$_conditional" $_el_info_color
+								};#if INFO
+
 								lappend _foreach_list "END"
 							} else {
 								# restore list - hashed based on meta line and var name
@@ -4211,9 +4216,11 @@ namespace eval expectlite {
 							# is list empty, then stop loop
 							if { [llength $_foreach_list] == 0 } {
 								set _foreach_list ""
+								# clear foreach info, to allow re-run of this foreach loop
+								unset -nocomplain _foreach($line_meta,$user_var)
 								if { $_el(line_meta) != -1 } {
 									# stop loop, jump to bottom of loop + 1
-									_el_buffer_goto [expr $_el(line_meta) + 1] $_el_buf(stack)
+									_el_buffer_goto [expr $_el(line_meta) + 0] $_el_buf(stack)
 								}
 							} else {
 								#List not empty, Loop back
@@ -4221,6 +4228,9 @@ namespace eval expectlite {
 								set _foreach($line_meta,$user_var) $_foreach_list
 								# Assign the Var
 								set user_namespace($user_var) $user_value
+								if {$INFO} {
+									cputs "\nForeach: \$$user_var=$user_value\n" $_el_info_color
+								};#if INFO
 							}
 
 						} else {
