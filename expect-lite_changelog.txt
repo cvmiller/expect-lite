@@ -1243,6 +1243,10 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed colour bug
 		left_angle was undefined when TERM=screen
 	
+29 April 2013 - 4.6.0d10
+	Fixed bug in paste of foreach loop - was only iterating once
+
+
 
 
 
@@ -1271,7 +1275,9 @@ x 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no" - targ
 
 			#This spawns the ssh program - auto generates spawn_id var
 			if { [catch "spawn $connect_cmd" error] } { ...
-					
+
+o	when *TIMESTAMP is set, set user var timestamp_now (or better name)	
+		Need time math functions				
 		
 o	implement "case" statement - Peter Fang
 
@@ -1280,6 +1286,7 @@ o	Look at improving ^\ when in an expect long time out period (and no prompt)
 x	list processing - foreach loop [ $x=item1 item2 item3		 ] - target 4.6.0
 		Requested by Tao
 		x placed into 2expect for 4.6.0
+		x paste foreach - only runs once, no loop
 
 x	Add code block for if-else statement - in 4.5.0
 		if [
@@ -1358,6 +1365,8 @@ b	Blog: describe "how I test" with loopback
 		run ./install -c to set this up
 		
 b	Logging (once 4.4.0 is out)
+
+b	Else Block (dog bone)
 
 k	Quoting - or lack there of
 

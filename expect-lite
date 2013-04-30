@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.0.d9"
+	variable version "4.6.0.d10"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -2324,8 +2324,9 @@ namespace eval expectlite {
 			return -1
 		
 		}; #end proc
-		
-		set line_buffer {}
+
+		# sets line buffer to start at line 1, rather than 0, helps pasting lines in IDE		
+		set line_buffer {#}
 		set help_buffer {}
 		set listptr 0
 		# read help flag
