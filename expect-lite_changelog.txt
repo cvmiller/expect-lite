@@ -1249,6 +1249,7 @@ Released 21 Dec 2010 - 4.0.2
 
 2 May 2013 - 4.6.0.d11
 	Fixed bug with trailing space(s) after ]::[ else
+	Updated 4.6.0 doc - error in "if" code blocks
 	
 
 
