@@ -26,6 +26,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -1354,8 +1355,8 @@ one "line" to be executed based on the evaluation of the if statement.<br>
       <br>
 Conditionals with code blocks also support the else construct, such as:<br>
       <pre>; === Conditional using code block as else statement<br>? $case == true ? &gt;echo "true" :: [<br>	&gt;echo "false 1"<br>	&gt;echo "false 2"<br>	&gt;echo "false 3"<br>]<br>      </pre>As of version 4.5.0 Code blocks <span style="font-style: italic;">are</span> supported in both the then <span style="font-style: italic;">and</span> the else sections of a conditional: <br>
-      <pre>; === Conditional using code block then and another code block else statement<br>? $case == true ? [ :: [<br>	&gt;echo " 1"<br>	&gt;echo " 2"<br>	&gt;echo " 3"<br>]::[<br>	; else code block<br>	&gt;echo " 4"<br>	&gt;echo " 5"<br>	&gt;echo " 6"<br>]<br></pre>
-However, using the square brackets on the same line is still not supported, since it appears ambiguous:<br>
+      <pre>; === Conditional using code block then and another code block else statement<br>? $case == true ? [<br>	&gt;echo " 1"<br>	&gt;echo " 2"<br>	&gt;echo " 3"<br>]::[<br>	; else code block<br>	&gt;echo " 4"<br>	&gt;echo " 5"<br>	&gt;echo " 6"<br>]<br></pre>
+However, using the square brackets on the same line is still <span style="font-style: italic;">not</span> supported, since it appears ambiguous:<br>
       <pre>; === NOT SUPPORTED Conditional using code block then and else statement<br>? $case == true ? [ :: [<br>	&gt;echo " 1"<br>] <br></pre>
 Nested code blocks can also be used. In the following example each if
 statement is using a code block for the then statement, and a non-code

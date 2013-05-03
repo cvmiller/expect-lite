@@ -1244,10 +1244,12 @@ Released 21 Dec 2010 - 4.0.2
 		left_angle was undefined when TERM=screen
 	
 29 April 2013 - 4.6.0d10
-	Fixed bug in paste of foreach loop - was only iterating once
+	Fixed bug in IDE paste of foreach loop - was only iterating once
 
 
-
+2 May 2013 - 4.6.0.d11
+	Fixed bug with trailing space(s) after ]::[ else
+	
 
 
 ------------ Future Versions --------------------------
