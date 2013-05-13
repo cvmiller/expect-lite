@@ -1252,6 +1252,10 @@ Released 21 Dec 2010 - 4.0.2
 	Updated 4.6.0 doc - error in "if" code blocks
 	
 
+12 May 2013 - 4.6.0.d11
+	Updated self_test_math.txt & self_test_code_block.txt for foreach feature
+	
+
 
 ------------ Future Versions --------------------------
 		
@@ -1268,6 +1272,10 @@ o	use Math function to do string operations e.g. + to cat strings...
 			split a string into a pseudo-array
 			return string length
 		x Documentation
+		o add DEBUG to help user debug script?
+		
+o	monitor if statement sometimes wrong when not using ?if - using ?$big==is a test?
+
 
 x 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no" - target 4.6.0
 		User wants to put additional options, and it doesn't work in tcl 8.6/expect 5.45

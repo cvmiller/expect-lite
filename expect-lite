@@ -2379,7 +2379,7 @@ namespace eval expectlite {
 					set meta_line [expr [llength $line_buffer] + 1]
 					
 					# if block lines is "else" ]::[  then push
-					if { [regexp {^\][ ]*::[ ]*\[[ ]*$} $buf_line ]} {
+					if { [regexp {^\][ ]*::[ ]*\[[ \t]*$} $buf_line ]} {
 						# then push "else"
 						_el_buffer_block_push [concat "[llength $line_buffer] $meta_line_type"]
 					}

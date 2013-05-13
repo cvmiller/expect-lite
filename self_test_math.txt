@@ -66,10 +66,10 @@ $answer=1
 
 
 $five=5
-; == Negative test answer1 not defined then division
+; == Negative test answer1 not defined then division, undefined should be initialized to zero
 =$answer1 / 2 * (10 + 1)
 # self check
-?if $answer1 !=  ? >echo FAIL :: >echo Good
+?if $answer1 != 0 ? >echo FAIL :: >echo Good
 <\nGood
 ; === answer is $answer1
 
@@ -81,13 +81,14 @@ $five=5
 ?if $answer1 != 22 ? >echo FAIL :: >echo Good
 <\nGood
 
-; === Negative test: Arrays not supported
+; === Negative test: Arrays not supported, but concatination will occur
+$answer3=30
 $count=3
 $answer=5
 =$answer$count + 5
 ; === answer is $answer
 # self check
-?if $answer != 5 ? >echo FAIL :: >echo Good
+?if $answer != 58 ? >echo FAIL :: >echo Good
 <\nGood
 
 # Calculate and set test_timeout in seconds
