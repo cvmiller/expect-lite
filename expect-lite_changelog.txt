@@ -1255,7 +1255,7 @@ Released 21 Dec 2010 - 4.0.2
 25 May 2013 - 4.6.0d11
 	Updated man page, ChangeLog and documentation in preparation for release
 	
-
+26 May 2013 - 4.6.0 - Released
 
 
 
