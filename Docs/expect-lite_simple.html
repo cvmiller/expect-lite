@@ -1,6 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
 
+
   
   <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>expect-lite</title>
   
@@ -80,16 +81,34 @@ A simple to use automation tool to do:<br>
         <li>etc.</li>
       </ul>
       <h2>What New?</h2>
-Latest version 4.5.0 improvements include:<br>
+Latest version 4.6.0 improvements include:<br>
       <ul>
-        <li>Enhances Code Blocks with "then" and "else" blocks (see
-example below)</li>
-        <li>Added environment variable EL_INFINITE_LOOP sets user's
-default infinite loop protection</li>
-        <li>Shortened expect-lite help, enhanced man page<br>
+        
+        <li>Added foreach loop using code blocks<br>
+$list=abc def ghi<br>
+[ $x=$list<br>
+&nbsp;&nbsp;&nbsp; &gt;echo $x<br>
+]<br>
         </li>
-
-      </ul>
+        <li>Added string-math: concat, subtract, search/replace<br>
+$list=abc,def,ghi</li>
+        <ul>
+          <li>Concat -&gt; abc,def,ghi,jkl<br>
+=$list + ,jkl</li>
+          <li>Subtract -&gt; abc,ghi<br>
+=$list - ,def</li>
+          <li>Search/replace with regex -&gt; def,abc,ghi<br>
+=$list/(\w+),(\w+)/\2,\1/</li>
+          <li>Search/replace without regex -&gt; abc def ghi<br>
+=list//,/ /<br>
+          </li>
+        </ul>
+        <li>Improved ssh login</li>
+        <ul>
+          <li>Removed ssh options, should be placed in ~/.ssh/config<br>
+          </li>
+        </ul>
+</ul>
       <p>The main purpose is keep it simple.
 However, the advanced features allow pretty creative scripting.</p>
       <p>The central ideas behind the design are:<br>
@@ -128,14 +147,13 @@ expect-lite</big></a></p>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">10
-March 2013<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">28 May 2013<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
 <small><span style="font-style: italic;">this
 document for version
-4.5.0 and above</span><br style="font-style: italic;">
+4.6.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

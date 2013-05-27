@@ -1,6 +1,28 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 28 May 2013 v4.6.0 (foreach release)
+	Added foreach loop using code blocks
+		e.g.  $list=abc def ghi
+			  [ $x=$list
+			     >echo $x
+			  ]
+	Added string math - search/replace options on strings
+		Supports concat, removal, search/replace
+		e.g.  $string=mylong2013string
+			  =$string + may
+			  		yields: mylong2013stringmay
+			  =$string - long
+			  		yields: my2013string
+			  =$string/(\w+)(\d+)/\2\1/
+			  		yields:: 2013mylongstring
+			  =$string//3stri/o/
+			  		yields: mylong201ong
+	Improved ssh login sequence, answering yes to login question automatically
+		removed ssh "-o StrictHostKeyChecking=no" option
+		ssh has very good support for ssh options on ~/.ssh/config
+	Fixed bug when running expect-lite in screen (TERM=screen)
+
 Released 10 March 2013 v4.5.0 (dog bone release)
 	Added else code block ]::[
 		e.g.  ?if this == $that ? [

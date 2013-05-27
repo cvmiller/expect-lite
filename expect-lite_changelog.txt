@@ -1232,7 +1232,6 @@ Released 21 Dec 2010 - 4.0.2
 25 March 2013 - 4.6.0d7
 	Update Man page with foreach loop & string math functions
 
-
 29 March 2013 - 4.6.0d8
 	Cleaned up INFO - timeout should only be displayd with INFO on
 	
@@ -1246,22 +1245,26 @@ Released 21 Dec 2010 - 4.0.2
 29 April 2013 - 4.6.0d10
 	Fixed bug in IDE paste of foreach loop - was only iterating once
 
-
 2 May 2013 - 4.6.0.d11
 	Fixed bug with trailing space(s) after ]::[ else
 	Updated 4.6.0 doc - error in "if" code blocks
 	
-
 12 May 2013 - 4.6.0.d11
 	Updated self_test_math.txt & self_test_code_block.txt for foreach feature
 	
+25 May 2013 - 4.6.0d11
+	Updated man page, ChangeLog and documentation in preparation for release
+	
+
+
+
 
 
 ------------ Future Versions --------------------------
 		
 Future
 
-o	use Math function to do string operations e.g. + to cat strings...
+x	use Math function to do string operations e.g. + to cat strings...
 		May need to use another construct - do typing checking on $var, if string, do string operations
 		Support concat(+), trim(-), 
 		replace		=$var/search/replace/
@@ -1289,6 +1292,10 @@ x 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no" - targ
 
 o	when *TIMESTAMP is set, set user var timestamp_now (or better name)	
 		Need time math functions				
+
+o	Add fuzzy comparison ~=  to if statement
+		$total ~= 100
+		Set ~= range with directive
 		
 o	implement "case" statement - Peter Fang
 

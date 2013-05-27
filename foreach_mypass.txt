@@ -1,0 +1,48 @@
+#!/usr/bin/env expect-lite
+# make this puppy run
+
+# How to use this expect-lite file, Lines that begin with:
+#   '>' send to remote host, implies "wait for prompt"
+#   '<' _MUST_ be received from the remote host, or this config script will fail
+#   # are comment lines, and have no effect
+#   ; are printable (in stdout) comments, and have no other effect
+#   @ change the expect timeout value
+#   ! Embedded Expect commands
+#   ? If statement, use format ?cond?action::else_action
+# For more info see: http://expect-lite.sf.net/
+
+
+@3
+
+$mypass=mypass
+
+; === Create the pass file using bash "here doc"
+>cat > $mypass <<'+++'
+>joe,1234
+>jane,5678
+>fred,abc!
+>+++
+; === now look at the file
+>cat $mypass
+
+
+; === read password file into variable
+>cat $mypass | tr '\n' ' '
+# don't capture prompt at end of line
++$myfile=\n(.+)\$ $
+
+; === tease apart password file
+[ $tuple=$myfile
+	;;purple tuple is:$tuple
+	# do string math
+	$name=$tuple
+	=$name/(\w+),.*/\1/
+	$pass=$tuple
+	=$pass/.*,(\w+)/\1/
+	;; === show name and pass: $name $pass
+	>echo $name $pass
+]
+>
+#*SHOW VARS
+>rm $mypass
+>

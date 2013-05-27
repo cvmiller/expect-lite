@@ -6,9 +6,9 @@
 .\" Updated Man Page for expect-lite - version 4.3.0	3/25/2012
 .\" Updated Man Page for expect-lite - version 4.4.0	12/16/2012
 .\" Updated Man Page for expect-lite - version 4.5.0	2/18/2013
-.\" Updated Man Page for expect-lite - version 4.6.0	4/10/2013
+.\" Updated Man Page for expect-lite - version 4.6.0	5/25/2013
 .\"
-.TH EXPECT-LITE "1" "April 2013" "expect-lite version 4.6.0" "User Commands"
+.TH EXPECT-LITE "1" "May 2013" "expect-lite version 4.6.0" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -83,7 +83,7 @@ NOT expect, if string/regex IS received from the remote host the script will FAI
 used to indicate comment lines, and have no effect
 .TP
 ;
-are also used to indicate comment lines, but are printed to stdout \(for logging\)
+are also used to indicate comment lines, but are printed to stdout (for logging)
 .TP
 ;<colour> comment
 add custom colour comment lines, colour may be blue, ltblue, gray, ltgray, cyan, black, pink, purple, red, green, yellow
@@ -114,7 +114,7 @@ decrement value of $var by 1 decimal
 math functions, perform bitwise and arithmetic operations:  << >> & | ^ * / % + - (see math functions)
 .TP
 =$str
-string math functions, if $str is a string, perform string operations: //search/replace/ + - (see string math functions)
+string math functions, if $str is a string, perform string operations: //search/replace/ + - (see string math functions in documentation)
 .TP
 !
 indicates an embedded expect line 
@@ -148,7 +148,7 @@ While Loop, using code blocks e.g.
 ]
 .RE
 .IP
-Foreach Loop, using code blocks, each iteration $item is assigned the next item in the list e.g.
+Foreach Loop, using code blocks, each iteration $item is assigned the next item in the list. List \fBmust\fR be space delimited e.g.
 .br
 .RS 10
 $thelist=ab cd ef
