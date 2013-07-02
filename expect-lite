@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.0"
+	variable version "4.6.1d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3880,7 +3880,9 @@ namespace eval expectlite {
 									set match_val ""
 								}
 								# remove newlines from capture value
-								regsub -all {[\n\r]+} $capture_val "" capture_val
+								# add spaces to make foreach lists easier
+								regsub -all {[\n\r]+} $capture_val " " capture_val
+								
 								if { $DEBUG } {
 									cputs "\nvar_found<<$capture_val>>" $_el_debug_color
 									cputs "\nvar_in<<$expect_out(buffer)>>" $_el_debug_color
@@ -4196,9 +4198,12 @@ namespace eval expectlite {
 							# create foreach list
 							set line_meta $_el(line_meta)
 							if { [info exists _foreach($line_meta,$user_var)] == 0 } {
+								# clean up white space
+								regsub -all {[ ]+} $_cond_arg2 " " _cond_arg2
 								set _foreach_list [split $_cond_arg2]
 								# add extra item to allow last user item to be executed
 								if {$INFO} {
+									regsub -all {[ ]+} $_conditional " " _conditional
 									cputs "\nForeach:$_conditional" $_el_info_color
 								};#if INFO
 

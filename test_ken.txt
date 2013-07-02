@@ -1,10 +1,26 @@
 #!/usr/bin/env expect-lite
 # make this puppy run
 
+; === set expect buffer big
+!match_max -d 1000
 @3
-$dummy_var=this is just to show a var
+$dummy_var=this   is just to   show a var abcdefghijklmnopqrstuvwxyz
 $joe=dude
 $user=admin
+
+
+; === simple foreach
+[ $x=$dummy_var
+	>echo $x
+]
+
+
+
+
+*INTERACT
+>
+*TERM
+
 
 # fail script
 #*~self_test_fail_script.txt
@@ -12,6 +28,32 @@ $user=admin
 >echo "hello ken"\
 <ken
 >
+>echo "$dummy_var"
++$var=\n(.+)
+>
+>echo "$dummy_var"
++$var=\n((\w+ )+)
+>
+; === look for longer text
+$prompt=$ 
+>cat /etc/passwd 
++$regList=\n((.|\n|\r)*)\$ 
+>
+
+; === look multiple captures
+$prompt=$ 
+>cat /etc/passwd 
++$var1=\n(www-data.*$)
++$var2=\n(avahi.*$)
+>
+
+
+
+*INTERACT
+>
+
+
+*TERM
 
 $x=1 
 $y=2 

@@ -1258,11 +1258,32 @@ Released 21 Dec 2010 - 4.0.2
 26 May 2013 - 4.6.0 - Released
 
 
+1 July 2013 - 4.6.1d1
+	Normalized list variables in foreach (strip out extra spaces)
+
+
 
 
 ------------ Future Versions --------------------------
 		
 Future
+
+
+o	Fix large variable captures
+		Use expect pre-defined action: full_buffer
+		Look at Chapter 18 (pg 407) for how to handle full buffers
+	Fix Var Capture DEBUG - reporting wrong buffer
+	Easy fix, change expect buffer size for just single script
+		; === set expect buffer big
+		!match_max -d 1000
+
+
+x	Normalize list variables in foreach logic (strip out extra spaces)
+
+o	Add fuzzy comparison ~=  to if statement
+		$total ~= 100
+		Set ~= range with directive
+		
 
 x	use Math function to do string operations e.g. + to cat strings...
 		May need to use another construct - do typing checking on $var, if string, do string operations
@@ -1293,13 +1314,9 @@ x 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no" - targ
 o	when *TIMESTAMP is set, set user var timestamp_now (or better name)	
 		Need time math functions				
 
-o	Add fuzzy comparison ~=  to if statement
-		$total ~= 100
-		Set ~= range with directive
-		
 o	implement "case" statement - Peter Fang
 
-o	Look at improving ^\ when in an expect long time out period (and no prompt)
+o	Look at improving ^\ when in an expect long time out period (and no prompt) - looks OK in 4.6.0
 
 x	list processing - foreach loop [ $x=item1 item2 item3		 ] - target 4.6.0
 		Requested by Tao
