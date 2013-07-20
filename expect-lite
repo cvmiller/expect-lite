@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.1d1"
+	variable version "4.6.1d6"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -751,6 +751,8 @@ namespace eval expectlite {
 								}
 								# end while
 						}
+						# remove extraneous end of lines (paste into putty from windows)
+						regsub {\n|\r|\r\n} $cli_list "" cli_list
 						#end if os_id
 						# clear line of pasted text
 						send_user "                                                                      \r"
@@ -1623,14 +1625,15 @@ namespace eval expectlite {
 			# handle real remote host invocation of shell
 			protected_send "$remote_shell$_el_eols"
 
-		}
-		# wait for echo to appear when starting a shell
-		if { $remote_shell != "" } {
-			expect {
-				-re ".+\[%>#$\] $remote_shell.+" { if {$DEBUG} { cputs "DEBUG: Starting Shell: $remote_shell\n" $_el_debug_color} }
-				timeout { if {$DEBUG} { puts "DEBUG: Unable to detect Shell Start\n"  $_el_debug_color} }
+			# wait for echo to appear when starting a shell
+			if { $remote_shell != "" } {
+				expect {
+					-re ".+\[%>#$\] $remote_shell.+" { if {$DEBUG} { cputs "DEBUG: Starting Shell: $remote_shell\n" $_el_debug_color} }
+					timeout { if {$DEBUG} { cputs "DEBUG: Unable to detect Shell Start\n"  $_el_debug_color} }
+				}
 			}
 		}
+
 		# attempt to detect shell by prompt
 		protected_send "$_el_eols"
 		expect -re {([%>#$]) $} {
@@ -2208,7 +2211,7 @@ namespace eval expectlite {
 	proc parse_var { var sep } {
 		# parses the string passed, separating out the Vars and passing them to resolve_var_sub to be resolved
 		# List of Chars which define the end of a Var
-		set sep_list { ! @ # % * / { } \\ ( ) . [ ] = ? \" : - , | }
+		set sep_list { ! @ # % & * / { } \\ ( ) . [ ] = ? \" : - , | }
 		#puts "v>$var|s>$sep"
 		set resolved_line ""
 
@@ -4057,7 +4060,8 @@ namespace eval expectlite {
 										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
 									}
 								{[-]}	{ # subtract or remove e.g. - string
-
+										# remove leading white space
+										regsub {([-])[ ]+(.+)} $_el_parse_list {\1\2} _el_parse_list
 										#reparse parse_list
 										set _el_predicate [join $_el_parse_list " "]
 										set _el_parse_list [split $_el_predicate "-"]
@@ -4065,7 +4069,7 @@ namespace eval expectlite {
 										set _el_parse_list [lreplace $_el_parse_list 0 0]
 										# create replace_map
 										set replacelist [list $_el_parse_list {} ]
-										#puts "===strmath5==>$replacelist#$_el_parse_list#"
+										#puts "===strmath5==>$_el_predicate#$_el_parse_list#"
 										if { [catch { set user_namespace($var) [string map $replacelist $user_namespace($var) ]} error]} {
 											set show_error 5
 										}
@@ -4200,13 +4204,14 @@ namespace eval expectlite {
 							if { [info exists _foreach($line_meta,$user_var)] == 0 } {
 								# clean up white space
 								regsub -all {[ ]+} $_cond_arg2 " " _cond_arg2
+								set _cond_arg2 [string trimleft $_cond_arg2 ]
+								set _cond_arg2 [string trimright $_cond_arg2 ]
+								
 								set _foreach_list [split $_cond_arg2]
-								# add extra item to allow last user item to be executed
 								if {$INFO} {
-									regsub -all {[ ]+} $_conditional " " _conditional
-									cputs "\nForeach:$_conditional" $_el_info_color
+									cputs "\nForeach: $_cond_arg1=$_cond_arg2" $_el_info_color
 								};#if INFO
-
+								# add extra item to allow last user item to be executed
 								lappend _foreach_list "END"
 							} else {
 								# restore list - hashed based on meta line and var name
@@ -4388,13 +4393,15 @@ namespace eval expectlite {
 					# set fail_script up for success
 					set _el(success) 1
 
-
 					# Make Recursive Call
 					# read in cmd_file (fail script) to buffer
 					set buf_stack [_el_buffer $include_path_file]
 					_el_script_exec "" $buf_stack
 					# pop _el_buf(stack)
+					_el_buffer_stack_clear $buf_stack
 					incr buf_stack -1
+					# sync with global value, for INTERACT/IDE
+					set _el_buf(stack) $buf_stack
 					
 					# special short cut to allow main script to continue
 					if { [info exists _el(continue)] == 1 } {
@@ -4515,7 +4522,6 @@ namespace eval expectlite {
 			ssh_key	{connect_ssh_key_host $remote_host }
 			none		{_el_connect_localhost $remote_host }
 		}
-
 
 		# initialize remote_host_init, fork session
 		session_init $cmd_file_ptr

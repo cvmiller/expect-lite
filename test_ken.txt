@@ -4,7 +4,7 @@
 ; === set expect buffer big
 !match_max -d 1000
 @3
-$dummy_var=this   is just to   show a var abcdefghijklmnopqrstuvwxyz
+$dummy_var= this   is just to   show a var abcdefghijklmnopqrstuvwxyz
 $joe=dude
 $user=admin
 
@@ -13,9 +13,15 @@ $user=admin
 [ $x=$dummy_var
 	>echo $x
 ]
+*~fail.inc
 
-
-
+>echo "hello&$user&there"
+>echo '$user'
+<bob
+>
+?if $FAIL == 1? ;purple --- detected failure
+>echo hello
+>
 
 *INTERACT
 >
