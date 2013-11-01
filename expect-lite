@@ -1142,7 +1142,7 @@ namespace eval expectlite {
 					# no optargval, set to a sane value
 					set optargval "--"
 				}
-				puts "=====>$x|$optarg|$optargval|"
+				#puts "=====>$x|$optarg|$optargval|"
 				#cli-based directives (in form *DIRECTIVE)
 				if [ regexp {\*[A-Z_]+} $optarg] {
 
@@ -1150,7 +1150,7 @@ namespace eval expectlite {
 					set chk_word ""
 					#regsub {[a-zA-Z./]+} $optargval {} chk_word
 					regsub {(^[-*]|[^*=]+)} $optargval {} chk_word
-					puts "===>got $optarg|$optargval|$el_log_ext|$chk_word|"
+					#puts "===>got $optarg|$optargval|$el_log_ext|$chk_word|"
 					
 					if { [string length $chk_word] != 0 } {
 						# just *LOG on the cli
