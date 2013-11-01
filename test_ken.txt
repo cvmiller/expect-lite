@@ -6,24 +6,27 @@
 @3
 $dummy_var= this   is just to   show a var abcdefghijklmnopqrstuvwxyz
 $joe=dude
-$user=admin
+$user=bob
+*#LOGAPPEND
+*TIMESTAMP
 
-
-; === simple foreach
-[ $x=$dummy_var
-	>echo $x
-]
-*~fail.inc
+*NOINFO
+*NODEBUG
+#; === simple foreach
+#[ $x=$dummy_var
+#	>echo $x
+#]
+#*~fail.inc
 
 >echo "hello&$user&there"
->echo '$user'
+>echo $user
 <bob
 >
 ?if $FAIL == 1? ;purple --- detected failure
 >echo hello
 >
 
-*INTERACT
+#*INTERACT
 >
 *TERM
 

@@ -28,6 +28,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -1423,7 +1424,9 @@ Nesting of while loops are also supported:<br>
       <br>
 Code blocks also support foreach loops, where a loop will iterate of a
 known number of items. Each iteration, the variable will be set to the
-next item in the list. Items in a list must be separated by spaces. Use
+next item in the list. Items in a list must be separated by spaces. As
+of version 4.6.1, the list variable will be normalized (extra spaces
+removed) before executing the loop. Use
 string math functions to create a list of items separated by spaces.<br>
       <br>
 In the following example, a list of network connected devices are named
@@ -1431,7 +1434,7 @@ after planets. The variable $planet will be set to mercury, then ping
 it. Next time through the loop, $planet will be set to venus, then ping
 it, and so on. After the last item, neptune, the loop will complete and
 the script will continue after the bottom of the code block.<br>
-      <pre>; === foreach loop<br>[ $planet=mercury venus earth mars jupiter saturn uranus neptune<br>	&gt;ping -c1 $planet<br>]<br></pre>
+      <pre>; === foreach loop<br>[ $planet=mercury venus earth mars jupiter  saturn  uranus     neptune<br>	&gt;ping -c1 $planet<br>]<br></pre>
 Of course, foreach loops can be nested with other foreach loops, or while loops.<br>
       <br>
 Infinite loop protection applies both the "jump-to-label" method as
@@ -1953,11 +1956,14 @@ from 'uname -a' command<br>
       <pre>&gt;uname -a<br>+$host=Linux ([a-z\-0-9]+)<br>Assigned Var:host=remote-host-008<br>&gt;<br></pre>
 Assigning multiple dynamic variables using regex to capture environment
 variables $HOME and $SHELL, while expecting $TERM=xterm<br>
-      <pre>&gt;env | sort<br>+$home=\nHOME=([a-z/]+)<br>+$shell=\nSHELL=([a-z/]+)<br>&lt;TERM=xterm<br>Assigned Var:home=/home/joe<br>Assigned Var:shell=/bin/bash<br>&gt;<br></pre><span style="font-weight: bold;">Manage multiple screen terminals</span><br>
-Manage multiple Screen commands with a dynamic variable and regex
-capture<br>
-      <pre># show the last screen in the list <br>&gt;screen -list | grep pts | sort | tail -1<br># regex capture to dynamically assign the result to var $myscreen<br>+$myscreen=([0-9]+\.pts.[0-9]+.[a-z\- 0-9]+)<br># connect to $myscreen<br>&gt; screen -r $myscreen<br># inside existing screen, kick it to get a prompt<br>&gt;&gt;^M<br>&gt; sleep 3<br>&gt; ls<br>&gt;<br>&gt;&gt;^A<br>&gt;&gt;^D<br>&lt;detached<br>&gt;<br></pre><span style="font-weight: bold;">Allowing multiple responses with RegEx</span><br>
-Using Regex in expect-lite to allow multiple responses<br>
+      <pre>&gt;env | sort<br>+$home=\nHOME=([a-z/]+)<br>+$shell=\nSHELL=([a-z/]+)<br>&lt;TERM=xterm<br>Assigned Var:home=/home/joe<br>Assigned Var:shell=/bin/bash<br>&gt;<br></pre>Assigning
+a dynamic variable to a list of items (or multiple lines). The value of
+the dynamic variable will be a space delimited list (replacing end of
+lines with spaces):<br>
+      <pre>#prompt is $ and space after $<br>$prompt=$ <br>&gt;env | sort<br>$env_list=((.|\n|\r)*)$prompt<br></pre>
+      <span style="font-weight: bold;"><br>
+      </span><span style="font-weight: bold;">Allowing multiple responses with RegEx</span><br>
+Using regex in expect-lite to expect <span style="text-decoration: underline;">users</span> OR <span style="text-decoration: underline;">wheel</span><br>
       <pre>&gt;id<br># allow either groups users or wheel<br>&lt;(users|wheel)<br></pre>
       <a name="temp_file_example"></a><span style="font-weight: bold;">Use of bash-here-doc to create temp file</span><br>
 Create a
@@ -2157,13 +2163,22 @@ Buffer<br>
       </h3>
 Expect by default places strings that are sent back (from the remote
 host) into an expect buffer ($expect_out(buffer)). Expect-lite
-leverages this built in function, and uses it to perform multiple
+leverages this built-in function, and uses it to perform multiple
 searches through the buffer when using the '&lt;' , '+&lt;' or
 '-&lt;'
 actions. The actions '&gt;' and '&gt;&gt;' will clear
 expect buffer to
 prevent spurious matches.<br>
       <br>
+The default size of the expect_out(buffer) is 10000 bytes. This has
+been selected as a compromise between performance (larger buffer slows
+down searches), and large enough for most users. If searches (using
+'&lt;' , '+&lt;' or
+'-&lt;') or dynamic variable captures are being truncated, it may be
+required to increase the size of the expect_out(buffer) size. <span style="font-style: italic;">Caution</span>: This should only be a last resort (as it will impact performance). Place the following near the top of the script.<br>
+      <pre>; === set expect buffer big<br>!match_max -d 20000<br></pre>
+      <br>
+
       <h3><a name="delay_wait_for_host"></a>Timing
 is everything:
 delay_wait_for_host</h3>
@@ -2270,7 +2285,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">28 May 2013<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">23 July 2013<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
@@ -2280,7 +2295,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.6.0 and above</span><br style="font-style: italic;">
+document for version 4.6.1 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

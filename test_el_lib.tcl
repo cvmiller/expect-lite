@@ -17,7 +17,7 @@ puts "el_lib loaded"
 #	_el_init_library <cli init string>
 #	Loads libexpect, initializes el global variables, spawns bash session
 #
-expectlite::_el_init_library "*EXP_INFO IP=10.5.5.5 *DEBUG"
+expectlite::_el_init_library "*EXP_INFO IP=10.5.5.5 "
 puts "el_lib initialized"
 
 
@@ -90,6 +90,7 @@ exit 0
 
 ########## Embedded EL Scrtpt ###############
 ; === start script $IP
+
 @2
 *TIMESTAMP ISO
 $IP=2001::DEAD

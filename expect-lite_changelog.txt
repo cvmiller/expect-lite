@@ -1267,6 +1267,7 @@ Released 21 Dec 2010 - 4.0.2
 
 4 July 2013 - 4.6.1d3
 	Improved login prompt detection with EL_CONNECTION_METHOD=none
+		no more 5 second delay
 	
 5 July 2013 - 4.6.1d4
 	Fixed leading space on list variable (was itterating on space)
@@ -1280,25 +1281,38 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed fail script & INTERACT/IDE - showing wrong script
 
 
+21 July 2013 - 4.6.1 - Released
 
+
+31 October 2013 - 4.6.2d2
+	Added env var EL_SHELL for shell to start when connect_method=none
+	Fixed *LOGAPPEND with no file name (now it appends to default name)
+	Fixed *TIMESTAMP to print to *LOG file
+	Fixed CLI directives *INFO, *WARN, *EXP_INFO, *DEBUG to override script values
+	Fixed CLI processing to not overwrite *LOG when using -h (help)
+	
+	
 
 ------------ Future Versions --------------------------
 		
 Future
 
+o 	BUG: Documentation - Tao example is missing PLUS $env_list=((.|\n|\r)*)$prompt
 
-x	Fix large variable captures
-		Use expect pre-defined action: full_buffer
-		Look at Chapter 18 (pg 407) for how to handle full buffers
-	Fix Var Capture DEBUG - reporting wrong buffer
-	Easy fix, change expect buffer size for just single script
-		; === set expect buffer big
-		!match_max -d 1000
-	o Document
-	
+x	BUG: using *LOG in library mode results in _el_exec returning FAIL
+		Actually this is the way it should work
+
+o	BUG: using *LOG with -h will overwrite log file
+
+o	Add Env Variable to allow telnet/ssh on custom Port - EL_REMOTE_PORT=8080
+	Feature request by Jeff Dean jhdean@mac.com
 
 o	Var does NOT dereference when in single quotes, e.g. '$var'
 		Should this be fixed? Are people using this _feature_?
+
+o	Add *NOINCLUDE directive to skip include files
+		This would replace library_mode no_include, so that future library could use includes
+		
 
 x	Normalize list variables in foreach logic (strip out extra spaces)
 
@@ -1308,7 +1322,12 @@ o	Add fuzzy comparison ~=  to if statement
 		$total ~= 100
 			or
 		$total ~10= 100
-		
+
+o	Add range checking
+	?if 10 < $x < 15? >do something
+	?if 20 > $y >= 10?
+		use: if { (8 < $x) && ($x < 14) } 
+	or ?if $x == 10 +- 5 ?
 
 x	use Math function to do string operations e.g. + to cat strings...
 		May need to use another construct - do typing checking on $var, if string, do string operations
@@ -1348,6 +1367,15 @@ x	list processing - foreach loop [ $x=item1 item2 item3		 ] - target 4.6.0
 		x placed into 2expect for 4.6.0
 		x paste foreach - only runs once, no loop
 
+x	Fix large variable captures
+		Use expect pre-defined action: full_buffer
+		Look at Chapter 18 (pg 407) for how to handle full buffers
+	Fix Var Capture DEBUG - reporting wrong buffer
+	Easy fix, change expect buffer size for just single script
+		; === set expect buffer big
+		!match_max -d 1000
+	x Document
+	
 x	Add code block for if-else statement - in 4.5.0
 		if [
 		]::[
@@ -1423,12 +1451,16 @@ o	Add Conditional if, used right after > command. Eliminates need to capture var
 	
 k	Blog: describe "how I test" with loopback
 		run ./install -c to set this up
-		
+	
+k	Updated code blocks - else, foreach
+	
 b	Logging (once 4.4.0 is out)
 
-b	Else Block (dog bone)
+b	sleeping - no native sleep
 
-b	foreach - capturing lines of text
+k	Else Block (dog bone)
+
+k	foreach - capturing lines of text
 
 k	Quoting - or lack there of
 

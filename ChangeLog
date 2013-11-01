@@ -1,6 +1,13 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 23 July 2013 v4.6.1 (foreach release)
+	Updated foreach to normalize lists (removing extra spaces) when executing loop
+	Improved login prompt detection with EL_CONNECTION_METHOD=none
+		Removed unessecary 5 second delay
+	Added code to remove of \r\n from *INTERACT pasted text
+		This is to improve windows copy/paste into putty
+	
 Released 28 May 2013 v4.6.0 (foreach release)
 	Added foreach loop using code blocks
 		e.g.  $list=abc def ghi
