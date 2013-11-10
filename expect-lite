@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.2d2"
+	variable version "4.6.2d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -178,6 +178,10 @@ namespace eval expectlite {
 
 		# clear NOINTERACT flag 0=allow interact, >0 skip interact
 		variable NOINTERACT 0
+
+		# clear NOINCLUDE flag 0=allow include files, >0 skip include files
+		# this is backward compatibility option for 4.1 library behaviour
+		variable NOINCLUDE 0
 
 		# clear LOG flag 0=no log, 1 logging
 		variable LOG 0
@@ -940,6 +944,9 @@ namespace eval expectlite {
 
 		# set el library mode
 		set ::EL_LIBRARY 1
+		# ignore *INTERACT directive
+		set expectlite::NOINTERACT 10
+
 
 		# Read arguments to el_lib and call el_read_args
 		# count words on cli_str
@@ -1077,7 +1084,7 @@ namespace eval expectlite {
 				# Check that last parameter is command file name
 				# script name cannot have '=', which would be interpretted as a constant
 				if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
-					if { [regexp "$el_log_ext" $optarg] == 0 } {
+					if { [regexp "$el_log_ext$" $optarg] == 0 } {
 						#puts ">>>$optarg>>>$optargval"
 						set cmd_file $optarg
 						set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file]
@@ -1638,7 +1645,6 @@ namespace eval expectlite {
 		global spawn_id timeout expect_out
 		upvar expectlite::remote_host			remote_host
 		upvar expectlite::remote_shell			remote_shell
-#		upvar expectlite::PROMPT				PROMPT
 		upvar expectlite::DEBUG					DEBUG
 		upvar expectlite::_el_timeout			_el_timeout
 		upvar expectlite::connect_method		connect_method
@@ -2798,6 +2804,7 @@ namespace eval expectlite {
 		upvar expectlite::_el					_el
 		upvar expectlite::TIMESTAMP 			TIMESTAMP
 		upvar expectlite::NOINTERACT			NOINTERACT
+		upvar expectlite::NOINCLUDE				NOINCLUDE
 		upvar expectlite::LOG					LOG
 		upvar expectlite::arg0					arg0
 		upvar expectlite::cli_namespace			cli_namespace
@@ -2983,12 +2990,10 @@ namespace eval expectlite {
 			"\\*INTERACT"	{	# place into expect interact mode
 				# Skip interact if in Library mode
 				# Jump to interact
-				if { [info exist ::EL_LIBRARY] == 0 } {
-					if { $NOINTERACT == 0 } {
-						cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-						instant_interact_sig
-					}
-				} else {
+				if { $NOINTERACT == 0 } {
+					cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+					instant_interact_sig
+				} elseif {$NOINTERACT > 0} {
 					cputs "\nSkipping expect-lite directive: $g_dir_str " $_el_info_color
 				}
 			}
@@ -3027,6 +3032,10 @@ namespace eval expectlite {
 			"\\*NOINTERACT"	{	# Never stop at *INTERACT (good for regression)
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				incr NOINTERACT
+			}
+			"\\*NOINCLUDE"	{	# Do not include files -- backward compatiblity with 4.1 behaviour
+				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				incr NOINCLUDE
 			}
 		}
 		# end switch glob
@@ -3149,6 +3158,7 @@ namespace eval expectlite {
 		upvar expectlite::EXP_INFO					EXP_INFO
 		upvar expectlite::_el_current_session		_el_current_session
 		upvar expectlite::NOFAIL					NOFAIL
+		upvar expectlite::NOINCLUDE					NOINCLUDE
 		upvar expectlite::TIMESTAMP 				TIMESTAMP
 
 
@@ -3835,30 +3845,33 @@ namespace eval expectlite {
 
 						print_comment_line
 
+							
 						set _include_file [_el_strip_char $_el(line) $_include]
 						#puts "==========> $_include_file"
-						
+
 						# set up passed values
 						set _var_value [split $_include_file " "]
 						set _include_file_str $_include_file
 						# get only the first word as include file
 						set _include_file [lindex [split $_include_file " " ] 0]
-						
-						# don't include file if name is set to __NO_STRING_CAPTURED__ (which is a blank dynamic/capture variable)
-						if { $_include_file != "__NO_STRING_CAPTURED__" } {
-							# absolute path to include file?
-							set _slash "/"
-							if { [string index $_include_file 0] == $_slash} {
-								set include_path_file "$_include_file"
-							} else {
-								set include_path_file "[parse_cmd_file_path $_el(cmd_file)]$_include_file"
-							}
-							#puts "->$include_path_file"
-							if {$INFO} {
-								cputs "\nIncluding: $_include_file_str\n" $_el_info_color
-							}
-							# Make Recursive Call in stand alone mode
-							if { [info exist ::EL_LIBRARY] != 1 } {
+
+						# This was 4.1 EL_LIBRARY behavior
+						if { $NOINCLUDE == 0 } {
+							# don't include file if name is set to __NO_STRING_CAPTURED__ (which is a blank dynamic/capture variable)
+							if { $_include_file != "__NO_STRING_CAPTURED__" } {
+								# absolute path to include file?
+								set _slash "/"
+								if { [string index $_include_file 0] == $_slash} {
+									set include_path_file "$_include_file"
+								} else {
+									set include_path_file "[parse_cmd_file_path $_el(cmd_file)]$_include_file"
+								}
+								#puts "->$include_path_file"
+								if {$INFO} {
+									cputs "\nIncluding: $_include_file_str\n" $_el_info_color
+								}
+								# Make Recursive Call in stand alone mode
+
 								# parse passed constants on include line
 								set _pass_var_values [ _el_parse_var_value $_var_value ]
 								#puts "==========> $_pass_var_values"
@@ -3868,11 +3881,11 @@ namespace eval expectlite {
 
 								# read in cmd_file to buffer
  								set buf_stack [_el_buffer $include_path_file]
-								
+
 								# preserve test_failed going into include file
 								set _preserve_test_result $_el(test_failed)
 								set _el(test_failed) 0
-								
+
 								set result [_el_script_exec "" $buf_stack]
 								# don't report false include failure, set test_failed
 								switch -- $result {
@@ -3884,7 +3897,7 @@ namespace eval expectlite {
 										set _el(success) 0
 										# no need to restore, it failed
 										set _el(test_failed) 1
-										
+
 										cputs "\n##Include Result: FAILED: $include_path_file\n" $_el_err_color
 										}
 									2 { # fail right now!
@@ -3899,10 +3912,10 @@ namespace eval expectlite {
 								set _el_buf(stack) $buf_stack
 								# restore constants
 								_el_restore_const $_keep_var_values
-								
-							} else {
-								cputs "\nWarning: Skipping include file:$_include_file\n" $_el_warn_color
-							}
+							}; # if include file not __NO_STRING_CAPTURED__
+						} else {
+							cputs "\nWarning: *NOINCLUDE: Skipping include file:$_include_file\n" $_el_warn_color
+
 						}; #if
 
 					}

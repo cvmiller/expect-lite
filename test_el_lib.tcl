@@ -51,6 +51,8 @@ expectlite::_el_import_session_ids [array get session]
 #
 #	Import more vars into EL (as constants)
 #
+# don't stop on *INTERACT in script
+
 expectlite::_el_import_const "DUT=mydut *NOFAIL {my=this or that}"
 
 expectlite::_el_import_const "DUT2=thatdut "
@@ -91,16 +93,22 @@ exit 0
 ########## Embedded EL Scrtpt ###############
 ; === start script $IP
 
-@2
+#*NOINCLUDE
 *TIMESTAMP ISO
-$IP=2001::DEAD
-~junk
+$IP=2001:db8::DEAD
+#~junk
+>
+@2
+~tcl_functions.inc
+
 >date
 <20[12][3-9]
 >pwd
-#*FORK
+*NODEBUG
+*FORK
 >
 *NOTIMESTAMP
+*INTERACT
 $count=0
 $max=3
 %GEN_LOOP

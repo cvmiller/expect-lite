@@ -18,6 +18,9 @@ $user=bob
 #]
 #*~fail.inc
 
+
+~tcl_functions.inc
+
 >echo "hello&$user&there"
 >echo $user
 <bob
