@@ -1297,6 +1297,12 @@ Released 21 Dec 2010 - 4.0.2
 		Added *NOINCLUDE to provide backward compatibility for library mode
 	
 
+14 November 2013 - 4.6.2d5
+	Fixed string math functions
+		concat - now spaces are not required e.g. =$var1+$var2
+		search/replace - searching for minus now fixed =$var/-/z/
+	
+
 ------------ Future Versions --------------------------
 		
 Future

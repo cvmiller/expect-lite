@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.2d4"
+	variable version "4.6.2d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -4084,7 +4084,11 @@ namespace eval expectlite {
 								{[+]}	{ # concat e.g. + string
 
 										# pop operator off front
-										set _el_parse_list [lreplace $_el_parse_list 0 0]
+										if { [llength $_el_parse_list ] > 1 } {
+											set _el_parse_list [lreplace $_el_parse_list 0 0]
+										} else {
+											set _el_parse_list [string trimleft $_el_parse_list "+"]
+										}
 										#puts "===strmath2==>$_el_parse_list#"
 										if { [catch { set user_namespace($var)  "$user_namespace($var)$_el_parse_list" } error]} {
 											set show_error 2 
@@ -4116,7 +4120,7 @@ namespace eval expectlite {
 										foreach {search replace} $replacelist {break}
 										
 										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
-										if { [catch { regsub -all $search $user_namespace($var) $replace user_namespace($var)} error]} {
+										if { [catch { regsub -all -- $search $user_namespace($var) $replace user_namespace($var)} error]} {
 											set show_error 4
 										}
 								 	
