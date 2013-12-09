@@ -7,8 +7,9 @@
 .\" Updated Man Page for expect-lite - version 4.4.0	12/16/2012
 .\" Updated Man Page for expect-lite - version 4.5.0	2/18/2013
 .\" Updated Man Page for expect-lite - version 4.6.0	5/25/2013
+.\" Updated Man Page for expect-lite - version 4.6.2	11/17/2013
 .\"
-.TH EXPECT-LITE "1" "May 2013" "expect-lite version 4.6.0" "User Commands"
+.TH EXPECT-LITE "1" "November 2013" "expect-lite version 4.6.2" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -51,7 +52,7 @@ eg. ./expect\-lite \-v r=host\-008 c=pm_alt.elt
 .PP
 user defined help options: \fB\-h\fR|\fB\-\-help\fR
 .IP
-displays user defined help text (demarcated by ;;;) and variables defined in script which can be overriden by constants on the command line
+displays user defined help text (demarcated by ;;;) and variables defined in script which can be overridden by constants on the command line
 .PP
 
 .SH
@@ -204,6 +205,9 @@ Infinite loop protection value, sets N as new value
 .TP
 *EOLS LF|*EOLS CRLF
 Controls end of line sequence sent to remote host, either line feed, or carriage return + line feed.
+.TP
+*NOINCLUDE
+Once set, will ignore all succeding include files (lines starting with ~). This was the default behaviour in Library mode (introduced in v4.1). This behavour is no longer default, and this directive provides a method to previous behavior.
 
 .P
 .SS
@@ -212,7 +216,7 @@ Logging
 Logging encompases two operations: 1) writing script output to a file, 2) controlling additional messages, such as info, exp_info and warnings. All logging commands when used on the CLI will override those inside the script
 .TP
 *LOG|*NOLOG
-Enable/disable logging of standard out and messages to a file. The log file name will be <script_name>.log saved in the script directory.(see Enviroment Variable EL_LOG_EXT below)
+Enable/disable logging of standard out and messages to a file. The log file name will be <script_name>.log saved in the script directory.(see Environment Variable EL_LOG_EXT below)
 .TP
 *LOG <file_name>|*LOGAPPEND <file_name>
 Enable logging to a user specified path/file_name. When invoked on the CLI, the specified file_name must end in ".log" (or as defined by EL_LOG_EXT) to avoid ambiguity 
@@ -233,7 +237,7 @@ Enable/disable debug messages
 Disables color on stdout
 .TP
 *TIMESTAMP <ISO|YMD|DMY|MDY>
-Prints Date and Timestamp for each command sent, ISO is default
+Prints Date and Timestamp for each command sent, ISO is default. Timestamps will be written to log file when *LOG is used.
 .TP
 *NOTIMESTAMP
 Disables timestamp printing
@@ -269,6 +273,9 @@ Name of expect-lite script to run
 .TP
 EL_USER_DIR
 Change to this directory upon login before executing script
+.TP
+EL_SHELL
+Start this shell (default bash) when using EL_CONNECT_METHOD=none
 .TP
 EL_LOG_EXT
 Set the log file name extension string (default=".log") which is appended to the script name when uusing *LOG without file name argument or used to detect a log file name on the command line.

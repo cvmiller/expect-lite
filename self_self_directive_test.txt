@@ -67,6 +67,7 @@ $LOCALHOST=localhost
 
 <expect-lite: ERROR: couldn't open
 
+<Overall Result
 # test over check status
 >echo $?
 <\n1

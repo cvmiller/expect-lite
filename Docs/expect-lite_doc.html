@@ -29,6 +29,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -669,6 +670,12 @@ script. Default is 5000<br>
                 </td>
               </tr>
               <tr>
+                <td style="vertical-align: top;">*NOINCLUDE<br>
+                </td>
+                <td style="vertical-align: top;">Ignore include files (was default behavour in library mode)<br>
+                </td>
+              </tr>
+<tr>
                 <td style="background-color: rgb(204, 204, 204); width: 197px;" align="undefined" valign="undefined"><br>
                 </td>
                 <td style="background-color: rgb(204, 204, 204); width: 289px;" align="undefined" valign="undefined"><span style="color: rgb(0, 0, 0); font-weight: bold;">Logging
@@ -1960,7 +1967,7 @@ variables $HOME and $SHELL, while expecting $TERM=xterm<br>
 a dynamic variable to a list of items (or multiple lines). The value of
 the dynamic variable will be a space delimited list (replacing end of
 lines with spaces):<br>
-      <pre>#prompt is $ and space after $<br>$prompt=$ <br>&gt;env | sort<br>$env_list=((.|\n|\r)*)$prompt<br></pre>
+      <pre>#prompt is $ and space after $<br>$prompt=$ <br>&gt;env | sort<br>+$env_list=((.|\n|\r)*)$prompt<br></pre>
       <span style="font-weight: bold;"><br>
       </span><span style="font-weight: bold;">Allowing multiple responses with RegEx</span><br>
 Using regex in expect-lite to expect <span style="text-decoration: underline;">users</span> OR <span style="text-decoration: underline;">wheel</span><br>
@@ -2285,7 +2292,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">23 July 2013<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">19 November 2013<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
@@ -2295,7 +2302,7 @@ to expect-list-users</a> Discussion List</small><br>
 <br>
 
 <small><span style="font-style: italic;">this
-document for version 4.6.1 and above</span><br style="font-style: italic;">
+document for version 4.6.2 and above</span><br style="font-style: italic;">
 </small>
 <br>
 

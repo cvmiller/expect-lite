@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.2d5"
+	variable version "4.6.2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1185,7 +1185,7 @@ namespace eval expectlite {
 			# assign over riding directives
 			if { $LOG } { set LOG 10 }
 			if { $LOG < 0 } { set LOG -10 }
-			if { $INFO } { set INFO 10 }
+			if { $INFO > 1 } { set INFO 10 }
 			if { $WARN } { set WARN 10 }
 			if { $DEBUG } { set DEBUG 10 }
 			if { $EXP_INFO } { set EXP_INFO 10 }
@@ -2816,7 +2816,7 @@ namespace eval expectlite {
 		switch -glob $g_dir_str {	
 			"\\*INFO"	{	# Turn on INFO logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-				set INFO 1
+				incr INFO
 			}
 			"\\*EXP_INFO"	{	# Turn on Expect INFO logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color

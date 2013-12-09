@@ -1301,6 +1301,14 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed string math functions
 		concat - now spaces are not required e.g. =$var1+$var2
 		search/replace - searching for minus now fixed =$var/-/z/
+
+17 November 2013 - 4.6.2d6
+	Regression test fixes
+		*INFO was being set incorrectly to 10 (overide value)
+
+19 November 2013 - 4.6.2 Released
+
+
 	
 
 ------------ Future Versions --------------------------
@@ -1320,7 +1328,7 @@ o	Add Env Variable to allow telnet/ssh on custom Port - EL_REMOTE_PORT=8080
 o	Var does NOT dereference when in single quotes, e.g. '$var'
 		Should this be fixed? Are people using this _feature_?
 
-o	Add *NOINCLUDE directive to skip include files
+x	Add *NOINCLUDE directive to skip include files
 		This would replace library_mode no_include, so that future library could use includes
 		
 
@@ -1473,6 +1481,8 @@ k	Updated code blocks - else, foreach
 b	Logging (once 4.4.0 is out)
 
 b	sleeping - no native sleep
+
+b	prompts - why simple prompts are useful, why are they important
 
 k	Else Block (dog bone)
 
@@ -1758,5 +1768,19 @@ ActiveTCL Expect problems - unusable
 Cygwin Packages - http://mirror.csclub.uwaterloo.ca/cygwin/release/expect/
 
 
+------------ Building Debian Package --------------------------
+untar package, change directory name to expect-lite-<version>
+dh_make -e cvmiller@gmail.com -f ../expect-lite_4.6.2.tar.gz
+Edit debian/<files>
+	Updaet debian/control with version number
+From source dir
+	dpkg-buildpackage -tc
+
+Check package
+	dpkg -c ../expect-lite_4.6.2-1_all.deb
+	lintian -Iv ../expect-lite_4.6.2-1_all.deb
+	
+Install on different machine to test (6lani)
+	dpkg -i expect-lite_4.6.2-1_all.deb
 
 

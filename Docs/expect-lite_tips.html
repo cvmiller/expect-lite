@@ -1,6 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
 
+
   
   <meta content="text/html; charset=ISO-8859-1">
 
@@ -259,15 +260,13 @@ is a variable named '$max', by adding the following line to the script,
 $max will be dereferenced and displayed:<br>
       <pre>; The value of max is:$max<br></pre>
 The above method works well for a few variables, but it may be
-neccessary to view all the expect-lite variables. In previous versions
+necessary to view all the expect-lite variables. In previous versions
 of expect-lite, a script (show_vars.inc) was required to view all
 variable values. As of version 4.0.x, the expect-lite directive: *SHOW
 VARS now displays variables, values, and any overriding constants.<br>
       <br>
 All variables can now be displayed by using the line:<br>
-      <pre>*SHOW VARS<br></pre>
-The include script is written in embedded expect and will walk the
-array of expect-lite variables, and print their respective values. The
+      <pre>*SHOW VARS<br></pre>The
 output will appear like the following:<br>
       <pre>expect-lite directive: *SHOW VARS <br>DEBUG Info: Printing all expect-lite variables<br>Var:count                 Value:14<br>Var:mac_da10              Value:00:7F:DE:6A:FF:FA     Const:00:30:65:98:e5:4a<br>Var:mac_da11              Value:88:45:3D:2A:95:63<br>Var:mac_da12 Value:38:8B:50:49:AE:0D<br>Var:mac_da13 Value:38:E4:EB:0C:DE:4B<br></pre>
       <br>
@@ -285,7 +284,7 @@ match just about anything, and more than likely not what is intended.<br>
       <br>
 Instead use a more specific '&lt;'. If the expected string is only
 composed of numbers at the beginning of a line, use:<br>
-      <pre>&lt;\n[0-9]+<br></pre>
+      <pre>&lt;\n\d+<br></pre>
 Use with the <a href="#finding_in">--verbose option</a>
 to see what is
 being matched, and to
@@ -377,13 +376,12 @@ repetitive tasks.<br>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">1
-August 2011<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">19 November 2013<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
 <small><span style="font-style: italic;">this
-document for version 4.1.2 or later</span><br style="font-style: italic;">
+document for version 4.6.2 or later</span><br style="font-style: italic;">
 </small>
 <br>
 

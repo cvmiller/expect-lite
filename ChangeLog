@@ -1,6 +1,20 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+
+Released 19 November 2013 v4.6.2
+	Added env var EL_SHELL for shell to start when connect_method=none
+	Fixed *LOGAPPEND with no file name (now it appends to default name)
+	Fixed *TIMESTAMP to print to *LOG file
+	Fixed CLI directives *INFO, *WARN, *EXP_INFO, *DEBUG to override script values
+	Fixed CLI processing to not overwrite *LOG when using -h (help)
+	Removed EL_LIBRARY mode automatically skipping include files
+		Added *NOINCLUDE to provide backward compatibility for library mode
+	Fixed string math functions
+		concat - now spaces are not required e.g. =$var1+$var2
+		search/replace - searching for minus now fixed =$var/-/z/
+
+
 Released 23 July 2013 v4.6.1 (foreach release)
 	Updated foreach to normalize lists (removing extra spaces) when executing loop
 	Improved login prompt detection with EL_CONNECTION_METHOD=none
