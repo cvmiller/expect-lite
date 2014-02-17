@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.2"
+	variable version "4.6.3d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1695,7 +1695,8 @@ namespace eval expectlite {
 			sh -
 			ksh -
 			bash		{ set _prompt "\"\[\\u@\\h:\\w\]\\$ \"" 
-						protected_send "export PS1=$_prompt$_el_eols" 
+						#set _prompt "\'\\$ \'"
+						protected_send "PS1=$_prompt$_el_eols" 
 						expect -re {.+PS1.+} { }
 					}
 			default 	{ switch -glob -- $detected_prompt {
@@ -2254,7 +2255,7 @@ namespace eval expectlite {
 	proc parse_var { var sep } {
 		# parses the string passed, separating out the Vars and passing them to resolve_var_sub to be resolved
 		# List of Chars which define the end of a Var
-		set sep_list { ! @ # % & * / { } \\ ( ) . [ ] = ? \" : - , | }
+		set sep_list { ! @ # % & * / { } \\ ( ) . [ ] = ? \" : - , | < >}
 		#puts "v>$var|s>$sep"
 		set resolved_line ""
 

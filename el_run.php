@@ -18,6 +18,19 @@
 //   Directories are sort at top of list
 //
 
+// Updated 12 Dec 2013 - v0.94
+//   Updated to set ENV variables using PHP
+//   	Set env var COLUMNS to avoid odd colour problem
+//
+
+// Updated 15 Dec 2013 - v0.95
+//   Updated to create a GET only link (used to call directly without post)
+//   	Recorganized, created el_run() function which actually runs the script
+//
+
+
+
+//
 // 
 //	CAUTION: this code is still experimental
 //
@@ -94,6 +107,34 @@ function calc_path($path) {
 	return $el_path;
 }
 
+function el_run($el_app,$el_args,$el_help,$el_path,$cdir) {
+	// encode the el_args properly for putting on a URL
+	$ARGS=urlencode("$el_args");
+ 	echo "You are looking at: <a href=\"el_run.php?el_path=$el_path&el_app=$el_app&el_args=$ARGS&el_get=true\">$el_app</a>   ";
+	echo " <PRE>";
+	// set ENV variables before running expect-lite 
+	putenv("TERM=web");
+	putenv("PATH=/usr/bin:/bin");
+	//putenv("PS1=\'# \'");
+	putenv("COLUMNS=256");
+	if ($el_help == false) {
+		$pipe = popen ("$cdir/$el_app $el_args *NOINTERACT", "r");
+	} else {
+		$pipe = popen ("$cdir/$el_app $el_args -h ", "r");
+	}
+
+	//$pipe = popen ("export TERM=web; $path/expect-lite $path/$el_app $el_args *NOINTERACT", "r");
+	while(!feof($pipe)) {
+		$line = fread($pipe, 1024);
+		echo $line;
+		// show partial output
+		flush();	
+	}
+	pclose($pipe);
+	echo "</PRE>";
+
+}
+
 ?>
   <title>EL runner</title>
  </head>
@@ -111,11 +152,29 @@ function calc_path($path) {
 	 if (isset($_GET["el_app"])) {
  		$el_app=$_GET["el_app"];
 		}
+	 if (isset($_GET["el_args"])) {
+ 		$el_args=$_GET['el_args'];
+		// strip quotes out of args
+		$el_args=str_replace('"',"",$el_args);
+		}
+
 	 if ($_GET["el_path"] != '') {
  		$el_path=$_GET["el_path"];
 		chdir("$path/$el_path");
 		$el_path=calc_path($path);
 		}
+	// run test from a GET link
+	 if (isset($_GET["el_get"])) {
+		$el_app=$_GET["el_app"];
+		$el_args=$_GET["el_args"];
+		$el_path=$_GET["el_path"];
+		//echo getcwd() . "/$el_app $el_args";
+		$cdir=getcwd();
+		$el_help="";
+		// run the script
+		el_run($el_app,$el_args,$el_help,$el_path,$cdir);
+	 
+	 }
  }
  if (!empty($_POST)) {
 	 if ($_POST["el_path"] != '') {
@@ -125,57 +184,50 @@ function calc_path($path) {
 		}
  }
 
- if (empty($_POST)) {
- 	echo "<form action=\"el_run.php\" method=\"POST\">";
-	echo "  Run: <input type=\"text\" name=\"el_app\" value=\"$el_app\" style=\"width: 150px\"/>";
-	echo " <small>with help </small><input type=\"checkbox\" name=\"with_help\" checked=\"checked\" value=\"true\">";
-	echo " args: <input type=\"text\" name=\"el_args\"value=\"$el_args\" style=\"width: 350px\" />";
-	//echo " in Week: <input type=\"text\" name=\"week\" />";
-	echo "  <input type=\"hidden\" name=\"el_path\" value=\"$el_path\" >";
-	echo "  <input type=\"submit\" value=\"Run-It\">";
-	echo " </form> ";
-	echo "<b>Available tests:</b><BR>";
-	$dir_list=read_dir(getcwd(),"dir");
-	show_dir($dir_list,$el_path);
-	$dir_list=read_dir(getcwd(),"elt");
-	show_dir($dir_list,$el_path);
-	}
- else {
-	$el_app=$_POST["el_app"];
-	$el_args=$_POST["el_args"];
-	//echo getcwd() . "/$el_app $el_args";
-	$cdir=getcwd();
+ if (!isset($_GET["el_get"])) {
+	 if (empty($_POST)) {
+ 		echo "<form action=\"el_run.php\" method=\"POST\">";
+		echo "  Run: <input type=\"text\" name=\"el_app\" value=\"$el_app\" style=\"width: 150px\"/>";
+		echo " <small>with help </small><input type=\"checkbox\" name=\"with_help\" checked=\"checked\" value=\"true\">";
+		echo " args: <input type=\"text\" name=\"el_args\"value=\"$el_args\" style=\"width: 350px\" />";
+		//echo " in Week: <input type=\"text\" name=\"week\" />";
+		echo "  <input type=\"hidden\" name=\"el_path\" value=\"$el_path\" >";
+		echo "  <input type=\"submit\" value=\"Run-It\">";
+		echo " </form> ";
+		echo "<b>Available tests:</b><BR>";
+		$dir_list=read_dir(getcwd(),"dir");
+		show_dir($dir_list,$el_path);
+		$dir_list=read_dir(getcwd(),"elt");
+		show_dir($dir_list,$el_path);
+		}
+	 else {
+		$el_app=$_POST["el_app"];
+		$el_args=$_POST["el_args"];
+		//echo getcwd() . "/$el_app $el_args";
+		$cdir=getcwd();
 
- 	echo "You are looking at: $el_app";
-	echo " <PRE>";
-	// show_dir(read_dir($path));
-	if (!isset($_POST["with_help"])) {
-		$pipe = popen ("export TERM=web;export PATH=/usr/bin:/bin;$cdir/$el_app $el_args *NOINTERACT", "r");
-	} else {
-		$pipe = popen ("export TERM=web;export PATH=/usr/bin:/bin;$cdir/$el_app $el_args -h ", "r");
-	}
-	//$pipe = popen ("export TERM=web; $path/expect-lite $path/$el_app $el_args *NOINTERACT", "r");
-	while(!feof($pipe)) {
-		$line = fread($pipe, 1024);
-		echo $line;
-		// show partial output
-		flush();	
-	}
-	pclose($pipe);
-	// show form again without help checkbox checked
-	echo "</PRE>";
+		if (!isset($_POST["with_help"])) {
+			$el_help=false;
+		} else {
+			$el_help=true;
+		}
 
-	echo "<HR />";
- 	echo "<form action=\"el_run.php\" method=\"POST\">";
-	echo "  Run: <input type=\"text\" name=\"el_app\" value=\"$el_app\" style=\"width: 150px\"/>";
-	echo " <small>with help </small><input type=\"checkbox\" name=\"with_help\" value=\"true\">";
-	echo " args: <input type=\"text\" name=\"el_args\"value=\"$el_args\" style=\"width: 350px\" />";
-	//echo " in Week: <input type=\"text\" name=\"week\" />";
-	echo "  <input type=\"hidden\" name=\"el_path\" value=\"$el_path\" >";
-	echo "  <input type=\"submit\" value=\"Run-It\">";
-	echo " </form> ";
+		// run the script
+		el_run($el_app,$el_args,$el_help,$el_path,$cdir);
 
-}
+		// show form again without help checkbox checked
+
+		echo "<HR />";
+ 		echo "<form action=\"el_run.php\" method=\"POST\">";
+		echo "  Run: <input type=\"text\" name=\"el_app\" value=\"$el_app\" style=\"width: 150px\"/>";
+		echo " <small>with help </small><input type=\"checkbox\" name=\"with_help\" value=\"true\">";
+		echo " args: <input type=\"text\" name=\"el_args\"value=\"$el_args\" style=\"width: 350px\" />";
+		//echo " in Week: <input type=\"text\" name=\"week\" />";
+		echo "  <input type=\"hidden\" name=\"el_path\" value=\"$el_path\" >";
+		echo "  <input type=\"submit\" value=\"Run-It\">";
+		echo " </form> ";
+	}
+ }
 ?>
 <HR />
 <i>el-web-runner</i> by Craig Miller &copy; 2013<BR>

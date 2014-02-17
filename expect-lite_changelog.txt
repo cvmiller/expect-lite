@@ -1309,18 +1309,23 @@ Released 21 Dec 2010 - 4.0.2
 19 November 2013 - 4.6.2 Released
 
 
+31 January 2013 - 4.6.3d1
+	Fixed bug in var deref, e.g. $i<4
+		'<' was not parsed as end of var
 	
+
+
+
+
 
 ------------ Future Versions --------------------------
 		
-Future
+Futurer
 
-o 	BUG: Documentation - Tao example is missing PLUS $env_list=((.|\n|\r)*)$prompt
+x	BUG: EL CLI var="item1 item2" - broken
+		seems to work
 
-x	BUG: using *LOG in library mode results in _el_exec returning FAIL
-		Actually this is the way it should work
-
-x	BUG: using *LOG with -h will overwrite log file
+o	Add include_script_name to ESC-V display
 
 o	Add Env Variable to allow telnet/ssh on custom Port - EL_REMOTE_PORT=8080
 	Feature request by Jeff Dean jhdean@mac.com
@@ -1340,6 +1345,12 @@ o	Add fuzzy comparison ~=  to if statement
 		$total ~= 100
 			or
 		$total ~10= 100
+	create tcl function for range checking in expect
+	[5..10] as syntax?
+		+< (range) or
+		~=10
+		~<this or that (30)
+		
 
 o	Add range checking
 	?if 10 < $x < 15? >do something
@@ -1347,12 +1358,25 @@ o	Add range checking
 		use: if { (8 < $x) && ($x < 14) } 
 	or ?if $x == 10 +- 5 ?
 
+# Define Range Check Functions
+!proc compare_fuzz { x value fuzz var_name } {
+!	# A Procedure that checks value is in range and, updates expect-lite variable
+!	# 	returns var_name=1 if in range, 0 if outside of range
+!	set result 1
+!	if { $x > [expr $value + $fuzz] } {set result 0}
+!	if { $x < [expr $value - $fuzz] } {set result 0}
+!	set ::expectlite::user_namespace($var_name) $result
+!}
+
+
+
+
 o	Add Conditional if, used right after > command. Eliminates need to capture var, and use the var in if statement
 	If [text] then - possible format ?if [text]? or ?if text?
 	Idea: Examine expect_out(buffer) when going into if function, use ~ operator to search in
 		Possibly set a pre-defined var with value of expect_out(buffer) e.g. BLOB
 		? word ~ BLOB ?
-		
+	think reactive programming - trigger	
 	
 x	use Math function to do string operations e.g. + to cat strings...
 		May need to use another construct - do typing checking on $var, if string, do string operations
@@ -1381,11 +1405,64 @@ x 	ssh variable connect_ssh_accept_host_key "-o StrictHostKeyChecking=no" - targ
 			if { [catch "spawn $connect_cmd" error] } { ...
 
 o	when *TIMESTAMP is set, set user var timestamp_now (or better name)	
-		Need time math functions				
+		Need time math functions
+		Marktime function into Var
+			@@$var
+		Show time funciton (decode microseconds since epoc to YMD format)
+			Need generic function call method 
+				%name [ block ]?
+							
+
+# Define Additional Functions
+!proc mark_time { var_name } {
+!	# A Procedure that marks current time in milliseconds and, updates expect-lite variable
+!	set time [clock clicks -milliseconds ]
+!	set ::expectlite::user_namespace($var_name) $time
+!}
+
+
+!proc show_time { var_time_ms var_date} {
+!	# A Procedure that converts time from milliseconds and, updates expect-lite variable
+!	set date $::expectlite::user_namespace($var_time_ms)
+!	set ms [expr $date % 1000]
+!	set date [expr int($date / 1000)]
+!	set date_str [clock format $date -format "%Y-%m-%d %H:%M:%S"]
+!	set date_str "$date_str.$ms"
+!	set ::expectlite::user_namespace($var_date) $date_str
+!}
+
+
+# must define this var before using with TCL functions
+$mytime1=0
+$mytime2=0
+$mydate=
+
+!mark_time mytime1
+>pwd
+!mark_time mytime2
+>pwd
+!show_time mytime1 mydate
+# calculate elapsed time
+=$mytime2 - $mytime1
+>
+; == my date is:$mydate and time was:$mytime1
+; == elapsed time is: $mytime2 ms
+>
+
+
+
 
 o	implement "case" statement - Peter Fang
 
 o	Look at improving ^\ when in an expect long time out period (and no prompt) - looks OK in 4.6.0
+
+x 	BUG: Documentation - Tao example is missing PLUS $env_list=((.|\n|\r)*)$prompt
+
+
+x	BUG: using *LOG in library mode results in _el_exec returning FAIL
+		Actually this is the way it should work
+
+x	BUG: using *LOG with -h will overwrite log file
 
 x	list processing - foreach loop [ $x=item1 item2 item3		 ] - target 4.6.0
 		Requested by Tao
@@ -1471,32 +1548,6 @@ o	Add variables to Labels, e.g. %$LOOP
 
 x	Look at SIGPIPE and handle broken pipe better - no longer needed now with *LOG
 
-
-
-k	Blog: describe "how I test" with loopback
-		run ./install -c to set this up
-	
-k	Updated code blocks - else, foreach
-	
-b	Logging (once 4.4.0 is out)
-
-b	sleeping - no native sleep
-
-b	prompts - why simple prompts are useful, why are they important
-
-k	Else Block (dog bone)
-
-k	foreach - capturing lines of text
-
-k	Quoting - or lack there of
-
-k	Embedding Env Vars
-
-k	using el-shell to develop scripts
-
-k	Regex made easy - using \d \w and |
-
-k	Parseing columnar output - e.g. route -n
 
 
 x	Add $var exist to if statement processing (added in 4.1.2)
@@ -1599,11 +1650,48 @@ x	Add deb and rpm to download files
 
 x	Add Env Var validation e.g. connect_method=ssh-key creates BUG!
 
+------------ Blogging --------------------------
+
+k	Blog: describe "how I test" with loopback
+		run ./install -c to set this up
+	
+k	Updated code blocks - else, foreach
+
+b	Include files, and how they are "searched"
+	
+b	Logging (once 4.4.0 is out)
+
+b	sleeping - no native sleep
+
+b	prompts - why simple prompts are useful, why are they important
+
+k	Include files
+
+k	Else Block (dog bone)
+
+k	foreach - capturing lines of text
+
+k	Quoting - or lack there of
+
+k	Embedding Env Vars
+
+k	using el-shell to develop scripts
+
+k	Regex made easy - using \d \w and |
+
+k	Parseing columnar output - e.g. route -n
+
+
 
 ------------ Future Version 5.0 --------------------------
 
 o	Be in INTERACT mode all the time - permit typing at any point
 		Still use ^\ to pause the script
+
+	Idea - call instant_interact_sig proc with drop thru parameter
+		May need to rewrite expect to allow keyboard entry while waiting
+
+		
 
 
 ------------ Future Version 4.0 --------------------------
