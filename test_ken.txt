@@ -1,9 +1,10 @@
 #!/usr/bin/env expect-lite
 # make this puppy run
 
+
 ; === set expect buffer big
 !match_max -d 1000
-@3
+@2
 $dummy_var= this   is just to   show a var abcdefghijklmnopqrstuvwxyz
 $joe=dude
 $user=bob
@@ -16,7 +17,7 @@ $user=bob
 
 >
 
-*TERM
+
 # Define Additional Functions
 !proc mark_time { var_name } {
 !	# A Procedure that marks current time in milliseconds and, updates expect-lite variable
@@ -44,6 +45,28 @@ $user=bob
 !	if { $x < [expr $value - $fuzz] } {set result 0}
 !	set ::expectlite::user_namespace($var_name) $result
 !}
+
+
+# Define Additional Functions
+!proc fuzz_exp { str } {
+!	set fuzz 5
+!	# A Procedure that does a fuzzy expect
+!	regsub "(.*)\((.*)" $str "\1" str_first
+!	regsub "(.*)\)(.*)" $str "\2" str_last
+!	regsub "(.*)\(.*\)(.*)" $str "\2" str_fuzz
+!
+!	# how to create expect line, with text(\d+)more text
+!	# compare captured number to fuzzy range
+!
+!
+!
+!
+!
+
+!	expect  -re $str { return } timeout { puts "\n\tExpect Failed:$str"; _el_fail_test }
+
+!}
+
 
 
 
@@ -77,13 +100,30 @@ $result=now
 ; === show result:$result
 ?if $result == 1? ;green $secs is in first half :: ;red $secs is in second half
 >
->date '+%S'
-<<<15~5
+
+; === test fuzzy expect
+~=5
+
+>MIN=$(date '+%S')
+#>MIN=15
+>echo "this is the $MIN to rise up"
+~<this is the ( 10 ) to rise up
 >
+>
+>echo "bbbb is the $MIN to rise up"
+~<bbbb (is) the ((10)) to rise up
 
+>echo "cccc is the $MIN"
+~<cccc is the (10)
+>
+>echo "eeee is the $MIN to rise up"
+~<eeee (is) the no number to rise up
 
-
-
+>echo "ffff is the 0xbeef to rise up"
+~<ffff is the (0xbeea) to rise up
+>
+>echo "gggg is the $MIN"
+~<(10.5)
 
 
 *INTERACT

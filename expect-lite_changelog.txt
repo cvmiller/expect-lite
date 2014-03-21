@@ -1309,13 +1309,18 @@ Released 21 Dec 2010 - 4.0.2
 19 November 2013 - 4.6.2 Released
 
 
-31 January 2013 - 4.6.3d1
+31 January 2014 - 4.6.3d1
 	Fixed bug in var deref, e.g. $i<4
 		'<' was not parsed as end of var
 	
 
-
-
+20 March 2014 - 4.7.0.d1
+	Started fuzzy number expect ~<	e.g. 
+		>echo "this 50 states"
+		~<this (45) states
+	Fuzzy number expect also supports hexadecimal e.g.
+		>echo "this 0xbeef moos"
+		~<this (0xbeee) moos
 
 
 ------------ Future Versions --------------------------

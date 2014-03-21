@@ -32,8 +32,6 @@
 #
 #
 
-
-
 ##################################################################################
 #	
 #	The user may want to customize the following variables & procs to suite one's needs
@@ -44,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.1d1"
+	variable version "4.7.0d1"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -140,8 +138,7 @@ namespace eval expectlite {
 		variable _el_timeout $::timeout
 
 		#set ::expectlite::the expect Match Buffer really large
-		#match_max -d 10000
-		match_max -d 100
+		match_max -d 10000
 
 		#Create Debug Log output == 1, no log ==0
 		variable DEBUG_LOG 0
@@ -170,6 +167,9 @@ namespace eval expectlite {
 		# initialize the command file name
 		set ::expectlite::_el(cmd_file) ""
 		
+		# initialize the fuzz value - used for fuzzy expect '~<'
+		set ::expectlite::_el(fuzz) 10
+		
 		# debugging aid: turn on to display match string and expect buffer
 		variable DEBUG 0
 
@@ -181,6 +181,10 @@ namespace eval expectlite {
 
 		# clear NOINTERACT flag 0=allow interact, >0 skip interact
 		variable NOINTERACT 0
+
+		# clear NOINCLUDE flag 0=allow include files, >0 skip include files
+		# this is backward compatibility option for 4.1 library behaviour
+		variable NOINCLUDE 0
 
 		# clear LOG flag 0=no log, 1 logging
 		variable LOG 0
@@ -230,6 +234,7 @@ namespace eval expectlite {
 		variable _out_nowait ">>"
 		variable _in "<"
 		variable _in_noregex "<<"
+		variable _in_fuzzy "~<"
 		variable _not_in "-<"
 		variable _timeout "@"
 		variable _exec "!"
@@ -409,7 +414,7 @@ namespace eval expectlite {
 	#	Wraps puts in selected global colour 
 	#	
 	#
-	proc cputs { str  {l_color ""} } {
+	proc cputs { str  {l_color ""} {newline ""}} {
 		upvar expectlite::el_color 					el_color
 		upvar expectlite::_el_info_color			_el_info_color
 		upvar expectlite::_el_warn_color			_el_warn_color
@@ -419,15 +424,24 @@ namespace eval expectlite {
 
 		proc protect_puts { str } {
 			upvar LOG 	LOG
-			# catch stdout errors and quit
-			if { [catch { puts $str } error] } {
-				puts stderr "ERROR:$error"
-				exit 1
+			upvar newline NL
+			
+			if {$NL != "-nonewline"} {			
+				# catch stdout errors and quit
+				if { [catch { puts $str } error] } {
+					puts stderr "ERROR:$error"
+					exit 1
+				}
+				# Log to file
+				if { $LOG } {send_log "$str\n"}
+			} else {
+				# catch stdout errors and quit
+				if { [catch { puts -nonewline $str } error] } {
+					puts stderr "ERROR:$error"
+					exit 1
+				}
+				if { $LOG } {send_log "$str"}
 			}
-			# Log to file
-			if { $LOG } {
-				send_log "$str\n"
-			}			
 		}
 
 
@@ -754,6 +768,8 @@ namespace eval expectlite {
 								}
 								# end while
 						}
+						# remove extraneous end of lines (paste into putty from windows)
+						regsub {\n|\r|\r\n} $cli_list "" cli_list
 						#end if os_id
 						# clear line of pasted text
 						send_user "                                                                      \r"
@@ -932,6 +948,9 @@ namespace eval expectlite {
 
 		# set el library mode
 		set ::EL_LIBRARY 1
+		# ignore *INTERACT directive
+		set expectlite::NOINTERACT 10
+
 
 		# Read arguments to el_lib and call el_read_args
 		# count words on cli_str
@@ -986,6 +1005,7 @@ namespace eval expectlite {
 	#		EL_LOG_EXT
 	#		EL_INFINITE_LOOP
 	#		EL_DELAY_WAIT_FOR_HOST
+	#		EL_SHELL
 	#
 	proc _el_read_args { argc argv } {
 		global env
@@ -997,6 +1017,7 @@ namespace eval expectlite {
 		upvar expectlite::pass					pass
 		upvar expectlite::delay_wait_for_host 	delay_wait_for_host
 		upvar expectlite::_el_infinite_loop 	_el_infinite_loop
+		upvar expectlite::remote_shell 			remote_shell
 		upvar expectlite::cli_namespace			cli_namespace
 		upvar expectlite::timeout_multiplier	timeout_multiplier
 		upvar expectlite::arg0					arg0
@@ -1047,6 +1068,7 @@ namespace eval expectlite {
 
 		if { [info exists env(EL_DELAY_WAIT_FOR_HOST)] } { catch { set delay_wait_for_host $env(EL_DELAY_WAIT_FOR_HOST)} }
 		if { $delay_wait_for_host == "" } { set delay_wait_for_host "100" }
+		if { [info exists env(EL_SHELL)] } { catch { set remote_shell $env(EL_SHELL)} }
 
 		# ensure arg list is separated by spaces - removed in 4.2.0
 # 		set argvstr [ join $argv ]
@@ -1066,10 +1088,12 @@ namespace eval expectlite {
 				# Check that last parameter is command file name
 				# script name cannot have '=', which would be interpretted as a constant
 				if {  [regexp {^[-*]|[=]}  $optarg ] == 0 && [regexp {^[-*]|[=]} $optargval] == 1 } {
-					#puts ">>>$optarg>>>$optargval"
-					set cmd_file $optarg
-					set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file]
-					incr cmd_file_counter
+					if { [regexp "$el_log_ext$" $optarg] == 0 } {
+						#puts ">>>$optarg>>>$optargval"
+						set cmd_file $optarg
+						set cli_namespace($arg0) [parse_cmd_file_nopath  $cmd_file]
+						incr cmd_file_counter
+					}
 				}
 				# look for help & debug options which overide script options
 				# added -r and -c for remote_host & cmd_file respectively
@@ -1119,6 +1143,17 @@ namespace eval expectlite {
 					} 
 
 				}
+			} ; # for loop
+			
+			# walk though CLI options again and check for *DIRECTIVES
+			for { set x  0 } { $x < $argc} { incr x } {
+				set optarg [ lindex $argv $x ]
+				catch {set optargval [ lindex $argv [expr $x + 1]]}
+				if { $optargval == "" } { 
+					# no optargval, set to a sane value
+					set optargval "--"
+				}
+				#puts "=====>$x|$optarg|$optargval|"
 				#cli-based directives (in form *DIRECTIVE)
 				if [ regexp {\*[A-Z_]+} $optarg] {
 
@@ -1139,13 +1174,25 @@ namespace eval expectlite {
 						_el_global_directive "$optarg $optargval"
 						# increment loop to skip optargval
 						incr x
+					} elseif {[string match "*$el_log_ext" $optargval ] == 0} {
+						# check again to see that second item doesn't end in .log
+						# just *LOG on the cli
+						_el_global_directive $optarg 
+					
 					} ; # end if
 						
 				}
 			} ; # for loop
+			
+			
+			
 			# assign over riding directives
 			if { $LOG } { set LOG 10 }
 			if { $LOG < 0 } { set LOG -10 }
+			if { $INFO > 1 } { set INFO 10 }
+			if { $WARN } { set WARN 10 }
+			if { $DEBUG } { set DEBUG 10 }
+			if { $EXP_INFO } { set EXP_INFO 10 }
 
 			#puts "->$remote_host|$cmd_file|$user_dir"
 
@@ -1256,9 +1303,9 @@ namespace eval expectlite {
 			set _include_file [_el_strip_char $line $_include]
 			# get only the first word as include file
 			set _include_file [lindex [split $_include_file " " ] 0]
-			
-			# is include file a variable, skip validation
-			if { [ regexp {^\$} $_include_file ] == 0 } {
+
+			# is include file a variable or fuzzy expect, skip validation
+			if { [ regexp {^\$|^\<|^=[0-9]} $_include_file ] == 0 } {
 				# absolute path to include file?
 				set _slash "/"
 				if { [string index $_include_file 0] == $_slash} {
@@ -1602,7 +1649,6 @@ namespace eval expectlite {
 		global spawn_id timeout expect_out
 		upvar expectlite::remote_host			remote_host
 		upvar expectlite::remote_shell			remote_shell
-#		upvar expectlite::PROMPT				PROMPT
 		upvar expectlite::DEBUG					DEBUG
 		upvar expectlite::_el_timeout			_el_timeout
 		upvar expectlite::connect_method		connect_method
@@ -1626,14 +1672,15 @@ namespace eval expectlite {
 			# handle real remote host invocation of shell
 			protected_send "$remote_shell$_el_eols"
 
-		}
-		# wait for echo to appear when starting a shell
-		if { $remote_shell != "" } {
-			expect {
-				-re ".+\[%>#$\] $remote_shell.+" { if {$DEBUG} { cputs "DEBUG: Starting Shell: $remote_shell\n" $_el_debug_color} }
-				timeout { if {$DEBUG} { puts "DEBUG: Unable to detect Shell Start\n"  $_el_debug_color} }
+			# wait for echo to appear when starting a shell
+			if { $remote_shell != "" } {
+				expect {
+					-re ".+\[%>#$\] $remote_shell.+" { if {$DEBUG} { cputs "DEBUG: Starting Shell: $remote_shell\n" $_el_debug_color} }
+					timeout { if {$DEBUG} { cputs "DEBUG: Unable to detect Shell Start\n"  $_el_debug_color} }
+				}
 			}
 		}
+
 		# attempt to detect shell by prompt
 		protected_send "$_el_eols"
 		expect -re {([%>#$]) $} {
@@ -1652,7 +1699,8 @@ namespace eval expectlite {
 			sh -
 			ksh -
 			bash		{ set _prompt "\"\[\\u@\\h:\\w\]\\$ \"" 
-						protected_send "export PS1=$_prompt$_el_eols" 
+						#set _prompt "\'\\$ \'"
+						protected_send "PS1=$_prompt$_el_eols" 
 						expect -re {.+PS1.+} { }
 					}
 			default 	{ switch -glob -- $detected_prompt {
@@ -2211,7 +2259,7 @@ namespace eval expectlite {
 	proc parse_var { var sep } {
 		# parses the string passed, separating out the Vars and passing them to resolve_var_sub to be resolved
 		# List of Chars which define the end of a Var
-		set sep_list { ! @ # % * / { } \\ ( ) . [ ] = ? \" : - , | }
+		set sep_list { ! @ # % & * / { } \\ ( ) . [ ] = ? \" : - , | < >}
 		#puts "v>$var|s>$sep"
 		set resolved_line ""
 
@@ -2761,17 +2809,19 @@ namespace eval expectlite {
 		upvar expectlite::_el					_el
 		upvar expectlite::TIMESTAMP 			TIMESTAMP
 		upvar expectlite::NOINTERACT			NOINTERACT
+		upvar expectlite::NOINCLUDE				NOINCLUDE
 		upvar expectlite::LOG					LOG
 		upvar expectlite::arg0					arg0
 		upvar expectlite::cli_namespace			cli_namespace
 		upvar expectlite::el_log_ext			el_log_ext
+		upvar expectlite::SHOW_HELP				SHOW_HELP
 
 
 
 		switch -glob $g_dir_str {	
 			"\\*INFO"	{	# Turn on INFO logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-				set INFO 1
+				incr INFO
 			}
 			"\\*EXP_INFO"	{	# Turn on Expect INFO logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
@@ -2816,7 +2866,16 @@ namespace eval expectlite {
 					}
 				} elseif {[llength $log_list] == 1 } {
 					set LOG 1
+					if { [regexp {LOGA} [lindex $log_list 0]] == 1 } {
+						set LOG -1
+						# close any running log
+						log_file
+					}
 				}				
+				if { $SHOW_HELP } {
+					# don't do any thing with the LOG
+					set LOG -10
+				}
 				
 				switch -- $LOG {
 					1 -
@@ -2936,12 +2995,10 @@ namespace eval expectlite {
 			"\\*INTERACT"	{	# place into expect interact mode
 				# Skip interact if in Library mode
 				# Jump to interact
-				if { [info exist ::EL_LIBRARY] == 0 } {
-					if { $NOINTERACT == 0 } {
-						cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-						instant_interact_sig
-					}
-				} else {
+				if { $NOINTERACT == 0 } {
+					cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+					instant_interact_sig
+				} elseif {$NOINTERACT > 0} {
 					cputs "\nSkipping expect-lite directive: $g_dir_str " $_el_info_color
 				}
 			}
@@ -2968,7 +3025,8 @@ namespace eval expectlite {
 				set _el_current_session [session_id_manager $fork_id]
 				# set eols from new fork_id_context
 				set _el_eols $_el_fork($_el_current_session,eols)
-
+				#kick the prompt
+				protected_send "$_el_eols"
 
 			}
 			"\\*NOFAIL"	{	# Never fail the test
@@ -2979,6 +3037,10 @@ namespace eval expectlite {
 			"\\*NOINTERACT"	{	# Never stop at *INTERACT (good for regression)
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				incr NOINTERACT
+			}
+			"\\*NOINCLUDE"	{	# Do not include files -- backward compatiblity with 4.1 behaviour
+				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				incr NOINCLUDE
 			}
 		}
 		# end switch glob
@@ -3061,6 +3123,7 @@ namespace eval expectlite {
 		upvar expectlite::_out_nowait				_out_nowait
 		upvar expectlite::_in						_in
 		upvar expectlite::_in_noregex				_in_noregex
+		upvar expectlite::_in_fuzzy					_in_fuzzy
 		upvar expectlite::_not_in					_not_in
 		upvar expectlite::_timeout					_timeout
 		upvar expectlite::_var						_var
@@ -3069,6 +3132,7 @@ namespace eval expectlite {
 		upvar expectlite::_cond_else				_cond_else
 		upvar expectlite::_label					_label
 		upvar expectlite::_el						_el
+		upvar expectlite::_el_buf					_el_buf
 		upvar expectlite::_exec 					_exec
 		upvar expectlite::_stdout_comment			_stdout_comment
 		upvar expectlite::_stdout_comment_nobuf 	_stdout_comment_nobuf
@@ -3097,10 +3161,10 @@ namespace eval expectlite {
 		upvar expectlite::_el_debug_color			_el_debug_color
 		upvar expectlite::_el_eols					_el_eols
 		upvar expectlite::el_color					el_color
-		upvar expectlite::_el_buf					_el_buf
 		upvar expectlite::EXP_INFO					EXP_INFO
 		upvar expectlite::_el_current_session		_el_current_session
 		upvar expectlite::NOFAIL					NOFAIL
+		upvar expectlite::NOINCLUDE					NOINCLUDE
 		upvar expectlite::TIMESTAMP 				TIMESTAMP
 
 
@@ -3123,27 +3187,6 @@ namespace eval expectlite {
 		set _el_current_session $_el(fork_current)
 		#fork_id
 
-
-		#
-		# Concat expect_out var using TCL Trace function
-		#  from Exploring Expect pg 408
-		#	
-		proc _el_append_buffer { array element op } {
-			upvar _el_expect_buffer _el_expect_buffer
-			# odd syntax to get var name "exploring expect pg 408"
-			upvar [set array]($element) var
-			append _el_expect_buffer $var
-			#puts "\n------------>$_el_expect_buffer_count:appending [string range $var 0 5]||[string length $var] bytes "
-			#puts "\n--------EL-->$_el_expect_buffer"
-		}
-		# Initalize trace var
-		# initialize trace var info
-		set _el_expect_buffer ""
-		#set _el_expect_buffer_count 0
-
-		trace variable ::expect_out(buffer) w _el_append_buffer
-		set ::expect_out(buffer) ""
-		
 		#
 		# Dereference Vars if needed in $_el(line) as read from cmd file	
 		#	
@@ -3374,7 +3417,7 @@ namespace eval expectlite {
 						set control_char [string index $_el(line) [expr [string length $_el(line)] -1]]
 						# print timestamp
 						if { $TIMESTAMP } {
-							puts -nonewline [timestamp -format $_el(ts_fmt)]
+							cputs  [timestamp -format $_el(ts_fmt)] "none" "-nonewline"
 						}
 						# Check if passed char is lower case
 						if {[expr $control_char_ascii - 96] > 0 } {
@@ -3399,7 +3442,7 @@ namespace eval expectlite {
 						after 10
 						# print timestamp
 						if { $TIMESTAMP } {
-							puts -nonewline [timestamp -format $_el(ts_fmt)]
+							cputs  [timestamp -format $_el(ts_fmt)] "none" "-nonewline"
 						}
 						# Check of remote_host is still connected before sending string
 						if { [catch { send  -- "[_el_strip_char $_el(line) $_out_nowait]$_el_eols"  } error] } {
@@ -3426,7 +3469,7 @@ namespace eval expectlite {
 						set _el(success) 1
 						# print timestamp
 						if { $TIMESTAMP } {
-							puts -nonewline [timestamp -format $_el(ts_fmt)]
+							cputs  [timestamp -format $_el(ts_fmt)] "none" "-nonewline"
 						}
 
 						# Check of remote_host is still connected before sending string
@@ -3525,6 +3568,114 @@ namespace eval expectlite {
 						}
 
 					}
+				^~\<	{ 	# Fuzzy Expect teststr without regex or set success to 0 and fail test	
+						set _el(success) 0
+						print_comment_line
+						# execute expect lines if present
+						_el_exec_expect
+						
+						set teststr [_el_strip_char $_el(line) $_in_fuzzy]
+						set testtr_org $teststr
+						
+						#puts "=>$teststr"
+						# parse teststr
+						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\1" str_first
+						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\3" str_last
+						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\2" str_val
+
+
+						# use split to parse
+#						set str_first [lindex [split $teststr "("] 0]
+#						set str_last  [lindex [split $teststr ")"] 1]
+#						set str_val [lindex [split [lindex [split $teststr "("] 1] ")"] 0]
+						
+						# build teststr
+						if { ($str_first == $str_last && $str_first == $str_val) || $str_val == "" } {
+							# didn't parse string, show error
+							cputs "\nWarning: Expect-lite unable to parse fuzzy compare number in line:\n$teststr" $_el_warn_color
+							set str_val ""
+						} else {
+							# parsed teststr, continue
+							set teststr "$str_first\(\[0-9.\]+|0x\[0-9a-fA-Fx.\]+\)$str_last"
+						}
+
+						#puts "===>$str_first|$str_last|$str_val"
+						#puts "==T=>$teststr"
+
+						if {$str_val == "" } {
+							#parsing problems
+							if { $str_first != $str_last } {
+								#set teststr for error message for no num found
+								set teststr "$str_first\(__NO_NUMBER_FOUND__\)$str_last"
+							}
+							set _el(success) 0 
+						} else {
+							# catch expect, just in case
+							if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
+								if {$WARN} {
+									cputs "\nWarning: Expect error: $error\n" $_el_warn_color
+								}
+							}
+						}
+						if {$_el(success) == 1 } {
+							#grab return value from expect line
+							set i 1
+							set rtn_val ""
+							while { $rtn_val == "" } {
+								if { [catch { set rtn_val $expect_out($i,string) } error] } {
+									# catch error, and set to sane value
+									set rtn_val "endloop"
+								}
+								# clear expect capture buffers
+								if { [ info exists expect_out($i,string)] } { 
+									unset expect_out($i,string)
+								}
+								#puts "====>$i|$rtn_val"
+								# look for hex value
+								if { [regexp {^0x[0-9a-fA-F]} $rtn_val ] == 1 } {
+									break
+								}
+								#remove leading zeros (which mess up 'string is'
+								set rtn_val [string trimleft $rtn_val "0"]
+								if { [string is integer $rtn_val ] || [string is double $rtn_val ]} {
+									# value is the one we want
+									break
+								} elseif {$rtn_val != "endloop"} {
+									set rtn_val ""
+								}
+								incr i
+							}
+							incr i -1
+							#check fuzz value against global fuzz value
+							if { [string is integer $rtn_val ] || [string is double $rtn_val ]} {
+								set fuzz_result 1
+								if { $rtn_val > [expr $str_val + $_el(fuzz)] } {set fuzz_result 0}
+								if { $rtn_val < [expr $str_val - $_el(fuzz)] } {set fuzz_result 0}
+
+								#return fuzz comparison
+								set _el(success) $fuzz_result
+								#puts "====f=>$rtn_val|$fuzz_result"
+								
+								if {$_el(success) == 0 } {
+									#set teststr for error message if num is found but out of range
+									set teststr "$str_first\($str_val~$_el(fuzz)\)$str_last"
+								}
+							}
+						}; # $_el(success) == 1 
+						
+						# look at the expect_out(buffer) for debugging
+						if { $DEBUG } {
+							cputs "\nfind<<$teststr>>" $_el_debug_color
+							cputs "  in<<$expect_out(buffer)>>" $_el_debug_color
+							cputs "  fuzz_in<<$expect_out($i,string)>>" $_el_debug_color
+							cputs "\n" $_el_debug_color
+							#puts "_el(success) $_el(success)"
+						}
+						# show expect found string
+						if { $EXP_INFO && $DEBUG==0 && $_el(success)==1 } {
+							cputs "~$el_color(left_angle)$expect_out(0,string)" $_el_info_color
+						}
+					}
 				^\-<	{ 	# NOT Expect teststr and If it is found then set success to 0 and fail test
 						set _el(success) 0
 						print_comment_line
@@ -3556,6 +3707,33 @@ namespace eval expectlite {
 						}
 
 					}
+				{^~=[0-9]+} 	{ 	# Update the fuzzy expect value (or range)
+						
+						# validate that the timeout value is a number
+						print_comment_line
+						# execute expect lines if present
+						_el_exec_expect
+						if {([regexp \[^0-9\ \]+ [_el_strip_char $_el(line) "~="]])} {
+							if {$WARN} {
+								cputs "WARN: Bad Fuzzy Value: [_el_strip_char $_el(line) "~=" ] " $_el_warn_color
+							}
+						} else {
+							#puts "\nSetting Expect Timeout to: [_el_strip_char $_el(line) $_timeout] \n"
+							set fuzzy_int [_el_strip_char $_el(line) "~=" ]
+
+							set fuzz_line "\nSetting Fuzzy Expect to: $fuzzy_int \n"
+							set _el(fuzz) $fuzzy_int
+							#puts "======>$fuzzy_int"
+
+						}
+						# print new timeout value if one_line is set (e.g. from IDE)
+
+						if {$INFO} {
+							cputs $fuzz_line $_el_info_color
+						}
+
+					}
+					
 				^\@ 	{ 	# Update the timeout value
 						
 						# validate that the timeout value is a number
@@ -3808,30 +3986,33 @@ namespace eval expectlite {
 
 						print_comment_line
 
+							
 						set _include_file [_el_strip_char $_el(line) $_include]
 						#puts "==========> $_include_file"
-						
+
 						# set up passed values
 						set _var_value [split $_include_file " "]
 						set _include_file_str $_include_file
 						# get only the first word as include file
 						set _include_file [lindex [split $_include_file " " ] 0]
-						
-						# don't include file if name is set to __NO_STRING_CAPTURED__ (which is a blank dynamic/capture variable)
-						if { $_include_file != "__NO_STRING_CAPTURED__" } {
-							# absolute path to include file?
-							set _slash "/"
-							if { [string index $_include_file 0] == $_slash} {
-								set include_path_file "$_include_file"
-							} else {
-								set include_path_file "[parse_cmd_file_path $_el(cmd_file)]$_include_file"
-							}
-							#puts "->$include_path_file"
-							if {$INFO} {
-								cputs "\nIncluding: $_include_file_str\n" $_el_info_color
-							}
-							# Make Recursive Call in stand alone mode
-							if { [info exist ::EL_LIBRARY] != 1 } {
+
+						# This was 4.1 EL_LIBRARY behavior
+						if { $NOINCLUDE == 0 } {
+							# don't include file if name is set to __NO_STRING_CAPTURED__ (which is a blank dynamic/capture variable)
+							if { $_include_file != "__NO_STRING_CAPTURED__" } {
+								# absolute path to include file?
+								set _slash "/"
+								if { [string index $_include_file 0] == $_slash} {
+									set include_path_file "$_include_file"
+								} else {
+									set include_path_file "[parse_cmd_file_path $_el(cmd_file)]$_include_file"
+								}
+								#puts "->$include_path_file"
+								if {$INFO} {
+									cputs "\nIncluding: $_include_file_str\n" $_el_info_color
+								}
+								# Make Recursive Call in stand alone mode
+
 								# parse passed constants on include line
 								set _pass_var_values [ _el_parse_var_value $_var_value ]
 								#puts "==========> $_pass_var_values"
@@ -3841,11 +4022,11 @@ namespace eval expectlite {
 
 								# read in cmd_file to buffer
  								set buf_stack [_el_buffer $include_path_file]
-								
+
 								# preserve test_failed going into include file
 								set _preserve_test_result $_el(test_failed)
 								set _el(test_failed) 0
-								
+
 								set result [_el_script_exec "" $buf_stack]
 								# don't report false include failure, set test_failed
 								switch -- $result {
@@ -3857,7 +4038,7 @@ namespace eval expectlite {
 										set _el(success) 0
 										# no need to restore, it failed
 										set _el(test_failed) 1
-										
+
 										cputs "\n##Include Result: FAILED: $include_path_file\n" $_el_err_color
 										}
 									2 { # fail right now!
@@ -3868,12 +4049,14 @@ namespace eval expectlite {
 								# pop _el_buf(stack)
 								_el_buffer_stack_clear $buf_stack
 								incr buf_stack -1
+								# sync with global value, for INTERACT/IDE
+								set _el_buf(stack) $buf_stack
 								# restore constants
 								_el_restore_const $_keep_var_values
-								
-							} else {
-								cputs "\nWarning: Skipping include file:$_include_file\n" $_el_warn_color
-							}
+							}; # if include file not __NO_STRING_CAPTURED__
+						} else {
+							cputs "\nWarning: *NOINCLUDE: Skipping include file:$_include_file\n" $_el_warn_color
+
 						}; #if
 
 					}
@@ -3895,24 +4078,20 @@ namespace eval expectlite {
 						#set teststr [_el_strip_char $_el(line) $_setvar]
 						set capture_val "__NO_STRING_CAPTURED__"
 						set _el(var_capture_begin) [ clock seconds ]
-						
-						
-						#old-way #regexp -line "$user_value" $expect_out(buffer) match_val capture_val
 						expect {
 							-notransfer -re "\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $" {
-								# fill partial expect buffer
 
 								# Do capture in expect buffer
-								if { [catch {regexp -line "$user_value" $_el_expect_buffer match_val capture_val}]  } {
+								if { [catch {regexp -line "$user_value" $expect_out(buffer) match_val capture_val}]  } {
 									set capture_val "__NO_STRING_CAPTURED__"
 									set match_val ""
 								}
 								# remove newlines from capture value
+								# add spaces to make foreach lists easier
 								regsub -all {[\n\r]+} $capture_val " " capture_val
 								
 								if { $DEBUG } {
 									cputs "\nvar_found<<$capture_val>>" $_el_debug_color
-									#cputs "\nin<<$_el_expect_buffer>>" $_el_debug_color
 									cputs "\nvar_in<<$expect_out(buffer)>>" $_el_debug_color
 								}
 								if { $INFO } {
@@ -3934,7 +4113,6 @@ namespace eval expectlite {
 									cputs "Warning: Expect-lite: Var Capture Timed Out! Recommend lengthening timeout, current timeout is: $timeout secs\n" $_el_warn_color
 									if { $DEBUG } {
 										cputs "\nfound<<$capture_val>>" $_el_debug_color
-										#cputs "\nin<<$_el_expect_buffer>>" $_el_debug_color
 										cputs "\nin<<$expect_out(buffer)>>" $_el_debug_color
 									}
 
@@ -3943,7 +4121,6 @@ namespace eval expectlite {
 						}
 						# set var (similar to below)
 						set user_namespace($user_var) $capture_val
-						#trace remove variable ::expect_out(buffer) write _el_append_buffer
 					}
 				{^\$[A-Za-z0-9_]+[=]([ ]?|[~\$\[/A-Za-z0-9_.-]+)} {
 						# allow a single space or blank as a value in addition to the normal assignment
@@ -4048,7 +4225,11 @@ namespace eval expectlite {
 								{[+]}	{ # concat e.g. + string
 
 										# pop operator off front
-										set _el_parse_list [lreplace $_el_parse_list 0 0]
+										if { [llength $_el_parse_list ] > 1 } {
+											set _el_parse_list [lreplace $_el_parse_list 0 0]
+										} else {
+											set _el_parse_list [string trimleft $_el_parse_list "+"]
+										}
 										#puts "===strmath2==>$_el_parse_list#"
 										if { [catch { set user_namespace($var)  "$user_namespace($var)$_el_parse_list" } error]} {
 											set show_error 2 
@@ -4080,14 +4261,15 @@ namespace eval expectlite {
 										foreach {search replace} $replacelist {break}
 										
 										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
-										if { [catch { regsub -all $search $user_namespace($var) $replace user_namespace($var)} error]} {
+										if { [catch { regsub -all -- $search $user_namespace($var) $replace user_namespace($var)} error]} {
 											set show_error 4
 										}
 								 	
 										#regsub -all $search $user_namespace($var) $replace user_namespace($var)
 									}
 								{[-]}	{ # subtract or remove e.g. - string
-
+										# remove leading white space
+										regsub {([-])[ ]+(.+)} $_el_parse_list {\1\2} _el_parse_list
 										#reparse parse_list
 										set _el_predicate [join $_el_parse_list " "]
 										set _el_parse_list [split $_el_predicate "-"]
@@ -4095,7 +4277,7 @@ namespace eval expectlite {
 										set _el_parse_list [lreplace $_el_parse_list 0 0]
 										# create replace_map
 										set replacelist [list $_el_parse_list {} ]
-										#puts "===strmath5==>$replacelist#$_el_parse_list#"
+										#puts "===strmath5==>$_el_predicate#$_el_parse_list#"
 										if { [catch { set user_namespace($var) [string map $replacelist $user_namespace($var) ]} error]} {
 											set show_error 5
 										}
@@ -4228,12 +4410,16 @@ namespace eval expectlite {
 							# create foreach list
 							set line_meta $_el(line_meta)
 							if { [info exists _foreach($line_meta,$user_var)] == 0 } {
+								# clean up white space
+								regsub -all {[ ]+} $_cond_arg2 " " _cond_arg2
+								set _cond_arg2 [string trimleft $_cond_arg2 ]
+								set _cond_arg2 [string trimright $_cond_arg2 ]
+								
 								set _foreach_list [split $_cond_arg2]
-								# add extra item to allow last user item to be executed
 								if {$INFO} {
-									cputs "\nForeach:$_conditional" $_el_info_color
+									cputs "\nForeach: $_cond_arg1=$_cond_arg2" $_el_info_color
 								};#if INFO
-
+								# add extra item to allow last user item to be executed
 								lappend _foreach_list "END"
 							} else {
 								# restore list - hashed based on meta line and var name
@@ -4381,8 +4567,8 @@ namespace eval expectlite {
 
 			#puts "line_ptr->$_el_buf($buf_stack,ptr)|$_el(success)"
 			
-			# Fail the test if Expect fails
-			if {$_el(success) != 1 && [regexp "^$_in" $_el(line)]==1  } {
+			# Fail the test if Expect fails or Expect Fuzzy fails
+			if {$_el(success) != 1 &&  [regexp "^$_in|$_in_fuzzy" $_el(line)]==1   } {
 				cputs "\n\n FAILED COMMAND:[_el_strip_char $prev_line $_out] \n" $_el_err_color
 				cputs "    Expect Failed:$teststr\n" $_el_err_color
 				if { $_el_current_session != "default" } {
@@ -4415,13 +4601,15 @@ namespace eval expectlite {
 					# set fail_script up for success
 					set _el(success) 1
 
-
 					# Make Recursive Call
 					# read in cmd_file (fail script) to buffer
 					set buf_stack [_el_buffer $include_path_file]
 					_el_script_exec "" $buf_stack
 					# pop _el_buf(stack)
+					_el_buffer_stack_clear $buf_stack
 					incr buf_stack -1
+					# sync with global value, for INTERACT/IDE
+					set _el_buf(stack) $buf_stack
 					
 					# special short cut to allow main script to continue
 					if { [info exists _el(continue)] == 1 } {
@@ -4542,7 +4730,6 @@ namespace eval expectlite {
 			ssh_key	{connect_ssh_key_host $remote_host }
 			none		{_el_connect_localhost $remote_host }
 		}
-
 
 		# initialize remote_host_init, fork session
 		session_init $cmd_file_ptr
