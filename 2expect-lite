@@ -2,7 +2,7 @@
 
 ##################################################################################
 #
-#  Copyright (C) 2008-2012 Craig Miller
+#  Copyright (C) 2008-2014 Craig Miller
 #
 #  Copyright (C) 2005-2007 Freescale Semiconductor, Inc. 
 #
@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.0d1"
+	variable version "4.7.0d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1304,8 +1304,8 @@ namespace eval expectlite {
 			# get only the first word as include file
 			set _include_file [lindex [split $_include_file " " ] 0]
 
-			# is include file a variable or fuzzy expect, skip validation
-			if { [ regexp {^\$|^\<|^=[0-9]} $_include_file ] == 0 } {
+			# is include file a variable or fuzzy expect (could be ~=$var), skip validation
+			if { [ regexp {^\$|^\<|^=\$?[a-zA-Z0-9]} $_include_file ] == 0 } {
 				# absolute path to include file?
 				set _slash "/"
 				if { [string index $_include_file 0] == $_slash} {
@@ -3579,15 +3579,22 @@ namespace eval expectlite {
 						
 						#puts "=>$teststr"
 						# parse teststr
-						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\1" str_first
-						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\3" str_last
-						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\2" str_val
+#						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\1" str_first
+#						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\3" str_last
+#						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\2" str_val
 
 
 						# use split to parse
 #						set str_first [lindex [split $teststr "("] 0]
 #						set str_last  [lindex [split $teststr ")"] 1]
 #						set str_val [lindex [split [lindex [split $teststr "("] 1] ")"] 0]
+
+						# remove escaped parens e.g \( \)
+						set teststr [string map { "\\(" "" "\\)" "" } $teststr ]
+						# use string first to parse
+						set str_first [string range $teststr 0 [expr [string first "(" $teststr] -1 ]]
+						set str_last [string range $teststr [expr [string first ")" $teststr] +1 ] [string length $teststr]]
+						set str_val [string range $teststr  [expr [string first "(" $teststr] +1 ]  [expr [string first ")" $teststr] -1 ] ]
 						
 						# build teststr
 						if { ($str_first == $str_last && $str_first == $str_val) || $str_val == "" } {
@@ -3617,10 +3624,11 @@ namespace eval expectlite {
 								}
 							}
 						}
+
 						if {$_el(success) == 1 } {
 							#grab return value from expect line
-							set i 1
 							set rtn_val ""
+							set i 1
 							while { $rtn_val == "" } {
 								if { [catch { set rtn_val $expect_out($i,string) } error] } {
 									# catch error, and set to sane value
@@ -3631,18 +3639,19 @@ namespace eval expectlite {
 									unset expect_out($i,string)
 								}
 								#puts "====>$i|$rtn_val"
-								# look for hex value
-								if { [regexp {^0x[0-9a-fA-F]} $rtn_val ] == 1 } {
-									break
-								}
-								#remove leading zeros (which mess up 'string is'
-								set rtn_val [string trimleft $rtn_val "0"]
-								if { [string is integer $rtn_val ] || [string is double $rtn_val ]} {
-									# value is the one we want
-									break
-								} elseif {$rtn_val != "endloop"} {
-									set rtn_val ""
-								}
+								switch -regexp $rtn_val {
+									{^0x[0-9a-fA-F]+$} {
+										# look for hex value
+									}
+									{^[0-9.]+$} {
+										# value is decimal
+										set rtn_val [string trimleft $rtn_val "0"]
+									}
+									default {
+										# continue loop
+										set rtn_val ""
+									}
+								}; #switch
 								incr i
 							}
 							incr i -1
@@ -3661,13 +3670,16 @@ namespace eval expectlite {
 									set teststr "$str_first\($str_val~$_el(fuzz)\)$str_last"
 								}
 							}
+						} else {
+							set teststr "$str_first\($str_val~$_el(fuzz)\)$str_last"
 						}; # $_el(success) == 1 
 						
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
 							cputs "\nfind<<$teststr>>" $_el_debug_color
 							cputs "  in<<$expect_out(buffer)>>" $_el_debug_color
-							cputs "  fuzz_in<<$expect_out($i,string)>>" $_el_debug_color
+							#cputs "  fuzz_in<<$expect_out($i,string)>>" $_el_debug_color
+							if { [info exists rtn_val] } { cputs "  fuzz_in<<$rtn_val>>" $_el_debug_color}
 							cputs "\n" $_el_debug_color
 							#puts "_el(success) $_el(success)"
 						}
@@ -3721,7 +3733,7 @@ namespace eval expectlite {
 							#puts "\nSetting Expect Timeout to: [_el_strip_char $_el(line) $_timeout] \n"
 							set fuzzy_int [_el_strip_char $_el(line) "~=" ]
 
-							set fuzz_line "\nSetting Fuzzy Expect to: $fuzzy_int \n"
+							set fuzz_line "\nSetting Fuzzy Expect to: + or - $fuzzy_int \n"
 							set _el(fuzz) $fuzzy_int
 							#puts "======>$fuzzy_int"
 

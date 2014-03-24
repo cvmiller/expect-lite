@@ -1322,6 +1322,11 @@ Released 21 Dec 2010 - 4.0.2
 		>echo "this 0xbeef moos"
 		~<this (0xbeee) moos
 
+23 March 2014 - 4.7.0d2
+	Improved parser for fuzzy number expect ~<
+		Now it is possible to escape parens where fuzzy expect is not desired
+		e.g. ~<my \(5\) year old wants (10) candies
+	
 
 ------------ Future Versions --------------------------
 		

@@ -70,6 +70,7 @@ $user=bob
 
 
 
+$FUZZ=5
 
 # must define this var before using with TCL functions
 $mytime1=0
@@ -102,7 +103,7 @@ $result=now
 >
 
 ; === test fuzzy expect
-~=5
+~=$FUZZ
 
 >MIN=$(date '+%S')
 #>MIN=15
@@ -111,7 +112,7 @@ $result=now
 >
 >
 >echo "bbbb is the $MIN to rise up"
-~<bbbb (is) the ((10)) to rise up
+~<bbbb is the ((10)) to rise up
 
 >echo "cccc is the $MIN"
 ~<cccc is the (10)
@@ -124,6 +125,23 @@ $result=now
 >
 >echo "gggg is the $MIN"
 ~<(10.5)
+
+>echo "zzzz is the $MIN to rise up"
+~<zzzz (is) the (10) to rise (up)
+
+>echo "hhhh 7 the $MIN "
+~<hhhh (5) the (10)
+
+
+>echo "iiii 7 the 10 to rise up"
+~<iiii (5) the (10) to rise (up)
+
+>echo "jjjj 7.5 the $MIN to rise up"
+~<jjjj ($MIN) the ($MIN) to rise (up)
+
+>echo "kkkk 7.5 the $MIN to rise up"
+~<kkkk \(7.5\) the (15) to rise (up)
+
 
 
 *INTERACT
