@@ -2,7 +2,7 @@
 
 ##################################################################################
 #
-#  Copyright (C) 2008-2012 Craig Miller
+#  Copyright (C) 2008-2014 Craig Miller
 #
 #  Copyright (C) 2005-2007 Freescale Semiconductor, Inc. 
 #
@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.6.3d1"
+	variable version "4.7.0d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -167,6 +167,9 @@ namespace eval expectlite {
 		# initialize the command file name
 		set ::expectlite::_el(cmd_file) ""
 		
+		# initialize the fuzz value - used for fuzzy expect '~<'
+		set ::expectlite::_el(fuzz) 10
+		
 		# debugging aid: turn on to display match string and expect buffer
 		variable DEBUG 0
 
@@ -231,6 +234,7 @@ namespace eval expectlite {
 		variable _out_nowait ">>"
 		variable _in "<"
 		variable _in_noregex "<<"
+		variable _in_fuzzy "~<"
 		variable _not_in "-<"
 		variable _timeout "@"
 		variable _exec "!"
@@ -1299,9 +1303,9 @@ namespace eval expectlite {
 			set _include_file [_el_strip_char $line $_include]
 			# get only the first word as include file
 			set _include_file [lindex [split $_include_file " " ] 0]
-			
-			# is include file a variable, skip validation
-			if { [ regexp {^\$} $_include_file ] == 0 } {
+
+			# is include file a variable or fuzzy expect (could be ~=$var), skip validation
+			if { [ regexp {^\$|^\<|^=\$?[a-zA-Z0-9]} $_include_file ] == 0 } {
 				# absolute path to include file?
 				set _slash "/"
 				if { [string index $_include_file 0] == $_slash} {
@@ -3119,6 +3123,7 @@ namespace eval expectlite {
 		upvar expectlite::_out_nowait				_out_nowait
 		upvar expectlite::_in						_in
 		upvar expectlite::_in_noregex				_in_noregex
+		upvar expectlite::_in_fuzzy					_in_fuzzy
 		upvar expectlite::_not_in					_not_in
 		upvar expectlite::_timeout					_timeout
 		upvar expectlite::_var						_var
@@ -3563,6 +3568,121 @@ namespace eval expectlite {
 						}
 
 					}
+				^~\<	{ 	# Fuzzy Expect teststr with regex or set success to 0 and fail test	
+						set _el(success) 0
+						print_comment_line
+						# execute expect lines if present
+						_el_exec_expect
+						
+						set teststr [_el_strip_char $_el(line) $_in_fuzzy]
+						set testtr_org $teststr
+						
+						#puts "=>$teststr"
+						# parse teststr
+#						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\1" str_first
+#						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\3" str_last
+#						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\2" str_val
+
+
+						# remap escaped parens e.g \( \)
+						set teststr [string map { "\\(" "#{#" "\\)" "#}#" } $teststr ]
+						# use string first to parse
+						set str_first [string range $teststr 0 [expr [string first "(" $teststr] -1 ]]
+						set str_last [string range $teststr [expr [string first ")" $teststr] +1 ] [string length $teststr]]
+						set str_val [string range $teststr  [expr [string first "(" $teststr] +1 ]  [expr [string first ")" $teststr] -1 ] ]
+						
+						# build teststr
+						if { ($str_first == $str_last && $str_first == $str_val) || $str_val == "" } {
+							# didn't parse string, show error
+							cputs "\nWarning: Expect-lite unable to parse fuzzy compare number in line:\n$teststr" $_el_warn_color
+							set str_val ""
+						} else {
+							# parsed teststr, continue
+							set teststr "$str_first\(\[0-9.\]+|0x\[0-9a-fA-Fx.\]+\)$str_last"							
+						}
+
+						# restore escaped parens e.g \( \)
+						set teststr [string map { "#{#" "\\("  "#}#" "\\)" } $teststr ]
+						set str_first [string map { "#{#" "\\("  "#}#" "\\)" } $str_first ]
+						
+						#puts "===>$str_first|$str_last|$str_val"
+						#puts "==T=>$teststr"
+
+						if {$str_val == "" } {
+							#parsing problems
+							if { $str_first != $str_last } {
+								#set teststr for error message for no num found
+								set teststr "$str_first\(__NO_NUMBER_FOUND__\)$str_last"
+							}
+							set _el(success) 0 
+						} else {
+							# catch expect, just in case
+							if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
+								if {$WARN} {
+									cputs "\nWarning: Expect error: $error\n" $_el_warn_color
+								}
+							}
+						}
+						
+						if {$_el(success) == 1 } {
+							#grab return value from expect line
+							set rtn_val ""
+							set i 1
+							while { $rtn_val == "" } {
+								if { [catch { set rtn_val $expect_out($i,string) } error] } {
+									# catch error, and set to sane value
+									set rtn_val "endloop"
+								}
+								# clear expect capture buffers
+								if { [ info exists expect_out($i,string)] } { 
+									unset expect_out($i,string)
+								}
+								#puts "====>$i|$rtn_val"
+								switch -regexp $rtn_val {
+									{^0x[0-9a-fA-F]+$} {
+										# look for hex value
+									}
+									{^[0-9.]+$} {
+										# value is decimal
+										set rtn_val [string trimleft $rtn_val "0"]
+									}
+									default {
+										# continue loop
+										set rtn_val ""
+									}
+								}; #switch
+								incr i
+							}
+							incr i -1
+							#check fuzz value against global fuzz value
+							if { [string is integer $rtn_val ] || [string is double $rtn_val ]} {
+								set fuzz_result 1
+								if { $rtn_val > [expr $str_val + $_el(fuzz)] } {set fuzz_result 0}
+								if { $rtn_val < [expr $str_val - $_el(fuzz)] } {set fuzz_result 0}
+
+								#return fuzz comparison
+								set _el(success) $fuzz_result
+								#puts "====f=>$rtn_val|$fuzz_result"
+							}
+						}; # $_el(success) == 1 
+						
+						#set teststr for error message if num is found but out of range
+						set teststr "$str_first\($str_val~$_el(fuzz)\)$str_last"
+						
+						# look at the expect_out(buffer) for debugging
+						if { $DEBUG } {
+							cputs "\nfind<<$teststr>>" $_el_debug_color
+							cputs "  in<<$expect_out(buffer)>>" $_el_debug_color
+							#cputs "  fuzz_in<<$expect_out($i,string)>>" $_el_debug_color
+							if { [info exists rtn_val] } { cputs "  fuzz_in<<$rtn_val>>" $_el_debug_color}
+							cputs "\n" $_el_debug_color
+							#puts "_el(success) $_el(success)"
+						}
+						# show expect found string
+						if { $EXP_INFO && $DEBUG==0 && $_el(success)==1 } {
+							cputs "~$el_color(left_angle)$expect_out(0,string)" $_el_info_color
+						}
+					}
 				^\-<	{ 	# NOT Expect teststr and If it is found then set success to 0 and fail test
 						set _el(success) 0
 						print_comment_line
@@ -3594,6 +3714,33 @@ namespace eval expectlite {
 						}
 
 					}
+				{^~=[0-9]+} 	{ 	# Update the fuzzy expect value (or range)
+						
+						# validate that the timeout value is a number
+						print_comment_line
+						# execute expect lines if present
+						_el_exec_expect
+						if {([regexp \[^0-9\ \]+ [_el_strip_char $_el(line) "~="]])} {
+							if {$WARN} {
+								cputs "WARN: Bad Fuzzy Value: [_el_strip_char $_el(line) "~=" ] " $_el_warn_color
+							}
+						} else {
+							#puts "\nSetting Expect Timeout to: [_el_strip_char $_el(line) $_timeout] \n"
+							set fuzzy_int [_el_strip_char $_el(line) "~=" ]
+
+							set fuzz_line "\nSetting Fuzzy Expect to: + or - $fuzzy_int \n"
+							set _el(fuzz) $fuzzy_int
+							#puts "======>$fuzzy_int"
+
+						}
+						# print new timeout value if one_line is set (e.g. from IDE)
+
+						if {$INFO} {
+							cputs $fuzz_line $_el_info_color
+						}
+
+					}
+					
 				^\@ 	{ 	# Update the timeout value
 						
 						# validate that the timeout value is a number
@@ -4427,8 +4574,8 @@ namespace eval expectlite {
 
 			#puts "line_ptr->$_el_buf($buf_stack,ptr)|$_el(success)"
 			
-			# Fail the test if Expect fails
-			if {$_el(success) != 1 && [regexp "^$_in" $_el(line)]==1  } {
+			# Fail the test if Expect fails or Expect Fuzzy fails
+			if {$_el(success) != 1 &&  [regexp "^$_in|$_in_fuzzy" $_el(line)]==1   } {
 				cputs "\n\n FAILED COMMAND:[_el_strip_char $prev_line $_out] \n" $_el_err_color
 				cputs "    Expect Failed:$teststr\n" $_el_err_color
 				if { $_el_current_session != "default" } {

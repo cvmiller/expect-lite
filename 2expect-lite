@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.0d2"
+	variable version "4.7.0d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3568,7 +3568,7 @@ namespace eval expectlite {
 						}
 
 					}
-				^~\<	{ 	# Fuzzy Expect teststr without regex or set success to 0 and fail test	
+				^~\<	{ 	# Fuzzy Expect teststr with regex or set success to 0 and fail test	
 						set _el(success) 0
 						print_comment_line
 						# execute expect lines if present
@@ -3584,13 +3584,8 @@ namespace eval expectlite {
 #						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\2" str_val
 
 
-						# use split to parse
-#						set str_first [lindex [split $teststr "("] 0]
-#						set str_last  [lindex [split $teststr ")"] 1]
-#						set str_val [lindex [split [lindex [split $teststr "("] 1] ")"] 0]
-
-						# remove escaped parens e.g \( \)
-						set teststr [string map { "\\(" "" "\\)" "" } $teststr ]
+						# remap escaped parens e.g \( \)
+						set teststr [string map { "\\(" "#{#" "\\)" "#}#" } $teststr ]
 						# use string first to parse
 						set str_first [string range $teststr 0 [expr [string first "(" $teststr] -1 ]]
 						set str_last [string range $teststr [expr [string first ")" $teststr] +1 ] [string length $teststr]]
@@ -3603,9 +3598,13 @@ namespace eval expectlite {
 							set str_val ""
 						} else {
 							# parsed teststr, continue
-							set teststr "$str_first\(\[0-9.\]+|0x\[0-9a-fA-Fx.\]+\)$str_last"
+							set teststr "$str_first\(\[0-9.\]+|0x\[0-9a-fA-Fx.\]+\)$str_last"							
 						}
 
+						# restore escaped parens e.g \( \)
+						set teststr [string map { "#{#" "\\("  "#}#" "\\)" } $teststr ]
+						set str_first [string map { "#{#" "\\("  "#}#" "\\)" } $str_first ]
+						
 						#puts "===>$str_first|$str_last|$str_val"
 						#puts "==T=>$teststr"
 
@@ -3624,7 +3623,7 @@ namespace eval expectlite {
 								}
 							}
 						}
-
+						
 						if {$_el(success) == 1 } {
 							#grab return value from expect line
 							set rtn_val ""
@@ -3664,15 +3663,11 @@ namespace eval expectlite {
 								#return fuzz comparison
 								set _el(success) $fuzz_result
 								#puts "====f=>$rtn_val|$fuzz_result"
-								
-								if {$_el(success) == 0 } {
-									#set teststr for error message if num is found but out of range
-									set teststr "$str_first\($str_val~$_el(fuzz)\)$str_last"
-								}
 							}
-						} else {
-							set teststr "$str_first\($str_val~$_el(fuzz)\)$str_last"
 						}; # $_el(success) == 1 
+						
+						#set teststr for error message if num is found but out of range
+						set teststr "$str_first\($str_val~$_el(fuzz)\)$str_last"
 						
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {

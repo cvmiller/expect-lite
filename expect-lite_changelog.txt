@@ -1328,6 +1328,14 @@ Released 21 Dec 2010 - 4.0.2
 		e.g. ~<my \(5\) year old wants (10) candies
 	
 
+23 March 2014 - 4.7.0d3
+	Improved parser for fuzzy number expect ~<
+		Fixed escape parens where fuzzy expect is not desired
+		e.g. ~<my \(5\) year old wants (10) candies
+	Merged 2expect-lite into expect-lite
+
+
+
 ------------ Future Versions --------------------------
 		
 Futurer
