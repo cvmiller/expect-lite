@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.0d3"
+	variable version "4.7.0d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1301,6 +1301,7 @@ namespace eval expectlite {
 		set inc_files [_el_buffer_get_obj $cmd_list_ptr ~]
 		foreach line $inc_files {
 			set _include_file [_el_strip_char $line $_include]
+
 			# get only the first word as include file
 			set _include_file [lindex [split $_include_file " " ] 0]
 
@@ -2785,6 +2786,23 @@ namespace eval expectlite {
 		
 	}
 
+	#
+	#	calculate timestamp with miliseconds
+	#	
+	#
+	proc _el_timestamp { } {
+		upvar expectlite::_el					_el
+		
+		set date [clock clicks -milliseconds ]
+		# separate milisecs from seconds
+		set ms [expr $date % 1000]
+		set date [expr int($date / 1000)]
+		set date_str [clock format $date -format $_el(ts_fmt)]
+		#add milisecs into formatted string
+		regsub {\$ms} $date_str "$ms" date_str
+		
+		return $date_str
+	}
 
 	#
 	#	Set Global expect-lite Directives
@@ -3085,12 +3103,12 @@ namespace eval expectlite {
 					set ts_format [lindex $ts_list 1]
 					switch -glob $ts_format {
 						"YMD"	-
-						"ISO"    { set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] " }
-						"MDY"	 { set _el(ts_fmt) "\n\[ %D %T \] " }
-						"DMY"	 { set _el(ts_fmt) "\n\[ %d-%m-%Y %T \] " }
+						"ISO"    { set _el(ts_fmt) "\n\[ %Y-%m-%d %T.\$ms \] " }
+						"MDY"	 { set _el(ts_fmt) "\n\[ %D %T.$ms \] " }
+						"DMY"	 { set _el(ts_fmt) "\n\[ %d-%m-%Y %T.\$ms \] " }
 						default { # set a ISO as default
 									if {$WARN} { cputs "\n\nWarning: unknown format, using YMD" $_el_warn_color }
-									set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] " 
+									set _el(ts_fmt) "\n\[ %Y-%m-%d %T.\$ms \] " 
 								}
 					}
 
@@ -3098,7 +3116,7 @@ namespace eval expectlite {
 					# no arguments to *TIMESTAMP, default to ISO
 					set TIMESTAMP 1
 					# use YMD format as default
-					set _el(ts_fmt) "\n\[ %Y-%m-%d %T \] "
+					set _el(ts_fmt) "\n\[ %Y-%m-%d %T.\$ms \] "
 				}
 
 			} ; #timestamp
@@ -3417,7 +3435,7 @@ namespace eval expectlite {
 						set control_char [string index $_el(line) [expr [string length $_el(line)] -1]]
 						# print timestamp
 						if { $TIMESTAMP } {
-							cputs  [timestamp -format $_el(ts_fmt)] "none" "-nonewline"
+							cputs  [ _el_timestamp ] "none" "-nonewline"
 						}
 						# Check if passed char is lower case
 						if {[expr $control_char_ascii - 96] > 0 } {
@@ -3442,7 +3460,7 @@ namespace eval expectlite {
 						after 10
 						# print timestamp
 						if { $TIMESTAMP } {
-							cputs  [timestamp -format $_el(ts_fmt)] "none" "-nonewline"
+							cputs  [ _el_timestamp ] "none" "-nonewline"
 						}
 						# Check of remote_host is still connected before sending string
 						if { [catch { send  -- "[_el_strip_char $_el(line) $_out_nowait]$_el_eols"  } error] } {
@@ -3469,7 +3487,7 @@ namespace eval expectlite {
 						set _el(success) 1
 						# print timestamp
 						if { $TIMESTAMP } {
-							cputs  [timestamp -format $_el(ts_fmt)] "none" "-nonewline"
+							cputs  [ _el_timestamp ] "none" "-nonewline"
 						}
 
 						# Check of remote_host is still connected before sending string
@@ -3577,13 +3595,6 @@ namespace eval expectlite {
 						set teststr [_el_strip_char $_el(line) $_in_fuzzy]
 						set testtr_org $teststr
 						
-						#puts "=>$teststr"
-						# parse teststr
-#						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\1" str_first
-#						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\3" str_last
-#						regsub -- {(.*)\(([0-9a-fA-Fx.]+)\)(.*)} $teststr "\\2" str_val
-
-
 						# remap escaped parens e.g \( \)
 						set teststr [string map { "\\(" "#{#" "\\)" "#}#" } $teststr ]
 						# use string first to parse

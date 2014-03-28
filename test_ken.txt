@@ -1,7 +1,7 @@
 #!/usr/bin/env expect-lite
 # make this puppy run
 
-
+*TIMESTAMP
 ; === set expect buffer big
 !match_max -d 1000
 @2
