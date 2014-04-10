@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.0d4"
+	variable version "4.7.0d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3636,6 +3636,8 @@ namespace eval expectlite {
 						}
 						
 						if {$_el(success) == 1 } {
+							#ensure fuzzy comparison is a pass
+							set _el(success) 0 
 							#grab return value from expect line
 							set rtn_val ""
 							set i 1
@@ -3666,7 +3668,8 @@ namespace eval expectlite {
 							}
 							incr i -1
 							#check fuzz value against global fuzz value
-							if { [string is integer $rtn_val ] || [string is double $rtn_val ]} {
+							if { ([string is integer $rtn_val ] || [string is double $rtn_val ]) && \
+								 ([string is integer $str_val ] || [string is double $str_val ]) } {
 								set fuzz_result 1
 								if { $rtn_val > [expr $str_val + $_el(fuzz)] } {set fuzz_result 0}
 								if { $rtn_val < [expr $str_val - $_el(fuzz)] } {set fuzz_result 0}

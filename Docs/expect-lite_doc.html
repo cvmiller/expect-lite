@@ -30,6 +30,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -70,11 +71,14 @@ easy. <br>
       <br>
       <span style="font-weight: bold;">Easy of Use</span><br>
       <ul>
+        
         <li><a href="expect-lite_doc.html#special_characters"><span style="font-weight: bold;">Simplicity</span> </a>using
 one
 character for send and expect '&gt;' '&lt;' <br>
-This creates many lines of expect with minimal "code" (<a href="#special_characters">table of interpreted characters</a>)<br>
+This creates many lines of expect with minimal "code" (<a href="#special_characters">table of interpreted characters</a>)</li>
+        <li><a href="#fuzzy_expect"><span style="font-weight: bold;">Fuzzy Expect</span></a> '~&lt;' expect an approximate value <span style="font-weight: normal;"></span><span style="background-color: yellow; font-weight: normal;">new in 4.7.0</span>
         </li>
+
         <li><a href="expect-lite_doc.html#executable_script"><span style="font-weight: bold;">Scripts
 can
 be executable</span></a>
@@ -109,7 +113,7 @@ Variables</a> <span style="font-weight: normal;">with
 math
 functions and pseudo arrays</span></li>
         <ul>
-          <li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#string_math_variables"><span style="font-weight: bold;">String Math</span></a> allows manipulation of strings: search/replace, +, - </span><span style="background-color: yellow; font-weight: normal;">new in 4.6.0</span></li>
+          <li style="font-weight: bold;"><span style="font-weight: normal;"><a href="#string_math_variables"><span style="font-weight: bold;">String Math</span></a> allows manipulation of strings: search/replace, +, -&nbsp;</span><span style="background-color: yellow; font-weight: normal;"></span></li>
         </ul>
 
         <li><a href="expect-lite_doc.html#constants"><span style="font-weight: bold;">Constants</span></a>,
@@ -148,7 +152,7 @@ conditional branching, a repeat loop can be constructed with infinite
 loop protection</li>
         <li><a style="font-weight: bold;" href="#code_blocks">Code Blocks</a> group lines of script for while loops and conditionals with then and else blocks&nbsp;<span style="background-color: yellow;"></span></li>
         <ul>
-          <li><span style="background-color: yellow;"></span><a href="#foreach_loop"><span style="font-weight: bold;">Foreach loops</span></a> Iterate through a list <span style="background-color: yellow;">new in 4.6.0</span> <span style="background-color: yellow;"></span></li>
+          <li><span style="background-color: yellow;"></span><a href="#foreach_loop"><span style="font-weight: bold;">Foreach loops</span></a> Iterate through a list&nbsp;<span style="background-color: yellow;"></span> <span style="background-color: yellow;"></span></li>
         </ul>
 
 
@@ -318,6 +322,12 @@ is a good value for a local LAN, 200 ms if running across high speed
 internet</td>
               </tr>
               <tr>
+                <td style="vertical-align: top;">EL_SHELL<br>
+                </td>
+                <td style="vertical-align: top;">Start this shell (default=bash) when using EL_CONNECT_METHOD=none<br>
+                </td>
+              </tr>
+<tr>
                 <td>EL_*</td>
                 <td>Any other shell environment variables starting with
 EL_ will become constants</td>
@@ -386,6 +396,12 @@ FAIL! (see <a href="#not_expect">Not Expect</a>)<br>
                 </td>
               </tr>
               <tr>
+                <td style="vertical-align: top;">~&lt;<br>
+                </td>
+                <td style="vertical-align: top;">expect an approximate number (see <a href="#fuzzy_expect">Fuzzy Expect</a>)<br>
+                </td>
+              </tr>
+<tr>
                 <td style="vertical-align: top;">#<br>
                 </td>
                 <td style="vertical-align: top;">used to
@@ -1560,7 +1576,12 @@ sub-script (see <a href="#regression_example">regression example</a>) . If the *
 include file should fail, a failure message will be reported at the
 completion of the include file:<br>
 <pre><span style="color: rgb(204, 0, 0);">##Include Result: FAILED: dns_connect.inc</span>    <br></pre>
+      <span style="font-weight: bold;"><a name="include_file_name_limitations"></a>Limitations on include file names</span><br>
       <br>
+With the version of 4.7.0, a line beginning wih tilde character has a
+dual purpose, marking a fuzzy expect line, and also include files. This
+means that an include file name must <span style="font-style: italic;">NOT</span> start with a greater than '&lt;' or an equals '='. All other characters should be allowed in an include file name.<br>
+<br>
       <h2><a name="embedded_expect"></a>Embedded
 Expect</h2>
 There are situations when expect-lite cannot provide a solution. Rather
@@ -2055,6 +2076,38 @@ You may want to ensure that eth4 is not down.<br>
 <pre>&gt;ip link show<br>&lt;eth4<br>-&lt;state DOWN<br></pre>
 In the example above, the 100ms counter will start <span style="font-style: italic;">after</span> finding 'eth4'<br>
       <br>
+      <a name="fuzzy_expect"></a><span style="font-weight: bold;">Fuzzy Expect</span><br>
+Fuzzy expect is expecting an approximate number (either decimal or
+hex). There are situations where an approximate value, or a range of
+numbers is acceptable. An example, one might be looking at cpu load (it
+is OK if it is between 0 and 2, but the test should fail if it over 2).<br>
+      <br>
+Fuzzy expect operates in two parts. The first part is to set a range
+(of fuzziness). This defines a range, for example entering 7, will
+match + or - 7. Set the range by:<br>
+      <pre>; set the fuzzy expect range to 7<br>~=7<br></pre>
+This value will be in effect until it is changed again.<br>
+      <br>
+The second part is to use fuzzy expect. In the following example, it is
+important to the script to run in the first 2 weeks of the month. Using
+the date command to print out the date/day of the month.<br>
+      <pre>; Check the date/day of the month<br>&gt;date "+the day is: %d"<br>~&lt;the day is: (7)</pre>
+
+The value in parens will be checked against the range earlier defined
+(plus or minus). In the above example, if the date command returns the
+string "the day is : 13", it will be pass, since 13 &lt; 7+7<br>
+      <br>
+Of course this could have been done in a more programmatic way, of
+capturing the value returned by date (using Dynamic Variables), then
+using a conditional (if statement) to do the comparison. But fuzzy
+expect is much simpler to use.<br>
+      <br>
+Additional important details are it consumes the <a href="#expect_buffer">expect buffer</a>,
+hexidecimal numbers must start with 0x (e.g. 0xbeef),&nbsp; parens in
+the string which are not matching the fuzzy value must be escaped with
+a backslash (e.g. \(15\) ), <a href="#regex_in_expect-lite">regex evaluation</a> is active (like '&lt;'), and the default range is 10.<br>
+      <br>
+
       <h2>How can it help?</h2>
 Expect-lite can be used to quickly create automated tests. It can
 collapse complicated tests into a single command line. It can also be

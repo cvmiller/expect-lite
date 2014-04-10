@@ -8,8 +8,9 @@
 .\" Updated Man Page for expect-lite - version 4.5.0	2/18/2013
 .\" Updated Man Page for expect-lite - version 4.6.0	5/25/2013
 .\" Updated Man Page for expect-lite - version 4.6.2	11/17/2013
+.\" Updated Man Page for expect-lite - version 4.7.0	4/11/2014
 .\"
-.TH EXPECT-LITE "1" "November 2013" "expect-lite version 4.6.2" "User Commands"
+.TH EXPECT-LITE "1" "April 2014" "expect-lite version 4.7.0" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -79,6 +80,9 @@ literal string MUST be received (similar to '<' without regex evaluation)
 .TP
 -<
 NOT expect, if string/regex IS received from the remote host the script will FAIL! 
+.TP
+~<
+fuzzy expect, expect an approximate number (decimal or hex)
 .TP
 #
 used to indicate comment lines, and have no effect
@@ -330,7 +334,7 @@ Written by Craig Miller
 .SH "REPORTING BUGS"
 Report bugs to <cvmiller at gmail dot com>.
 .SH COPYRIGHT
-Copyright \(co 2008-2013 Craig Miller
+Copyright \(co 2008-2014 Craig Miller
 .br
 Copyright \(co 2005-2007 FreeScale Semiconductor and Craig Miller
 .br

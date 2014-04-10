@@ -18,54 +18,35 @@ $user=bob
 >
 
 
-# Define Additional Functions
-!proc mark_time { var_name } {
-!	# A Procedure that marks current time in milliseconds and, updates expect-lite variable
-!	set time [clock clicks -milliseconds ]
-!	set ::expectlite::user_namespace($var_name) $time
-!}
+## Define Additional Functions
+#!proc mark_time { var_name } {
+#!	# A Procedure that marks current time in milliseconds and, updates expect-lite variable
+#!	set time [clock clicks -milliseconds ]
+#!	set ::expectlite::user_namespace($var_name) $time
+#!}
+#
+#
+#!proc show_time { var_time_ms var_date} {
+#!	# A Procedure that converts time from milliseconds and, updates expect-lite variable
+#!	set date $::expectlite::user_namespace($var_time_ms)
+#!	set ms [expr $date % 1000]
+#!	set date [expr int($date / 1000)]
+#!	set date_str [clock format $date -format "%Y-%m-%d %H:%M:%S"]
+#!	set date_str "$date_str.$ms"
+#!	set ::expectlite::user_namespace($var_date) $date_str
+#!}
+#
+## Define Additional Functions
+#!proc compare_fuzz { x value fuzz var_name } {
+#!	# A Procedure that checks value is in range and, updates expect-lite variable
+#!	# 	returns var_name=1 if in range, 0 if outside of range
+#!	set result 1
+#!	if { $x > [expr $value + $fuzz] } {set result 0}
+#!	if { $x < [expr $value - $fuzz] } {set result 0}
+#!	set ::expectlite::user_namespace($var_name) $result
+#!}
 
-
-!proc show_time { var_time_ms var_date} {
-!	# A Procedure that converts time from milliseconds and, updates expect-lite variable
-!	set date $::expectlite::user_namespace($var_time_ms)
-!	set ms [expr $date % 1000]
-!	set date [expr int($date / 1000)]
-!	set date_str [clock format $date -format "%Y-%m-%d %H:%M:%S"]
-!	set date_str "$date_str.$ms"
-!	set ::expectlite::user_namespace($var_date) $date_str
-!}
-
-# Define Additional Functions
-!proc compare_fuzz { x value fuzz var_name } {
-!	# A Procedure that checks value is in range and, updates expect-lite variable
-!	# 	returns var_name=1 if in range, 0 if outside of range
-!	set result 1
-!	if { $x > [expr $value + $fuzz] } {set result 0}
-!	if { $x < [expr $value - $fuzz] } {set result 0}
-!	set ::expectlite::user_namespace($var_name) $result
-!}
-
-
-# Define Additional Functions
-!proc fuzz_exp { str } {
-!	set fuzz 5
-!	# A Procedure that does a fuzzy expect
-!	regsub "(.*)\((.*)" $str "\1" str_first
-!	regsub "(.*)\)(.*)" $str "\2" str_last
-!	regsub "(.*)\(.*\)(.*)" $str "\2" str_fuzz
-!
-!	# how to create expect line, with text(\d+)more text
-!	# compare captured number to fuzzy range
-!
-!
-!
-!
-!
-
-!	expect  -re $str { return } timeout { puts "\n\tExpect Failed:$str"; _el_fail_test }
-
-!}
+~tcl_functions.inc
 
 
 
@@ -88,26 +69,21 @@ $mydate=
 ; == my date is:$mydate and time was:$mytime1
 ; == elapsed time is: $mytime2 ms
 >
+*EXP_INFO
 
 ;cyan === fuzz testing
 
 >date '+%S'
 +$secs=\n(\d+)
 >
-$result=now
-; first half of minute
-!compare_fuzz $secs 15 15 result
->
-; === show result:$result
-?if $result == 1? ;green $secs is in first half :: ;red $secs is in second half
->
 
 ; === test fuzzy expect
 ~=$FUZZ
 
 >echo $(date '+%S')
-+$MIN=\n(\d+)
-#>MIN=15
+#+$MIN=\n(\d+)
+#$+MIN=\n(\d+)
+$MIN=15
 >echo "this is the $MIN to rise up"
 ~<this is the ( 10 ) to rise up
 >
@@ -146,6 +122,12 @@ $result=now
 >echo "llll 7.5 the $MIN to rise up"
 ~<llll 7.5 the (15) to rise up
 
+$big=250
+>/sbin/route -n
+<0.0.0.0
+<255.255.
+~<($big)
+>
 
 
 *INTERACT

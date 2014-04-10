@@ -1338,6 +1338,12 @@ Released 21 Dec 2010 - 4.0.2
 	Added miliseconds to *TIMESTAMP
 	
 
+9 April 2014 - 4.7.0d5
+	Fixed  not handling "found" non-number in fuzzy expect
+	Updated Docs & man page
+	Updated tcl_functions.inc with "mark time" function
+
+
 ------------ Future Versions --------------------------
 		
 Futurer
@@ -1684,6 +1690,8 @@ b	Logging (once 4.4.0 is out)
 b	sleeping - no native sleep
 
 b	prompts - why simple prompts are useful, why are they important
+
+b	tcl_functions - extending EL
 
 k	Include files
 
