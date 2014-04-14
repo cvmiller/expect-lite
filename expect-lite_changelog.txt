@@ -1344,6 +1344,11 @@ Released 21 Dec 2010 - 4.0.2
 	Updated tcl_functions.inc with "mark time" function
 
 
+13 April 2014 4.7.0d6
+	Added include_script_name to <esc>-v display
+
+
+
 ------------ Future Versions --------------------------
 		
 Futurer
@@ -1351,7 +1356,7 @@ Futurer
 x	BUG: EL CLI var="item1 item2" - broken
 		seems to work
 
-o	Add include_script_name to ESC-V display
+x	Add include_script_name to ESC-V display
 
 o	Add Env Variable to allow telnet/ssh on custom Port - EL_REMOTE_PORT=8080
 	Feature request by Jeff Dean jhdean@mac.com

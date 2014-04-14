@@ -128,7 +128,11 @@ $big=250
 <255.255.
 ~<($big)
 >
-
+*INTERACT
+; === Garbage Test
+>cd /tmp/
+~/tmp/garb.txt
+>
 
 *INTERACT
 >

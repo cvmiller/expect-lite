@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.0d5"
+	variable version "4.7.0d6"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -628,7 +628,7 @@ namespace eval expectlite {
 
 								# end clump send
 							}
-						^\~	{	# include a file
+						^\~[^=<]	{	# include a file
 								if { $param == "k" } {
 									cputs "Skipping:$line"  $_el_info_color
 									protected_send "$_el_eols"
@@ -2149,6 +2149,8 @@ namespace eval expectlite {
 		upvar expectlite::user_namespace		user_namespace
 		upvar expectlite::cli_namespace			cli_namespace
 		upvar expectlite::arg0					arg0
+		upvar expectlite::_el_buf				_el_buf
+		upvar expectlite::_el					_el
 
 		set blank "                    "
 		set blank_len [string length $blank]
@@ -2160,7 +2162,13 @@ namespace eval expectlite {
 		if { [ info exists cli_namespace($arg0) ] } { 
 			set ii_len [string length $arg0]
 			set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
-			cputs "Var:arg0 $ii_blank Value:$cli_namespace($arg0)" "none"
+			set script_name $cli_namespace($arg0)
+			if { $_el_buf(stack) > 1 } {
+				if { [info exists _el(include_file_name) ] } {
+				set script_name "$script_name-> ~$_el(include_file_name)"
+				}
+			}
+			cputs "Var:arg0 $ii_blank Value:$script_name" "none"
 		}
 		foreach ii $var_list_sorted {
 			# create aligned columns
@@ -4029,6 +4037,8 @@ namespace eval expectlite {
 									set include_path_file "[parse_cmd_file_path $_el(cmd_file)]$_include_file"
 								}
 								#puts "->$include_path_file"
+								# preserve include file name for future reference
+								set _el(include_file_name) $_include_file
 								if {$INFO} {
 									cputs "\nIncluding: $_include_file_str\n" $_el_info_color
 								}
@@ -4074,6 +4084,9 @@ namespace eval expectlite {
 								set _el_buf(stack) $buf_stack
 								# restore constants
 								_el_restore_const $_keep_var_values
+								
+								# clear include file name for future reference
+								set _el(include_file_name) ""
 							}; # if include file not __NO_STRING_CAPTURED__
 						} else {
 							cputs "\nWarning: *NOINCLUDE: Skipping include file:$_include_file\n" $_el_warn_color
