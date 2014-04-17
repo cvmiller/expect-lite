@@ -1347,6 +1347,11 @@ Released 21 Dec 2010 - 4.0.2
 13 April 2014 4.7.0d6
 	Added include_script_name to <esc>-v display
 
+13 April 2014 4.7.0d7
+	Improved EL_REMOTE_HOST=none speed
+		Reduced wait_for_remote_host / 4
+		Fixed 5 second delay at beginning of script
+
 
 
 ------------ Future Versions --------------------------

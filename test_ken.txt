@@ -76,6 +76,9 @@ $mydate=
 >date '+%S'
 +$secs=\n(\d+)
 >
+>
+>
+>
 
 ; === test fuzzy expect
 ~=$FUZZ

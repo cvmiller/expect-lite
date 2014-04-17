@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.0d6"
+	variable version "4.7.0d7"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1680,8 +1680,10 @@ namespace eval expectlite {
 					timeout { if {$DEBUG} { cputs "DEBUG: Unable to detect Shell Start\n"  $_el_debug_color} }
 				}
 			}
+		} else {
+			#connect_method is none - set to speed up "none" operation
+			set delay_wait_for_host [expr $delay_wait_for_host / 4 ]
 		}
-
 		# attempt to detect shell by prompt
 		protected_send "$_el_eols"
 		expect -re {([%>#$]) $} {
@@ -1689,6 +1691,8 @@ namespace eval expectlite {
 			#puts "<<$expect_out(buffer)>>" 
 			set detected_prompt $expect_out(0,string)
 		}
+		# kick things to keep it moving
+		protected_send "\n"
 		# set sane prompt
 		
 		switch -glob -- $remote_shell {
@@ -3510,7 +3514,7 @@ namespace eval expectlite {
 						#set expect_out(buffer) ""
 						if {$connect_method == "none"} {
 							# delay in ms - slow down the host, give the target time to respond
-							after [expr $delay_wait_for_host * 2]
+							after [expr $delay_wait_for_host * 1]
 						}	
 					}
 				^\<\<	{ 	# Expect teststr without regex or set success to 0 and fail test		'<<'=no regex
