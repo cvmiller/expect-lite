@@ -32,6 +32,7 @@
 
 
 
+
   
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
@@ -2083,11 +2084,11 @@ hex). There are situations where an approximate value, or a range of
 numbers is acceptable. An example, one might be looking at cpu load (it
 is OK if it is between 0 and 2, but the test should fail if it over 2).<br>
       <br>
-Fuzzy expect operates in two parts. The first part is to set a range
+Fuzzy expect operates in two parts. The first part is to set a range or tolerance
 (of fuzziness). This defines a range, for example entering 7, will
 match + or - 7. Set the range by:<br>
       <pre>; set the fuzzy expect range to 7<br>~=7<br></pre>
-This value will be in effect until it is changed again.<br>
+This value will be in effect until it is changed.<br>
       <br>
 The second part is to use fuzzy expect. In the following example, it is
 important to the script to run in the first 2 weeks of the month. Using
@@ -2103,7 +2104,7 @@ capturing the value returned by date (using Dynamic Variables), then
 using a conditional (if statement) to do the comparison. But fuzzy
 expect is much simpler to use.<br>
       <br>
-Additional important details are it consumes the <a href="#expect_buffer">expect buffer</a>,
+Additional important details are: it consumes the <a href="#expect_buffer">expect buffer</a>,
 hexidecimal numbers must start with 0x (e.g. 0xbeef),&nbsp; parens in
 the string which are not matching the fuzzy value must be escaped with
 a backslash (e.g. \(15\) ), <a href="#regex_in_expect-lite">regex evaluation</a> is active (like '&lt;'), and the default range is 10.<br>

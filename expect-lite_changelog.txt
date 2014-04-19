@@ -1347,16 +1347,29 @@ Released 21 Dec 2010 - 4.0.2
 13 April 2014 4.7.0d6
 	Added include_script_name to <esc>-v display
 
-13 April 2014 4.7.0d7
+16 April 2014 4.7.0d7
 	Improved EL_REMOTE_HOST=none speed
 		Reduced wait_for_remote_host / 4
 		Fixed 5 second delay at beginning of script
+
+18 April 2014 4.7.0d8
+	Fixed setting fuzz exp value 
+		with non-dereferenced var
+		with space in front of value
+	Added not-expect & fuzzy-expect to self_test_basics.txt
+	Suppress some directives when *NOINFO is in effect
+		*TIMESTAMP/*NOTIMESTAMP, *EOLS LF/*EOLS CRLF
+	Fixed CLI override of directives (again)
+	Fixed *TIMESTAMP miliseconds to be pad left with zeros
 
 
 
 ------------ Future Versions --------------------------
 		
-Futurer
+Future
+
+x	Silence directives with *NOINFO?
+		Put only *TIMESTAMP/*NOTIMESTAMP under INFO
 
 x	BUG: EL CLI var="item1 item2" - broken
 		seems to work

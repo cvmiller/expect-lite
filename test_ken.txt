@@ -2,6 +2,7 @@
 # make this puppy run
 
 *TIMESTAMP
+*EXP_INFO
 ; === set expect buffer big
 !match_max -d 1000
 @2
@@ -51,8 +52,12 @@ $user=bob
 
 
 
-$FUZZ=5
-
+$FUZZ=2
+~=1
+>uptime
+~<load average: (1.00), \d.\d\d, \d.\d\d
+>
+*INTERACT
 # must define this var before using with TCL functions
 $mytime1=0
 $mytime2=0

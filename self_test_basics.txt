@@ -15,6 +15,14 @@
 #	Requires Expect-lite version 3.6.0
 #
 
+#
+# Added additional expects (not expect, fuzzy expect) '-<' '~<'
+#
+#	Requires Expect-lite version 4.7.0
+#
+
+
+
 # Turn on warnings
 *WARN
 
@@ -70,6 +78,80 @@
 >^D
 >
 *NODEBUG
+
+; === check NOT expect
+>echo "the answer is 42"
+-<answer is 43
+
+; === check NOT expect of 1 digit
+>echo "9"
+-<8
+
+
+*EXP_INFO
+; === test fuzzy expect read var before set
+~=$FUZZ
+
+$FUZZ=5
+; === test fuzzy expect
+~=$FUZZ
+
+
+; === check fuzzy expect - spaces around number
+$MIN=15
+>echo "this is the $MIN to rise up"
+~<this is the ( 10 ) to rise up
+>
+>
+
+; === check fuzzy expect - white space at end of line
+>echo "cccc is the $MIN		"
+~<cccc is the (10)
+>
+; === check fuzzy expect - hexidecimal
+>echo "ffff is the 0xbeef to rise up"
+~<ffff is the (0xbeea) to rise up
+>
+; === check fuzzy expect - decimal
+>echo "gggg is the $MIN"
+~<(10.5)
+
+; === check fuzzy expect - variable in second parens, not fuzzy
+>echo "hhhh 7 the $MIN "
+~<hhhh (5) the ($MIN)
+
+
+; === check fuzzy expect - extra words in parens
+>echo "iiii 7 the 10 to rise up"
+~<iiii (5) the (10) to rise (up)
+
+; === check fuzzy expect - reverse decimal
+>echo "jjjj 12.5 the $MIN to rise up"
+~<jjjj ($MIN) the ($MIN) to rise (up)
+
+; === check fuzzy expect - escaped parens
+>echo "kkkk (705) the $MIN to rise up"
+~<kkkk \(705\) the (10) to rise up
+
+#; === check fuzzy expect - no parens
+#>echo "llll now is the time to rise up"
+#~<llll now is the time to rise up
+
+
+; === check fuzzy expect - decimals
+# space in front of fuzzy value, and tab after
+~= 0.9	
+>uptime
+~<load average: (0.7)
+
+#; === negative testing
+#>echo "zbbb is the ($MIN) to rise up"
+#~<zbbb is the ($BAD) to rise up
+#
+#; === no number
+#>echo "zeee is the $MIN to rise up"
+#~<zeee (is) the 15 to rise up
+
 
 #pau!
 

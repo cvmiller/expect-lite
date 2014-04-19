@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.0d7"
+	variable version "4.7.0d8"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1306,7 +1306,7 @@ namespace eval expectlite {
 			set _include_file [lindex [split $_include_file " " ] 0]
 
 			# is include file a variable or fuzzy expect (could be ~=$var), skip validation
-			if { [ regexp {^\$|^\<|^=\$?[a-zA-Z0-9]} $_include_file ] == 0 } {
+			if { [ regexp {^\$|^\<|^=\$?[a-zA-Z0-9]|^=} $_include_file ] == 0 } {
 				# absolute path to include file?
 				set _slash "/"
 				if { [string index $_include_file 0] == $_slash} {
@@ -1691,8 +1691,10 @@ namespace eval expectlite {
 			#puts "<<$expect_out(buffer)>>" 
 			set detected_prompt $expect_out(0,string)
 		}
-		# kick things to keep it moving
-		protected_send "\n"
+		if {$connect_method == "none" } {
+			# kick things to keep it moving
+			protected_send "$_el_eols"
+		}
 		# set sane prompt
 		
 		switch -glob -- $remote_shell {
@@ -2810,6 +2812,8 @@ namespace eval expectlite {
 		set ms [expr $date % 1000]
 		set date [expr int($date / 1000)]
 		set date_str [clock format $date -format $_el(ts_fmt)]
+		#pad left with zeros
+		set ms [format "%03d" $ms]
 		#add milisecs into formatted string
 		regsub {\$ms} $date_str "$ms" date_str
 		
@@ -2855,15 +2859,15 @@ namespace eval expectlite {
 			}
 			"\\*EXP_INFO"	{	# Turn on Expect INFO logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-				set EXP_INFO 1
+				incr EXP_INFO
 			}
 			"\\*WARN"	{	# Turn on WARN logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-				set WARN 1
+				incr WARN
 			}
 			"\\*DEBUG"	{	# Turn on DEBUG logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-				set DEBUG 1
+				incr DEBUG
 			}
 			"\\*LOG*"	{	# Turn on LOG logging
 				# set default log file name to script name+.log (e.g. $el_log_ext)
@@ -2956,23 +2960,23 @@ namespace eval expectlite {
 			"\\*NOINFO"	{	# Turn off INFO logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				# do not disable if CLI has enabled
-				if {$INFO != 10 } { set INFO 0 }
+				if {$INFO < 10 } { set INFO 0 }
 
 			}
 			"\\*NOEXP_INFO"	{	# Turn off Expect INFO logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
-				if {$EXP_INFO != 10 } { set EXP_INFO 0 }
+				if {$EXP_INFO < 10 } { set EXP_INFO 0 }
 			}
 			"\\*NOWARN"	{	# Turn off WARN logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				# do not disable if CLI has enabled
-				if {$WARN != 10 } { set WARN 0 }
+				if {$WARN < 10 } { set WARN 0 }
 
 			}
 			"\\*NODEBUG"	{	# Turn off DEBUG logging
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				# do not disable if CLI has enabled
-				if {$DEBUG != 10 } { set DEBUG 0 }
+				if {$DEBUG < 10 } { set DEBUG 0 }
 
 			}
 			"\\*NOCOLOR"	-
@@ -2988,7 +2992,7 @@ namespace eval expectlite {
 				set _el_comment_color none		 	
 			}
 			"\\*NOTIMESTAMP"	{	# Turn off TIMESTAMP logging
-				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				if {$INFO} { cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color }
 				# do not disable if CLI has enabled
 				if {$TIMESTAMP != 10 } { set TIMESTAMP 0 }
 			}
@@ -3011,11 +3015,11 @@ namespace eval expectlite {
 				}
 			}
 			"\\*EOLS LF"	{	# Set End of Line Sequence to LF
-				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				if {$INFO} { cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color }
 				set _el_eols "\n"
 			}
 			"\\*EOLS CRLF"	{	# Set End of Line Sequence to CRLF
-				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				if {$INFO} { cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color }
 				set _el_eols "\r\n"
 			}
 			"\\*SHOW VARS"	{	# Show expect-lite variables
@@ -3101,7 +3105,7 @@ namespace eval expectlite {
 				}
 			}
 			"\\*TIMESTAMP" { #Issue Time Stamps with each > or >>
-				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				if {$INFO} { cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color }
 				set ts_list [split $g_dir_str]
 				if { [llength $ts_list] > 2 } {
 					if {$WARN} {
@@ -3613,8 +3617,14 @@ namespace eval expectlite {
 						set str_first [string range $teststr 0 [expr [string first "(" $teststr] -1 ]]
 						set str_last [string range $teststr [expr [string first ")" $teststr] +1 ] [string length $teststr]]
 						set str_val [string range $teststr  [expr [string first "(" $teststr] +1 ]  [expr [string first ")" $teststr] -1 ] ]
-						
+
+						# check str_val is a number
+						if { ([string is integer $str_val ] == 0) && ([string is double $str_val ] ==0) } {
+							set str_val ""
+						}
 						# build teststr
+						#puts "===>$str_first|$str_last|$str_val!"
+						
 						if { ($str_first == $str_last && $str_first == $str_val) || $str_val == "" } {
 							# didn't parse string, show error
 							cputs "\nWarning: Expect-lite unable to parse fuzzy compare number in line:\n$teststr" $_el_warn_color
@@ -3631,14 +3641,8 @@ namespace eval expectlite {
 						#puts "===>$str_first|$str_last|$str_val"
 						#puts "==T=>$teststr"
 
-						if {$str_val == "" } {
-							#parsing problems
-							if { $str_first != $str_last } {
-								#set teststr for error message for no num found
-								set teststr "$str_first\(__NO_NUMBER_FOUND__\)$str_last"
-							}
-							set _el(success) 0 
-						} else {
+						if {$str_val != "" } {
+							#parsing looks OK
 							# catch expect, just in case
 							if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
 								if {$WARN} {
@@ -3693,7 +3697,11 @@ namespace eval expectlite {
 						}; # $_el(success) == 1 
 						
 						#set teststr for error message if num is found but out of range
-						set teststr "$str_first\($str_val~$_el(fuzz)\)$str_last"
+						if { $str_val != "" } {
+							set teststr "$str_first\($str_val~$_el(fuzz)\)$str_last"
+						} else {
+							set teststr "$str_first\(__NO_NUMBER_FOUND__\)$str_last"
+						}
 						
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
@@ -3740,23 +3748,22 @@ namespace eval expectlite {
 						}
 
 					}
-				{^~=[0-9]+} 	{ 	# Update the fuzzy expect value (or range)
+				{^~=[ ]?[0-9.]+} 	{ 	# Update the fuzzy expect value (or range)
 						
 						# validate that the timeout value is a number
 						print_comment_line
 						# execute expect lines if present
 						_el_exec_expect
-						if {([regexp \[^0-9\ \]+ [_el_strip_char $_el(line) "~="]])} {
+						set fuzzy_int [_el_strip_char $_el(line) "~=" ]
+						#trim extra white space
+						set fuzzy_int [string trimright $fuzzy_int ]
+						if {[regexp \[^0-9.\ \]+ $fuzzy_int]} {
 							if {$WARN} {
 								cputs "WARN: Bad Fuzzy Value: [_el_strip_char $_el(line) "~=" ] " $_el_warn_color
 							}
 						} else {
-							#puts "\nSetting Expect Timeout to: [_el_strip_char $_el(line) $_timeout] \n"
-							set fuzzy_int [_el_strip_char $_el(line) "~=" ]
-
 							set fuzz_line "\nSetting Fuzzy Expect to: + or - $fuzzy_int \n"
 							set _el(fuzz) $fuzzy_int
-							#puts "======>$fuzzy_int"
 
 						}
 						# print new timeout value if one_line is set (e.g. from IDE)
@@ -4011,7 +4018,7 @@ namespace eval expectlite {
 						if {$_one_line} { print_comment_line }
 
 					}
-				^\~ 	{	# include file from same location at cmd_file
+				^\~[^=<] 	{	# include file from same location at cmd_file
 						# Uses recursion to interpret included file
 
 						# execute expect lines if present

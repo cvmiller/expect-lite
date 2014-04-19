@@ -6,6 +6,7 @@
 
 
 
+
   
   <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>expect-lite</title>
   
@@ -90,10 +91,14 @@ Latest version 4.7.0 improvements include:<br>
         
         
         <li>Fuzzy Expect - expect an approximate number<br>
-&gt; echo "a random number is $RAND<br>
-~&lt;a random number is (100)<br>
+# set fuzzy range e.g. + or - 1<br>
+~=1<br>
+&gt; uptime<br>
+~&lt;load average: (0.9)<br>
 </li>
-        <li>*TIMESTAMP now at milisecond resolution</li>
+        <li>Improved speed when using EL_REMOTE_HOST=none (default)</li>
+        <li>*TIMESTAMP now with milisecond resolution</li>
+
         <li>Debugger &lt;esc&gt;v prints script and include file names<br>
         </li>
 
