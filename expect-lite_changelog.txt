@@ -1335,8 +1335,7 @@ Released 21 Dec 2010 - 4.0.2
 	Merged 2expect-lite into expect-lite
 
 27 March 2014 - 4.7.0d4
-	Added miliseconds to *TIMESTAMP
-	
+	Added miliseconds to *TIMESTAMP	
 
 9 April 2014 - 4.7.0d5
 	Fixed  not handling "found" non-number in fuzzy expect
@@ -1344,7 +1343,7 @@ Released 21 Dec 2010 - 4.0.2
 	Updated tcl_functions.inc with "mark time" function
 
 
-13 April 2014 4.7.0d6
+13 April 2014 - 4.7.0d6
 	Added include_script_name to <esc>-v display
 
 16 April 2014 4.7.0d7
@@ -1352,7 +1351,7 @@ Released 21 Dec 2010 - 4.0.2
 		Reduced wait_for_remote_host / 4
 		Fixed 5 second delay at beginning of script
 
-18 April 2014 4.7.0d8
+18 April 2014 - 4.7.0d8
 	Fixed setting fuzz exp value 
 		with non-dereferenced var
 		with space in front of value
@@ -1361,6 +1360,9 @@ Released 21 Dec 2010 - 4.0.2
 		*TIMESTAMP/*NOTIMESTAMP, *EOLS LF/*EOLS CRLF
 	Fixed CLI override of directives (again)
 	Fixed *TIMESTAMP miliseconds to be pad left with zeros
+
+20 April 2014 - 4.7.0 Released
+
 
 
 
@@ -1401,7 +1403,7 @@ o	Add fuzzy comparison ~=  to if statement
 		~<this or that (30)
 		
 
-o	Add range checking
+x	Add range checking (use fuzzy expect)
 	?if 10 < $x < 15? >do something
 	?if 20 > $y >= 10?
 		use: if { (8 < $x) && ($x < 14) } 

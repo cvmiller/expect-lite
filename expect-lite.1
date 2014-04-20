@@ -8,7 +8,7 @@
 .\" Updated Man Page for expect-lite - version 4.5.0	2/18/2013
 .\" Updated Man Page for expect-lite - version 4.6.0	5/25/2013
 .\" Updated Man Page for expect-lite - version 4.6.2	11/17/2013
-.\" Updated Man Page for expect-lite - version 4.7.0	4/11/2014
+.\" Updated Man Page for expect-lite - version 4.7.0	4/20/2014
 .\"
 .TH EXPECT-LITE "1" "April 2014" "expect-lite version 4.7.0" "User Commands"
 .SH NAME
@@ -73,7 +73,7 @@ send string to remote host, without waiting for prompt
 
 .TP
 <
-string/regex MUST be received from the remote host in the alloted timeout or the script will FAIL! 
+string/regex MUST be received from the remote host in the allotted timeout or the script will FAIL! 
 .TP
 << 	
 literal string MUST be received (similar to '<' without regex evaluation)
@@ -187,19 +187,19 @@ Immediately terminates script, but returns 0 (pass)
 Immediately fails script, and returns 1 (fail) 
 .TP
 *NOFAIL
-Script will run to completion, and returns 1, if failure occured during execution, or 0, if pass (it is a sticky flag, and can not be unset)
+Script will run to completion, and returns 1, if failure occurred during execution, or 0, if pass (it is a sticky flag, and can not be unset)
 .TP
 **SHELL=<shell>
-Configuration directive which sets the shell imediately after automatic login to remote host (see setting the shell)
+Configuration directive which sets the shell immediately after automatic login to remote host (see setting the shell)
 .TP
 *INTERACT
 A breakpoint which places user in interact mode, and pauses the script and turns control of the keyboard over to the user 
 .TP
 *NOINTERACT
-Once set, will ignore all succeding breakpoints (*INTERACT). This permits running a  script or scripts in an unattended regression. This can not be unset (it is a sticky flag)
+Once set, will ignore all succeeding breakpoints (*INTERACT). This permits running a  script or scripts in an unattended regression. This can not be unset (it is a sticky flag)
 .TP
 *FORK <session>
-Multiple session support. Directs expect-lite to open a new session and spawns a newshell 
+Multiple session support. Directs expect-lite to open a new session and spawns a new shell 
 .TP
 *SHOW VARS
 Debug information, displays all expect-lite variables. Can be used in interact mode.
@@ -211,13 +211,13 @@ Infinite loop protection value, sets N as new value
 Controls end of line sequence sent to remote host, either line feed, or carriage return + line feed.
 .TP
 *NOINCLUDE
-Once set, will ignore all succeding include files (lines starting with ~). This was the default behaviour in Library mode (introduced in v4.1). This behavour is no longer default, and this directive provides a method to previous behavior.
+Once set, will ignore all succeeding include files (lines starting with ~). This was the default behaviour in Library mode (introduced in v4.1). This behaviour is no longer default, and this directive provides a method to previous behavior.
 
 .P
 .SS
 Logging
 .PP
-Logging encompases two operations: 1) writing script output to a file, 2) controlling additional messages, such as info, exp_info and warnings. All logging commands when used on the CLI will override those inside the script
+Logging encompasses two operations: 1) writing script output to a file, 2) controlling additional messages, such as info, exp_info and warnings. All logging commands when used on the CLI will override those inside the script
 .TP
 *LOG|*NOLOG
 Enable/disable logging of standard out and messages to a file. The log file name will be <script_name>.log saved in the script directory.(see Environment Variable EL_LOG_EXT below)
@@ -229,7 +229,7 @@ Enable logging to a user specified path/file_name. When invoked on the CLI, the 
 Enable/disable informational messages
 .TP
 *EXP_INFO|*NOEXP_INFO
-Enable/disable "expected" messages (addtionally use -V flag to enable) 
+Enable/disable "expected" messages (additionally use -V flag to enable) 
 .TP
 *WARN|*NOWARN
 Enable/disable warning messages
@@ -282,7 +282,7 @@ EL_SHELL
 Start this shell (default bash) when using EL_CONNECT_METHOD=none
 .TP
 EL_LOG_EXT
-Set the log file name extension string (default=".log") which is appended to the script name when uusing *LOG without file name argument or used to detect a log file name on the command line.
+Set the log file name extension string (default=".log") which is appended to the script name when using *LOG without file name argument or used to detect a log file name on the command line.
 .TP
 EL_*
 Any other shell environment variables starting with EL_ will become constants

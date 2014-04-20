@@ -2,6 +2,19 @@
 All changes by Craig Miller cvmiller at gmail dot com
 
 
+Released 20 April 2014 v4.7.0
+	Added fuzzy expect ~<
+		Permitting approximate values to be expected
+		e.g.	>uptime
+				~<load average: (1.0)
+	*TIMESTAMP now prints with miliseconds
+	Updated examples/tcl_functions.inc with "mark time" function
+	Suppress some directives when *NOINFO is in effect
+		*TIMESTAMP/*NOTIMESTAMP, *EOLS LF/*EOLS CRLF
+	Added include_script_name to IDE <esc>-v display
+	Improved speed EL_REMOTE_HOST=none (default), by shortening delays
+
+
 Released 19 November 2013 v4.6.2
 	Added env var EL_SHELL for shell to start when connect_method=none
 	Fixed *LOGAPPEND with no file name (now it appends to default name)
@@ -13,7 +26,6 @@ Released 19 November 2013 v4.6.2
 	Fixed string math functions
 		concat - now spaces are not required e.g. =$var1+$var2
 		search/replace - searching for minus now fixed =$var/-/z/
-
 
 Released 23 July 2013 v4.6.1 (foreach release)
 	Updated foreach to normalize lists (removing extra spaces) when executing loop
