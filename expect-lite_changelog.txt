@@ -1364,6 +1364,11 @@ Released 21 Dec 2010 - 4.0.2
 20 April 2014 - 4.7.0 Released
 
 
+17 May 2014 - 4.7.1d1
+	Fixed bug when $var ended in semicolon e.g. $var;
+
+
+
 
 
 ------------ Future Versions --------------------------
@@ -1702,6 +1707,9 @@ x	Add deb and rpm to download files
 x	Add Env Var validation e.g. connect_method=ssh-key creates BUG!
 
 ------------ Blogging --------------------------
+
+
+
 
 k	Blog: describe "how I test" with loopback
 		run ./install -c to set this up
