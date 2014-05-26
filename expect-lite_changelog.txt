@@ -1368,6 +1368,14 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed bug when $var ended in semicolon e.g. $var;
 
 
+23 May 2014 - 4.7.1d2
+	Fixed bug in string math, if $var is equal to blank
+		e.g. $var=
+			=$var + string
+
+24 May 2014 - 4.7.1d3
+	Fixed while loop comparison if first value was blank
+		Added warning if greater/lesser comparison values are blank
 
 
 
@@ -1709,7 +1717,9 @@ x	Add Env Var validation e.g. connect_method=ssh-key creates BUG!
 ------------ Blogging --------------------------
 
 
+b	How-to use string math, search/replace, concat, remove or just assignment
 
+b	pseudo arrays
 
 k	Blog: describe "how I test" with loopback
 		run ./install -c to set this up

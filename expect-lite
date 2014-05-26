@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.1d1"
+	variable version "4.7.1d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -4236,7 +4236,7 @@ namespace eval expectlite {
 							# if not, set to blank
 							set user_namespace($var) 0
 						}
-						if { [string is integer $user_namespace($var) ] || [string is double $user_namespace($var) ]} {
+						if { [string length $user_namespace($var)] > 0 && ( [string is integer $user_namespace($var) ] || [string is double $user_namespace($var) ] ) } {
 							#$var is a number
 							# supports oper: << >> & | ^ + = * / % pow(x,y)
 							if { [catch { set user_namespace($var) [expr $user_namespace($var)$_el_predicate] } error]} {
@@ -4529,24 +4529,22 @@ namespace eval expectlite {
 								regsub -all {\$[a-zA-Z0-9_]+} $_cond_arg2 {} _cond_arg2							
 							} 
 
-							# allow _cond_arg2 to be blank, test against blank
-							if {( $_cond_oper == "==" || $_cond_oper == "!=" ) && ($_cond_arg2 == "" ) } {
-								# build special test line against blank arg2
-								set _test " expr { \"$_cond_arg1\" $_cond_oper \"\" } "
-							} else {
+							# build test line - allow blank arguements
+							set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
+
+							# Do not allow blanks in greater/lesser than comparisons
+							if { [lsearch { <= >= < > } $_cond_oper ] != -1 } {
 								# build test line
 								if { $_cond_arg1 == "" || $_cond_arg2 == "" } {
-									# something is wrong, one of the conditions is blank break the eval
+									# something is wrong, one of the conditions is blank, break loop
 									set _test " expr { $_cond_arg1 $_cond_oper $_cond_arg2 } "
-								} else {
-									set _test " expr { \"$_cond_arg1\" $_cond_oper \"$_cond_arg2\" } "
 								}
 							}
 
 							# check for syntax errors and evaluate result of test line
 							if {[catch { eval  $_test  } error ] } {
 								if {$WARN} {
-									cputs "\nWarning: Expect-lite: $error: Unable to detect conditional operator\n" $_el_warn_color
+									cputs "\nWarning: Expect-lite: $error: \nWhile Loop: One of comparison values is blank" $_el_warn_color
 									cputs "	Evaluating line:$_test" $_el_warn_color
 								}
 								#skip block lines, don't jump if bad line-meta value
@@ -4556,7 +4554,7 @@ namespace eval expectlite {
 								}
 
 							} else {
-								# Show user the if statement, action and result
+								# Show user the while statement, action and result
 								set _test_result [eval  $_test ]
 								if {$_test_result} {
 									set _test_result "TRUE"

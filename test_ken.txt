@@ -57,7 +57,7 @@ $FUZZ=2
 >uptime
 ~<load average: (1.00), \d.\d\d, \d.\d\d
 >
-*INTERACT
+#*INTERACT
 # must define this var before using with TCL functions
 $mytime1=0
 $mytime2=0
@@ -74,6 +74,45 @@ $mydate=
 ; == my date is:$mydate and time was:$mytime1
 ; == elapsed time is: $mytime2 ms
 >
+
+*NOTIMESTAMP
+
+; === un initialized math var $num
+=$num + 10
+
+; == string math
+$junk=
+=$junk + $mytime1 is $mytime2
+; === $junk and math var:$num
+>
+
+; === get host addresses of sites visited - sort by first octets
+>/sbin/route -6 | sort -k 1,4 -n -u | grep '/128' | cat
+$i=0
+[ $addr$i != __NO_STRING_CAPTURED__
+	+$i
+	# get first address
+	+$addr$i=\n([a-f0-9:]{15,37})/128
+	# consume buffer
+	? $addr$i != __NO_STRING_CAPTURED__ ? <$addr$i
+]
+# decrement counter $i
+=$i
+$total_addrs=$i
+
+; == display addresses
+$i=1
+
+[ $i < $total_addrs
+	>whois $addr$i | egrep 'OrgName:|netname:|person:'
+	+$i
+]
+>
+*INTERACT
+>
+*TERM
+
+
 *EXP_INFO
 
 ;cyan === fuzz testing
