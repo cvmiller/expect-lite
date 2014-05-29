@@ -1,0 +1,362 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+#	test of Code Blocks implemented in expect-lite
+#	and self tested (where possible)
+
+
+# Turn on warnings
+!set ::WARN 1
+
+; ==== Set Timeout ====
+@4
+
+*EXP_INFO
+
+; === basic if code block
+?if 1==1?[
+>echo "if1 good"
+]
+<\nif1 good
+>
+
+
+; === if else code block
+?if 1!=1?>echo "BAD" :: [
+	>echo "if2 good"
+]
+<\nif2 good
+>
+
+; === NEG: third if too many code blocks - should have warning
+?if 1!=1? [:: [
+	>echo "if3 bad"
+]
+-<\nif3 bad
+>
+
+; === nested ifs
+?if 1 == 1? ?if 2==2? [ 
+	>echo "good"
+]
+<good
+>
+
+$test=3
+; === nested ifs using code blocks
+?if 1 < $test ? [ :: >echo "else 1"
+	?if 2 < $test ? [ :: >echo "else 2"
+		>echo "good"
+	]
+]
+<good
+>
+
+# requires expect-lite 4.5.0
+$test=4
+; === if then else - taking else path
+?if 1 == $test ? [
+	>echo "bad"
+]::[
+	>echo "good"
+]
+-<bad
+<good
+
+
+$test=5
+; === if then else - taking then path
+?if 1 != $test ? [
+	>echo "good"
+]::[
+	>echo "bad"
+]
+-<bad
+<good
+
+; === Tested nested if then else - taking then path
+
+?if 5 == $test ? [
+	?if 1 == 2? [
+		>echo "bad"
+	]::[
+		>echo "good nested then, else"
+	]
+	>echo "good"
+]::[
+	>echo "bad"
+]
+-<bad
+<good
+
+; === Tested nested if then else - taking then else
+
+?if 1 == $test ? [
+	>echo "bad"
+]::[
+	?if 1 == 2? [
+		>echo "bad"
+	]::[
+		>echo "good nested then, else"
+	]
+]
+-<bad
+<good
+
+
+; === while loops with code blocks
+
+; === simple while loop
+$i=0
+[$i < 5
+	>echo "hello ken2"
+	<ken
+	+$i
+]
+?if $i == 5 ? >echo "good"
+<good
+>
+
+; === while loop with break
+$i=0
+[$i < 5
+	>echo "hello ken2"
+	<ken
+	#break
+	?if $i == 3? $i=5
+	+$i
+]
+?if $i == 6 ? >echo "good"
+<good
+>
+
+; === Nested While loops
+; == should repeat "hello ken" 3 times, with 2 "bye now"s inside each outer loop
+>
+$i=0
+[ $i < 3
+	>echo "hello ken"
+	<ken
+	$j=0
+	[ $j < 2 
+		>echo "bye now"
+		>
+		+$j
+	]
+	+$i
+]
+?if $i == 3 ? >echo "good"
+<good
+>
+?if $j == 2 ? >echo "good"
+<good
+>
+
+; === Negative testing of code blocks
+
+#*INTERACT
+
+; == while statement with an "else" statement (should execute else statement)
+
+; === simple while loop
+$i=0
+[$i < 2
+	>echo "looping $i"
+	<looping $i
+	+$i
+]::[
+	>echo "good"
+]
+<good
+
+>
+
+
+*INFINITE_LOOP 35
+
+; == test blank arg2
+>
+$blank=
+[3 == $blank
+	>echo "blank"
+]
+-<blank
+>
+; === NEG: test just number 
+>
+[3
+>echo "blank3"
+]
+>
+; === extra right bracket
+>
+]
+
+>
+; === NEG: test with no closure
+[ 1 < 2
+>echo "good"
+# empty open bracket
+[
+<good
+>
+
+
+; === testing foreach loops
+$joe=dude
+
+$host=aaa
+$list=123 45 678 90 good
+[ $host = $list
+	>echo $host
+]
+<good
+
+; === testing repeating foreach loops
+$i=0
+[ $i < 3
+	; === $i
+	[ $x=abc def $i
+		>echo $x
+	]
+	@5
+	+$i
+]	
+<\n2
+?$x == 2? > echo good
+<good
+
+
+>
+; === testing string math - slices
+
+$big=12345678901234567890
+$big=this is a test today
+=$big % 6-15
+>
+; === $big
+>
+?if $big==is a test? >echo good
+<good
+>
+
+; === testing string math - literal search/replace
+
+$replace=abc,def,hig
+=$replace//,/ /
+>
+; === $replace
+>
+?$replace == abc def hig? >echo good
+<good
+
+$replace=123|456|789
+=$replace //|/ /
+>
+; === $replace
+>
+?$replace==123 456 789? >echo good
+<good
+
+$replace=123|456|789
+=$replace //|/ 
+>
+; === bad $replace
+>
+?$replace==123 456 789? >echo good
+<good
+
+$replace=123|456|789
+=$replace //|
+>
+; === NEG: bad2 $replace
+>
+?$replace==123|456|789? >echo good
+<good
+
+; === testing string math - regex search/replace
+
+$replace=123-456+789
+=$replace;[+-];=;
+>
+; === reg1; $replace
+>
+?$replace==123=456=789? >echo good
+<good
+
+
+; === regex search/replace
+$replace=123-456+789
+=$replace/[+-]/=/
+>
+; === reg1/ $replace
+>
+?$replace==123=456=789? >echo good
+<good
+
+; === regex search and replace
+$myip=192.168.0.50
+=$myip /\d+\.\d+\.\d+\.(\d+)/\1/
+>
+; $myip
+>
+?$myip==50? >echo good
+<good
+
+; === testing string math -  var search/replace
+$host=good
+$replace=123-dude+789
+=$replace//$joe/$host/
+>
+; === reg1 $replace
+>
+?$replace==123-good+789? >echo good
+<good
+
+; === testing string math - concat
+
+$replace=123-456+789
+=$replace + $host
+>
+; === reg1 $replace
+>
+?$replace==123-456+789good? >echo good
+<good
+
+
+; === testing string math - subtract
+$replace=123-dude+789
+=$replace-$joe
+>
+; === reg1 $replace
+>
+?$replace==123-+789? >echo good
+<good
+
+
+
+
+>
+# put this at the end of the file, it tests jumping to the end of the file
+; === NEG: just [ ]
+[
+>echo "blank4"
+]
+
+
+
+
+
+
+
+
+
+

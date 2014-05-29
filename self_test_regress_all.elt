@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# make this auto-runnable! with current directory $PWD
+# Little bootstrap bash script to run kick start expect-lite script
+expect-lite $0  -d $PWD $*
+exit $?
+
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+#	Requires expect-lite version 4.3.0
+
+# define user defined help
+;;;
+   Self Test Suite for expect-lite, use connect_method=ssh_key
+
+    NOTE: Not all tests will pass when running connect method=none
+	    self_test_directives.txt & self_test_fork.txt will fail
+;;;
+
+@5
+>
+>
+
+# default expect-lite app
+$el=expect-lite
+$test_host=localhost
+
+######## Get host to pass to child tests
+# back door to get --r parameter
+!if { $::expectlite::remote_host == "none" } { set ::expectlite::user_namespace(test_host) "none" }
+>hostname
+?if $test_host == none? :: +$test_host=\n([a-zA-Z0-9/_-]+)
+#$test_host=localhost
+
+######## Get PWD to pass to child tests
+>echo $PWD
+>pwd
++$pwd=\n(/[a-zA-Z0-9/_.-]+)
+
+
+
+######## Inside view of include file pass
+# peeks at test_failed and exposed value to script
+!proc inc_result { var_result } {
+!	if {$::expectlite::_el(test_failed)} {
+!		set ::expectlite::user_namespace(var_result) 1 
+!	} else {
+!		set ::expectlite::user_namespace(var_result) 0
+!	}
+!}
+
+
+######## set defaults
+$inc_failed=0
+
+$reg_count=0
+$fail=0
+
+$blank=
+
+$self_test0=self_test_conditional.txt
+$self_test1=self_test_code_block.txt
+$self_test2=self_test_math.txt 
+$self_test3=self_test_var_deref.txt
+$self_test4=self_test_basics.txt
+$self_test5=self_self_ide_test.txt
+$self_test6=self_test_fork.txt
+$self_test7=self_self_directive_test.txt
+$self_test8=
+
+
+
+[ $self_test$reg_count != $blank
+	; ******************** start self test: $self_test$reg_count ********************
+	~$self_test$reg_count 
+	!inc_result inc_failed
+	>
+	# give indication that test has passed or failed
+	?if $inc_failed == 1? [ :: ; ******************** $self_test$reg_count  PASSED ********************
+		;red ******************** $self_test$reg_count  FAILED ********************
+	]
+	
+	+$reg_count
+
+]
+
+>
+>
+; ******************** Self Tests Complete! ********************
+>
+# pau!
+

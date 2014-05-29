@@ -86,6 +86,37 @@ $junk=
 ; === $junk and math var:$num
 >
 
+; === get top processes
+>top -n 1 | cat
+$i=0
+$proc$i=none
+[ $proc$i != __NO_STRING_CAPTURED__
+	+$i
+	# get real time process
+	+$proc$i=rt   0     0    0    0 S   0.0  0.0   [0-9:.]+ (\w+/\d+)
+	# consume buffer
+	? $proc$i != __NO_STRING_CAPTURED__ ? <$proc$i
+]
+# decrement counter $i
+=$i
+$total_proc=$i
+
+; == display processes
+$i=1
+
+[ $i < $total_proc
+	>pgrep -l $proc$i 
+	+$i
+]
+>
+*INTERACT
+>
+*TERM
+
+
+
+
+
 ; === get host addresses of sites visited - sort by first octets
 >/sbin/route -6 | sort -k 1,4 -n -u | grep '/128' | cat
 $i=0

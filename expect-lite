@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.1d3"
+	variable version "4.7.1d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -160,6 +160,9 @@ namespace eval expectlite {
 
 		# clear native expect lines list
 		set ::expectlite::_el(_el_lines) {}
+
+		# initialize expect line - used to read buffer
+		set ::expectlite::_el(line) ""
 
 		# clear ide paste lines flag
 		set ::expectlite::_el(ide_paste_lines) 0
@@ -744,7 +747,7 @@ namespace eval expectlite {
 						interact_help
 						protected_send "$_el_eols"
 					}
-				-echo -re  {^(>[a-zA-Z0-9/$.]|\?[iI][fF]|\$[a-zA-Z0-9]|~[a-zA-Z0-9]|;|\*[A-Z]|\+\$|=\$|%[A-Z]|\[ )(.+)\r|(^@[0-9]+\r)|(\]\r)} {
+				-echo -re  {^(>[a-zA-Z0-9/$.]|\?[iI][fF]|\$[a-zA-Z0-9]|~[a-zA-Z0-9]|;[^\r\n]|\*[A-Z]|\+\$|=\$|%[A-Z]|\[ )(.+)\r|(^@[0-9]+\r)|(\]\r)} {
 						#### Support for EL commands in Interact
 						#### Permits pasting of multiple commands into Interact session
 						#### test for expect version - 5.26 does not paste
@@ -779,7 +782,7 @@ namespace eval expectlite {
 					}
 				} }  \
 			 error] } {
-				puts stderr "CONNECT ERROR: lost connection to $remote_host \n   $error \n $errorInfo"
+				puts stderr "CONNECT ERROR: lost connection to $remote_host \n   $error \nExiting..."
 				# Fail script?
 				exit 1
 			}
@@ -1382,7 +1385,7 @@ namespace eval expectlite {
 
 		#The script sends the user variable
 		if { [catch { send -- "$user\r"   } error] } {
-			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error\n    $errorInfo"
+			puts stderr "CONNECT ERROR: Unable to connect to $remote_host \n   $error\n    $errorInfo\nExiting..."
 			# Fail script?
 			exit 1
 		}

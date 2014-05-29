@@ -1377,11 +1377,20 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed while loop comparison if first value was blank
 		Added warning if greater/lesser comparison values are blank
 
-
+28 May 2014 - 4.7.1d4
+	Fixed IDE when typing a line which ended in semicolon
+	Fixed CLI with no script *INTERACT, exits cleaner
+	
 
 ------------ Future Versions --------------------------
 		
 Future
+
+
+x	EL bug - *INTERACT on command line crash
+		can't read "_el(line)": no such element in array
+    		while executing
+		"if { $_el(line) != "*INTERACT" } {
 
 x	Silence directives with *NOINFO?
 		Put only *TIMESTAMP/*NOTIMESTAMP under INFO
