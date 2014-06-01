@@ -1380,6 +1380,9 @@ Released 21 Dec 2010 - 4.0.2
 28 May 2014 - 4.7.1d4
 	Fixed IDE when typing a line which ended in semicolon
 	Fixed CLI with no script *INTERACT, exits cleaner
+
+1 June 2014 - 4.7.1 Released
+
 	
 
 ------------ Future Versions --------------------------

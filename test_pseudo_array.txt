@@ -1,0 +1,39 @@
+#!/usr/bin/env expect-lite
+
+#
+#	Sample pseudo array variable script for blog
+#	27 May 2014 - Craig Miller
+#
+
+# display something everyone (except windows) has
+>ls -l /dev
+# initialize index variable
+$i=0
+# initialize the first element in the pseudo array 
+$dev$i=none
+# while loop testing the pseudo array value is captured
+[ $dev$i != __NO_STRING_CAPTURED__
+	+$i
+	# capture the block device
+	+$dev$i=\nb.*\d\d:\d\d (\w+)
+	# expect the device to consume the output
+	? $dev$i != __NO_STRING_CAPTURED__ ? <$dev$i
+]
+
+# set max devices captured
+$max=$i
+
+# initialize index variable
+$i=1
+# while loop to check the devices in the pseudo array
+[ $i < $max
+	# show the pseudo array value - the device
+	>file /dev/$dev$i
+	# check that it is a special device
+	<block special
+	+$i
+]
+*INTERACT
+>
+#pau
+

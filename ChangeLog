@@ -1,6 +1,15 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 1 June 2014 v4.7.1
+	Fixed while loop comparison if first value was blank
+		Equal/not-equal comparisons are allowed to have blanks
+		Less/Greater than comparisons are not allowed to have have blank values
+	Fixed bug when $var ended in semicolon e.g. $var;
+	Fixed IDE when typing a line which ended in semicolon
+	Fixed CLI with no script and *INTERACT, now exits cleaner
+	Added/Updated examples in examples directory
+
 
 Released 20 April 2014 v4.7.0
 	Added fuzzy expect ~<
@@ -13,7 +22,6 @@ Released 20 April 2014 v4.7.0
 		*TIMESTAMP/*NOTIMESTAMP, *EOLS LF/*EOLS CRLF
 	Added include_script_name to IDE <esc>-v display
 	Improved speed EL_REMOTE_HOST=none (default), by shortening delays
-
 
 Released 19 November 2013 v4.6.2
 	Added env var EL_SHELL for shell to start when connect_method=none

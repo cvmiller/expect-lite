@@ -7,6 +7,7 @@
 
 
 
+
   
   <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>expect-lite</title>
   
@@ -86,7 +87,7 @@ A simple to use automation tool to do:<br>
         <li>etc.</li>
       </ul>
       <h2>What New?</h2>
-Latest version 4.7.0 improvements include:<br>
+Latest version 4.7.1 improvements include:<br>
       <ul>
         
         
@@ -96,11 +97,19 @@ Latest version 4.7.0 improvements include:<br>
 &gt; uptime<br>
 ~&lt;load average: (0.9)<br>
 </li>
-        <li>Improved speed when using EL_REMOTE_HOST=none (default)</li>
-        <li>*TIMESTAMP now with milisecond resolution</li>
-
-        <li>Debugger &lt;esc&gt;v prints script and include file names<br>
+        <li>Fixed while loop comparison if first value was blank.
+Equal/not-equal comparisons are allowed to have blanks values,
+Less/Greater than comparisons are not e.g.<br>
+$a=<br>
+$b=<br>
+[ $a == $b<br>
+...<br>
         </li>
+        <li>Fixed bug when $var ended in semicolon e.g. $var;</li>
+        <li>Fixed IDE when typing a line which ended in semicolon</li>
+        <li>Fixed CLI with no script and *INTERACT, now exits cleaner<br>
+        </li>
+
 
 </ul>
       <p>The main purpose is keep it simple.
@@ -141,13 +150,13 @@ expect-lite</big></a></p>
   </tbody>
 </table>
 
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">20 April 2014<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">1 June 2014<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
 </span><br>
 
 <small><span style="font-style: italic;">this
 document for version
-4.7.0 and above</span><br style="font-style: italic;">
+4.7.1 and above</span><br style="font-style: italic;">
 </small>
 <br>
 
