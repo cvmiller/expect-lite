@@ -35,7 +35,7 @@ expect-lite, call it test.elt :
 ; ==== Ping localhost and report result ====
 @5
 >ping -c 2 localhost
-+$packet_rx=([0-9]+) received
++$packet_rx=(\d+) received
 >
 >echo "Packets received are:$packet_rx"
 
@@ -90,7 +90,7 @@ reading the documentation.
     BSD-Style License
     -----------------
 
-Copyright (c) 2008-2013, Craig Miller
+Copyright (c) 2008-2014, Craig Miller
 Copyright (c) 2007, Freescale Semiconductor, Inc.
 All rights reserved.
 
@@ -119,7 +119,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ------------------------------------------------------------------------
-10 March 2013
+1 June 2014
 http://expect-lite.sourceforge.net/
 
 this document for version 4.1.1 or later

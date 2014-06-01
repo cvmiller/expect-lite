@@ -1,0 +1,98 @@
+#!/usr/bin/env expect-lite
+
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: http://lancelot.am.freescale.net/~craig/Docs/expect-lite.html
+
+#
+#	Build EL Release
+#
+#	by Craig Miller 10 April 2011
+#
+#	Assumes that expect-lite.proj is up to date 
+#		Docs and Self tests will be copied in by this script
+#
+#
+#
+
+Build CheckList
+
+1) Update version inside expect-lite
+2) Update ChangeLog
+3) Update manpage & spellcheck
+4) Update Documentation
+
+5) Update build version in this script
+
+
+
+
+# Build version
+$build=4.7.1
+
+$proj_dir=~/Expect-lite/expect-lite.proj
+$pkg_dir=~/Expect-lite/Pkg
+$pkg_dir_el=usr/share/doc/expect-lite
+$pkg_dir_man=usr/share/man/man1/
+$pkg_dir_el_example=usr/share/doc/expect-lite/examples
+$doc_dir=~/Expect-lite/Docs
+$exp_root=~/Expect-lite
+
+; === Starting the build
+
+; === update files to the proj directory
+>cd $exp_root
+>cp ChangeLog $proj_dir
+>cp expect-lite $proj_dir
+>cp README $proj_dir
+>cp COPYING $proj_dir
+>cp bashrc $proj_dir
+>cp install.sh $proj_dir
+>cp setup_local_ssh.sh $proj_dir/Tools/
+>cp expect-lite.1 $proj_dir/man/
+>gzip -f $proj_dir/man/expect-lite.1
+
+#
+# copy other files? PkgIndex.tcl? Example Files?
+#
+
+>cd $proj_dir
+; == update docs
+>rsync -tv $doc_dir/* $proj_dir/Docs
+; == update self tests
+>rsync -tv $exp_root/self* $proj_dir/examples
+>
+; == make tarball
+>cd $exp_root
+>tar cvzf expect-lite_$build.tar.gz expect-lite.proj
+
+
+; === update Pkg Dir
+# use interact to enter sudo password
+
+; === enter sudo password then +++
+>
+>sudo cp expect-lite ChangeLog $pkg_dir/$pkg_dir_el
+*INTERACT
+>sudo cp README install.sh $pkg_dir/$pkg_dir_el
+>sudo cp $proj_dir/man/expect-lite.1.gz $pkg_dir/$pkg_dir_man
+>sudo rsync -tv $proj_dir/Docs/* $pkg_dir/$pkg_dir_el/Docs
+>sudo rsync -tv $proj_dir/examples/* $pkg_dir/$pkg_dir_el/examples
+>sudo cp expect-lite $pkg_dir/usr/bin/
+>sudo sed -i 's/Version: .*-0ubuntu1/Version: $build-0ubuntu1/' $pkg_dir/DEBIAN/control
+
+; === make the package
+# update Pkg/DEBIAN/control with build number
+>sudo dpkg -b Pkg expect-lite_$build-0ubuntu1_all.deb
+
+; === make the alien
+>sudo alien -r -k expect-lite_$build-0ubuntu1_all.deb
+#>mv expect-lite_$build-0ubuntu1_all.deb expect-lite_$build-all.deb
+>mv -f expect-lite-$build-0ubuntu1.noarch.rpm expect-lite-$build.noarch.rpm
+>
+#pau
