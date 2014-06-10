@@ -1383,12 +1383,21 @@ Released 21 Dec 2010 - 4.0.2
 
 1 June 2014 - 4.7.1 Released
 
+6 June 2014 - 4.7.2d1 
+	Fixed last comment line not printed when last line of file
+
+
 	
 
 ------------ Future Versions --------------------------
 		
 Future
 
+o	bug: print unprinted comment at end of script
+
+
+o	Add case insensitive expect --nocase
+		tcl standard is (?i), but does not work with expect
 
 x	EL bug - *INTERACT on command line crash
 		can't read "_el(line)": no such element in array
