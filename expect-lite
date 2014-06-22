@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.2d1"
+	variable version "4.7.2d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3605,7 +3605,7 @@ namespace eval expectlite {
 						}
 
 					}
-				^~\<	{ 	# Fuzzy Expect teststr with regex or set success to 0 and fail test	
+				^\~<	{ 	# Fuzzy Expect teststr with regex or set success to 0 and fail test	
 						set _el(success) 0
 						print_comment_line
 						# execute expect lines if present

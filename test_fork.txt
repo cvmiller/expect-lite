@@ -21,9 +21,10 @@ exit $?
 #
 #
 #
-#	Requires expect-lite version 3.5.0
+#	Requires expect-lite version 3.5.0, 4.7.0
 #
 
+*EXP_INFO
 
 $fork_session=MY_HOST
 $fork_session2=MY_2nd_HOST
@@ -35,6 +36,7 @@ $fork_session2=MY_2nd_HOST
 @10
 *FORK $fork_session
 ; ======== "SESSION 1a"
+~=4
 >
 # show fork status
 *FORK
@@ -70,15 +72,18 @@ $fork_session2=MY_2nd_HOST
 </tmp/session2
 >
 
+#*DEBUG
+;========== "SESSION 1b" -- double command
 
 *FORK $fork_session
-;========== "SESSION 1b"
->
+>uptime
+>uptime
+~<\d\d:\d\d,\s+(5) users
 >pwd
 </tmp/$fork_session
 >sleep 2
 >
-
+*NODEBUG
 
 *FORK $fork_session2
 ; ======== "SESSION 2b"

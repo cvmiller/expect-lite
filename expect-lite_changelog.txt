@@ -1387,13 +1387,21 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed last comment line not printed when last line of file
 
 
+16 June 2014 - 4.7.2d2 
+	Fixed fuzzy search, sometimes searching previous command
+		Bad escaped regex
 	
 
 ------------ Future Versions --------------------------
 		
 Future
 
-o	bug: print unprinted comment at end of script
+
+o	Add IDE command to show EL parameters (timeout, fuzzy tollerance, directives? etc)
+		watch out for vi commands (like <esc>:w)
+
+
+x	bug: print unprinted comment at end of script
 
 
 o	Add case insensitive expect --nocase
