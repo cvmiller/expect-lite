@@ -1390,6 +1390,13 @@ Released 21 Dec 2010 - 4.0.2
 16 June 2014 - 4.7.2d2 
 	Fixed fuzzy search, sometimes searching previous command
 		Bad escaped regex
+
+30 June 2014 - 4.7.2.d3
+	Added include file home '~' expansion e.g. ~~fred/include.inc
+
+
+
+
 	
 
 ------------ Future Versions --------------------------

@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.2d2"
+	variable version "4.7.2d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -1283,11 +1283,13 @@ namespace eval expectlite {
 	proc read_cmd_file { } {
 		upvar expectlite::cmd_file				cmd_file
 		upvar expectlite::INFO					INFO
+		upvar expectlite::WARN					WARN
 		upvar expectlite::_el_info_color			_el_info_color
 		upvar expectlite::SHOW_HELP				SHOW_HELP
 		upvar expectlite::arg0					arg0
 		upvar expectlite::_el_buf				_el_buf
 		upvar expectlite::_include				_include
+		upvar expectlite::_el_warn_color 			_el_warn_color
 		upvar expectlite::_el_err_color 			_el_err_color
 		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::DEBUG 					DEBUG
@@ -1310,6 +1312,14 @@ namespace eval expectlite {
 
 			# is include file a variable or fuzzy expect (could be ~=$var), skip validation
 			if { [ regexp {^\$|^\<|^=\$?[a-zA-Z0-9]|^=} $_include_file ] == 0 } {
+			
+				# normalize file name to read to allow tilde expansion e.g. ~fred/file.inc
+				if { [catch { file normalize $_include_file } error ] == 0 } {
+					set _include_file [file normalize $_include_file ]
+				} else {
+					if {$WARN} { cputs "\nWarning: $error\n" $_el_warn_color }
+				}
+			
 				# absolute path to include file?
 				set _slash "/"
 				if { [string index $_include_file 0] == $_slash} {
@@ -4043,6 +4053,16 @@ namespace eval expectlite {
 						if { $NOINCLUDE == 0 } {
 							# don't include file if name is set to __NO_STRING_CAPTURED__ (which is a blank dynamic/capture variable)
 							if { $_include_file != "__NO_STRING_CAPTURED__" } {
+							
+								# normalize file name to read to allow tilde expansion e.g. ~fred/file.inc
+								#puts "======>[ catch { file normalize $_include_file  } error ]|$error"
+
+								if { [catch { file normalize $_include_file } error ] == 0 } {
+									set _include_file [file normalize $_include_file ]
+								} else {
+									if {$WARN} { cputs "\nWarning: $error\n" $_el_warn_color }
+								}
+								
 								# absolute path to include file?
 								set _slash "/"
 								if { [string index $_include_file 0] == $_slash} {
@@ -4609,7 +4629,7 @@ namespace eval expectlite {
 				default {	# blank lines are allowed
 
 			 		}
-			}
+			}; #end switch
 
 			#puts "line_ptr->$_el_buf($buf_stack,ptr)|$_el(success)"
 			
@@ -4717,7 +4737,11 @@ namespace eval expectlite {
 				}
 			}; #endif not one_line
 
-		}
+		}; #end while
+		
+		# print last comment line
+		print_comment_line
+		
 		# set result code
 		if { $_el(test_failed) == 1} {
 			# FAIL

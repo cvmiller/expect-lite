@@ -11,13 +11,20 @@ $joe=dude
 $user=bob
 #*LOGAPPEND
 
+$PATH=~fred/Downloads
+$PATH=~cvmiller/Expect-lite
+
 
 
 >echo "hello&$user&there"
 >echo $var
+~$PATH/fail.inc
+
+
 
 >
 
+*TERM
 
 ## Define Additional Functions
 #!proc mark_time { var_name } {
@@ -209,7 +216,7 @@ $big=250
 *INTERACT
 ; === Garbage Test
 >cd /tmp/
-~/tmp/garb.txt
+#~/tmp/garb.txt
 >
 
 *INTERACT
