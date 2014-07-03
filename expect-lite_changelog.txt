@@ -1386,7 +1386,6 @@ Released 21 Dec 2010 - 4.0.2
 6 June 2014 - 4.7.2d1 
 	Fixed last comment line not printed when last line of file
 
-
 16 June 2014 - 4.7.2d2 
 	Fixed fuzzy search, sometimes searching previous command
 		Bad escaped regex

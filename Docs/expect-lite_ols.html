@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+  
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+  <title>expect-lite at the Linux Symposium</title>
+
+  
+  
+  <meta name="description" content="Automation for the rest of us">
+
+  
+  <meta name="keywords" content="test testing automation expec-lite script expect project google linux symposium ols">
+
+  
+  <meta name="author" content="Craig Miller">
+
+  
+  <meta name="copyright" content="2007-2013 Craig MIller">
+
+  
+  <meta name="contact_addr" content="">
+
+  
+  <meta name="revisit-after" content="3 days">
+
+  
+  <meta name="robots" content="all">
+
+  
+  <meta name="distribution" content="global">
+
+  
+  <link rel="stylesheet" type="text/css" href="el.css">
+
+  
+  <link rel="icon" type="image/png" ;="" href="http://www.makikiweb.com/ols.png">
+
+</head><body>
+<table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
+
+  <tbody class="page">
+    <tr>
+      <td style="vertical-align: top; width: 35%;"><br>
+      <div style="text-align: center;"><a href="index.html"><img style="border: 0px none ; font-weight: bold; width: 200px; height: 213px;" alt="greater than" src="keycap_200.jpg"></a><br>
+      <h1>expect-lite</h1>
+      <br>
+      <h2>Automation for the rest of us</h2>
+      </div>
+      <script type="text/javascript" src="js-side-menu.js"></script> <noscript><br>
+Please Enable Javascript
+to see Features, Downloads, and Docs </noscript> </td>
+      <td style="vertical-align: middle; width: 1px;"> <img src="vbar.gif" style="width: 1px; height: 1100px;"></td>
+      <td style="vertical-align: top; width: 5%;"><br>
+      </td>
+      <td style="vertical-align: top;"><!--- Begin of Right Column Content --->
+      <h2>What is it?<!-- Intro --> </h2>
+expect-lite is an quick and
+easy command line automation tool.
+      <p>Written in expect, it is designed to
+directly map an interactive terminal session into an automation script.
+expect-lite scripts use special character(s) at the beginning of each
+line to indicate the action. Basic expect-lite scripts can be created
+by simply cutting and pasting text from a terminal window into a
+script, and adding '&gt;' '&lt;' characters. No knowledge of
+expect is required!</p>
+      <p>The main purpose is keep it simple.
+However, the advanced features allow pretty creative scripting.</p>
+      <h2>What is New since Linux Symposium 2010?<!-- Features --> <br>
+      </h2>
+      <p>The new features include:</p>
+      <ul>
+        <li>Color (3.7)</li>
+        <ul>
+          <li>*EXP_INFO - displays expected value found<br>
+          </li>
+        </ul>
+        <li>IDE (4.0)</li>
+        <ul>
+          <li>Powerful Debugger with breakpoints, step/skip,
+copy/paste expect-lite lines right into a running script.</li>
+          <li>*TIMESTAMP &gt; commands</li>
+        </ul>
+        <li>Library Release (4.1)</li>
+        <ul>
+          <li>use expect-lite as a TCL library</li>
+        </ul>
+        <li>Code blocks (4.2)</li>
+        <ul>
+          <li>While Loop</li>
+          <li>Multi-line if statements</li>
+          <li>Full IPv6 support</li>
+        </ul>
+        <li>User Defined help (4.3)</li>
+        <ul>
+          <li>Making your script more user friendly<br>
+          </li>
+        </ul>
+        <ul>
+          <li>Include file improvements - simple regression<br>
+          </li>
+          <ul>
+            <li>*NOINTERACT - does not stop at breakpoints<br>
+            </li>
+          </ul>
+        </ul>
+        <li>Native Logging (4.4)</li>
+        <ul>
+          <li>Log everything to a file, natively<br>
+          </li>
+        </ul>
+        <ul>
+          <li>*LOG *NOLOG<br>
+          </li>
+        </ul>
+        <li>Code blocks - else statement (4.5)<br>
+        </li>
+        <ul>
+          <li>Foreach Loops with code blocks (4.6)<br>
+          </li>
+          <li>String Math: search/replace, concat, remove<br>
+          </li>
+        </ul>
+        <li>Fuzzy Expect (4.7)<br>
+        </li>
+        <ul>
+          <li>Expect an approximate value e.g. 11 is about 10<br>
+          </li>
+        </ul>
+      </ul>
+      <br>
+      <h2>Download the Linux Symposium Presentations<!-- Features -->&nbsp;</h2>
+The Linux Symposium Presentations are in PDF format:<br>
+      <ul>
+        <li>2010 - <a href="./ols/ols.pdf">Introducing expect-lite</a><br>
+        </li>
+        <li>2014 - <a href="./ols/ols_2014.pdf">A quick look four
+years later</a><br>
+        </li>
+      </ul>
+      <h2>Where to get it?</h2>
+The most recent version is always available on
+SourceForge:<br>
+      <br>
+      <a style="font-weight: bold; background-color: yellow;" href="http://sourceforge.net/projects/expect-lite/files/"><big><big>Download
+the latest version </big></big></a><br>
+      <br>
+Also expect-lite is even easier to install as part of the following
+distributions:<br>
+      <ul>
+        <li><a href="http://www.ubuntu.com/">Ubuntu</a></li>
+        <li><a href="http://linuxmint.com/">Linux Mint</a></li>
+        <li><a href="http://www.gentoo.org/">Gentoo</a><br>
+        </li>
+      </ul>
+      <ul>
+      </ul>
+      <p> </p>
+      <h2>Examples<!-- Example --> </h2>
+      <p>Check the IP address of the localhost</p>
+      <pre>&gt;ifconfig<br>&lt;192\.168\.1\.1<br>&gt;ip -6 addr show<br>&lt;2001:db8::f00d<br></pre>
+      <p>ssh to a remote host</p>
+      <pre>&gt;ssh root@host-021<br>&lt;assword:<br>&gt;&gt;secret_password<br># issue a command once logged in<br>&gt;ls<br>&gt;exit</pre>
+While loops using code blocks<br>
+      <pre>$i=1<br>[ $i &lt; 5<br>	&gt;echo hello times $i<br>	&lt;times $i<br>	+$i<br>]<br></pre>
+Conditional using code blocks<br>
+      <pre>? $IP == 2001:db8::f00d ? [<br>	&gt;echo future of the internet is here<br>]::[<br>	&gt;echo time to upgrade to IPv6<br>]<br></pre>
+      <br>
+expect-lite includes over 25 example scripts
+covering topics such as: if statements, looping, multiple sessions,
+random number generation, and more.
+      <p><br>
+      </p>
+<!--- End of Right Column Content ---> </td>
+    </tr>
+  </tbody>
+</table>
+
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">14
+July 2014<br>
+</span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span style="font-style: italic;"><br>
+</span><br>
+
+<small><span style="font-style: italic;">this
+document for version
+4.7 and above</span><br style="font-style: italic;">
+</small>
+<br>
+
+</body></html>
