@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.2d3"
+	variable version "4.7.2d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -114,6 +114,10 @@ namespace eval expectlite {
 	# some devices must have a CRLF at the end of line in order to respond
 	# This is also controlled by directive *EOLS LF|CRLF
 	variable _el_eols "\n"
+
+	# Set dynamic var capture uses prompt or not (default=yes, use prompt)
+	variable DVARPROMPT 1
+
 
 
 	####################################################################################
@@ -1034,6 +1038,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::SHOW_HELP				SHOW_HELP
 		upvar expectlite::el_log_ext			el_log_ext
+		upvar expectlite::DVARPROMPT	DVARPROMPT
 
 		# default timeout_multiplier multiplier to 1
 		set cli_namespace($timeout_multiplier) 1
@@ -1043,6 +1048,7 @@ namespace eval expectlite {
 
 		# If needed read parameters from Env Vars
 		catch { set remote_host $env(EL_REMOTE_HOST)}
+		catch { set DVARPROMPT $env(EL_DYN_VAR_PROMPT)}
 		if { $remote_host == "" } { set remote_host "none" }
 
 		if { $cmd_file=="" } { catch { set cmd_file $env(EL_CMD_FILE)} }
@@ -2862,6 +2868,8 @@ namespace eval expectlite {
 		upvar expectlite::cli_namespace			cli_namespace
 		upvar expectlite::el_log_ext			el_log_ext
 		upvar expectlite::SHOW_HELP				SHOW_HELP
+		upvar expectlite::DVARPROMPT	DVARPROMPT
+		
 
 
 
@@ -3035,6 +3043,17 @@ namespace eval expectlite {
 				if {$INFO} { cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color }
 				set _el_eols "\r\n"
 			}
+			"\\*DVPROMPT"	{	# Dyn Var Capture requires prompt (default)
+				if {$INFO} { cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color }
+				# do not change if CLI has enabled
+				if {$DVARPROMPT < 10 } { incr DVARPROMPT }
+			}
+			"\\*NODVPROMPT"	{	# Dyn Var Capture does not require prompt
+				if {$INFO} { cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color }
+				# do not change if CLI has enabled
+				if {$DVARPROMPT < 10 } { set DVARPROMPT 0 }
+			}
+			
 			"\\*SHOW VARS"	{	# Show expect-lite variables
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				show_vars
@@ -3213,6 +3232,7 @@ namespace eval expectlite {
 		upvar expectlite::NOFAIL					NOFAIL
 		upvar expectlite::NOINCLUDE					NOINCLUDE
 		upvar expectlite::TIMESTAMP 				TIMESTAMP
+		upvar expectlite::DVARPROMPT 		DVARPROMPT
 
 
 
@@ -3580,6 +3600,7 @@ namespace eval expectlite {
 						    	}
 						} else {
 							# test for multi-char expect strings
+							#TODO: remove catch and unbalanced fixes, see if this allows ^\ while waiting
 							# catch expect, just in case
 							if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
 								if {$WARN} {
@@ -3599,7 +3620,7 @@ namespace eval expectlite {
 									puts "\nBUG: Expect-lite: $error\n Fix Failed\n"
 								}
 							}
-					 		#puts "\nGood=[_el_strip_char $_el(line) $_in]\n" 
+					 		#puts "\nGood=[_el_strip_char $_el(line) $_in]|$_el(success)|$teststr|\n" 
 						}
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
@@ -4143,11 +4164,18 @@ namespace eval expectlite {
 						# remove '$' in front of the Var
 						regsub {\$} $user_var "" user_var
 
-						#set teststr [_el_strip_char $_el(line) $_setvar]
+						# Require dynamic variable to capture with a prompt?
+						if { $DVARPROMPT } {
+							set _expect_str "\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $"
+						} else {
+							# no prompt required for dynamic variable capture
+							set _expect_str ".*$user_value"
+						}
+						
 						set capture_val "__NO_STRING_CAPTURED__"
 						set _el(var_capture_begin) [ clock seconds ]
 						expect {
-							-notransfer -re "\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $" {
+							-notransfer -re "$_expect_str" {
 
 								# Do capture in expect buffer
 								if { [catch {regexp -line "$user_value" $expect_out(buffer) match_val capture_val}]  } {
@@ -4158,17 +4186,7 @@ namespace eval expectlite {
 								# add spaces to make foreach lists easier
 								regsub -all {[\n\r]+} $capture_val " " capture_val
 								
-								if { $DEBUG } {
-									cputs "\nvar_found<<$capture_val>>" $_el_debug_color
-									cputs "\nvar_in<<$expect_out(buffer)>>" $_el_debug_color
-								}
-								if { $INFO } {
-									#puts "\nAssigned Var:$user_var=|$capture_val|\n"
-									cputs "\nAssigned Var:$user_var=$capture_val\n" $_el_info_color
-								}
-								# Trigger a new prompt - commented out cvm 10/2/10
-								#protected_send "$_el_eols"
-								}
+								}; #notransfer
 							# expect should never timeout, but just in case
 							timeout {
 								set _el(var_capture_end)	[ clock seconds ]
@@ -4177,16 +4195,31 @@ namespace eval expectlite {
 									puts "BUG: Expect-lite: Var Capture Timed Out!\n"
 									puts "Debugging Info: \n\tEL_Line:$_el(line)\n\texpect timeout=$timeout secs \n\tDuration of capture:$_el(var_capture_duration) secs \n\n"
 									show_vars
-								} elseif {$WARN} {
-									cputs "Warning: Expect-lite: Var Capture Timed Out! Recommend lengthening timeout, current timeout is: $timeout secs\n" $_el_warn_color
+								} else {
+									if {$WARN} {
+										if {$DVARPROMPT} {
+											cputs "Warning: Expect-lite: Var Capture Timed Out! Recommend lengthening timeout, current timeout is: $timeout secs\n" $_el_warn_color
+										} else {
+											cputs "Warning: Expect-lite: *NODVPROMPT: Var Capture Timed Out! $user_value not found.\n" $_el_warn_color
+										}
+									}
 									if { $DEBUG } {
 										cputs "\nfound<<$capture_val>>" $_el_debug_color
 										cputs "\nin<<$expect_out(buffer)>>" $_el_debug_color
 									}
-
 								}
-							}
+							}; #timeout
+						}; #expect
+						
+						if { $INFO } {
+							#puts "\nAssigned Var:$user_var=|$capture_val|\n"
+							cputs "\nAssigned Var:$user_var=$capture_val\n" $_el_info_color
 						}
+						if { $DEBUG } {
+							cputs "\nvar_found<<$capture_val>>" $_el_debug_color
+							cputs "\nvar_in<<$expect_out(buffer)>>" $_el_debug_color
+						}
+						
 						# set var (similar to below)
 						set user_namespace($user_var) $capture_val
 					}

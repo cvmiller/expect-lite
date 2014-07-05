@@ -1,0 +1,15 @@
+#>sleep 1 ; date +"TODAY IS DAY %j OF 365" & $( sleep 1 ; $(date +"AND THE TIME IS %H:%M:%S");) &
+*EXP_INFO
+*NOFAIL
+@3
+$junk=
+>(sleep 1 ; date +"TODAY IS DAY %j OF 365") & (sleep 2 ; date +"AND THE TIME IS %H:%M:%S") &
+<<[2]
++$day=TODAY IS DAY (\d+)
+<OF 365
+
+<AND THE TIME IS
++$time=(\d+:\d+:\d+)
+*SHOW VARS
+>
+

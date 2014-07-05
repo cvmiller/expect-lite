@@ -1390,11 +1390,15 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed fuzzy search, sometimes searching previous command
 		Bad escaped regex
 
-30 June 2014 - 4.7.2.d3
+30 June 2014 - 4.7.2d3
 	Added include file home '~' expansion e.g. ~~fred/include.inc
 
-
-
+5 July 2014 - 4.7.2d4
+	Added *DVPROMPT (default) & *NODVPROMPT directives - user request
+		Controls whether Dynamic Variable Capture requires prompt as part of capture
+		*NODVPROMPT only looks for Dynamic Variable regex for capture
+		Added env var EL_DYN_VAR_PROMPT (1 or 0)
+	
 
 	
 
