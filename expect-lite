@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.2d4"
+	variable version "4.7.2d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -480,6 +480,7 @@ namespace eval expectlite {
 		send_user "  <esc>k      sKip next step\n"
 		send_user "  <esc>c      Continue\n"
 		send_user "  <esc>v      show Vars\n"
+		send_user "  <esc>e      show Env\n"
 		send_user "  <esc>0to9   Show N next lines of script\n"
 		send_user "  <esc>-1to-9 Show N previous lines of script\n"
 		send_user "  ctrl+D      Quit & Exit expect-lite\n"
@@ -745,6 +746,10 @@ namespace eval expectlite {
 					}
 				-re {^\x1bv|`v} {	#DEBUGGER .v Show Vars
 						show_vars
+						protected_send "$_el_eols"
+					}
+				-re {^(\x1b|`)(e)} {	#DEBUGGER .e Show expect-lite Environment
+						show_environment
 						protected_send "$_el_eols"
 					}
 				-re {\x1bh|`h} {	#DEBUGGER .h Show help
@@ -1199,7 +1204,7 @@ namespace eval expectlite {
 			if { $LOG } { set LOG 10 }
 			if { $LOG < 0 } { set LOG -10 }
 			if { $INFO > 1 } { set INFO 10 }
-			if { $WARN } { set WARN 10 }
+			if { $WARN > 1 } { set WARN 10 }
 			if { $DEBUG } { set DEBUG 10 }
 			if { $EXP_INFO } { set EXP_INFO 10 }
 
@@ -2217,6 +2222,122 @@ namespace eval expectlite {
 			}
 		}
 	}
+	#
+	#	Prints all expect-lite environment
+	#	Called by IDE <esc>e
+	#
+	proc show_environment { } {
+		upvar expectlite::user_namespace		user_namespace
+		upvar expectlite::cli_namespace			cli_namespace
+		upvar expectlite::arg0					arg0
+		upvar expectlite::_el_buf				_el_buf
+		upvar expectlite::_el					_el
+		
+		# clean up names for printout
+		global env
+		upvar expectlite::INFO					INFO
+		upvar expectlite::EXP_INFO				EXP_INFO
+		upvar expectlite::WARN					WARN
+		upvar expectlite::DEBUG 				DEBUG
+		upvar expectlite::_el_debug_color		_el_debug_color
+		upvar expectlite::_el_eols				_el_eols
+		upvar expectlite::_el_current_session	CURRENT_FORK_SESSION
+		upvar expectlite::_el_infinite_loop 	INFINTE_LOOP_COUNT
+		upvar expectlite::NOFAIL				NOFAIL
+		upvar expectlite::TIMESTAMP 			TIMESTAMP
+		upvar expectlite::NOINTERACT			NOINTERACT
+		upvar expectlite::NOINCLUDE				NOINCLUDE
+		upvar expectlite::LOG					LOG
+		upvar expectlite::cli_namespace			cli_namespace
+		upvar expectlite::el_log_ext			LOG_EXT
+		upvar expectlite::SHOW_HELP				SHOW_HELP
+		upvar expectlite::DVARPROMPT			DVPROMPT
+
+
+		#generic print utility
+		proc print_item { item value } {
+			upvar env_list_sorted env_list_sorted
+			set blank "                    "
+			set blank_len [string length $blank]
+			
+			# allow exceptions - print numbers
+			set exception_list { timeout INFINTE_LOOP_COUNT fuzzy_range }
+
+			# create aligned columns
+			set ii_len [string length $item]
+			set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
+			
+			if { [string is integer $value ] } {
+				set val "on"
+				if { $value == 0 } { set val "off"} 
+				# print on/off if value is a flag, otherwise print value
+				switch -glob $value {
+					0 -
+					1 -
+					10  {
+						# allow exceptions to print numbers
+						if { [ lsearch $exception_list $item ] > -1 } {
+							cputs "$item $ii_blank $value" "none"
+						} else {
+							cputs "$item $ii_blank $val" "none"
+						}
+					}
+					default {
+						cputs "$item $ii_blank $value" "none"
+					}
+				}
+
+			} else {
+				# $item is a string value
+				cputs "$item $ii_blank $value" "none"
+			}
+		}
+		
+
+		# additional values
+		set timeout $::timeout
+		set USER_DEFINED_PROMPT $_el(prompt)
+		# handle EOLS
+		if { $_el_eols == "\n" } { set EOLS LF } else { set EOLS CRLF}
+		set fuzzy_range $_el(fuzz)
+
+		set env_list { INFO EXP_INFO WARN DEBUG  CURRENT_FORK_SESSION \
+		INFINTE_LOOP_COUNT NOFAIL TIMESTAMP NOINTERACT NOINCLUDE LOG  LOG_EXT  \
+	 	DVPROMPT timeout USER_DEFINED_PROMPT EOLS fuzzy_range }
+		
+		set env_list_sorted [lsort $env_list]
+
+		cputs "DEBUG Info: Printing expect-lite directives/environment" "none"
+		
+		# print header
+		print_item Environment: Value:
+		
+		foreach ii $env_list_sorted {
+			# double dereference $item to get value using [set $item]
+			print_item $ii [set $ii]
+		}
+		
+		
+		# Shell Env
+		set env_list { EL_REMOTE_HOST EL_CMD_FILE EL_USER_DIR EL_CONNECT_METHOD \
+			EL_CONNECT_USER EL_CONNECT_PASS EL_LOG_EXT EL_INFINITE_LOOP \
+			EL_DELAY_WAIT_FOR_HOST EL_SHELL }
+			
+		set env_list_sorted [lsort $env_list]
+		
+		foreach ii $env_list_sorted {
+			if { [info exist env($ii) ]} {
+				print_item $ii $env($ii)
+			} else {
+				#print_item $ii "none"
+			}
+		}
+		
+
+
+
+		
+	}
 
 	#
 	#	Resolves user vars to values, only if there isn't a Constant with the same name
@@ -2868,7 +2989,7 @@ namespace eval expectlite {
 		upvar expectlite::cli_namespace			cli_namespace
 		upvar expectlite::el_log_ext			el_log_ext
 		upvar expectlite::SHOW_HELP				SHOW_HELP
-		upvar expectlite::DVARPROMPT	DVARPROMPT
+		upvar expectlite::DVARPROMPT			DVARPROMPT
 		
 
 

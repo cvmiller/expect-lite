@@ -14,7 +14,9 @@ $user=bob
 $PATH=~fred/Downloads
 $PATH=~cvmiller/Expect-lite
 
+>_el_read_args
 
+*INTERACT
 
 >echo "hello&$user&there"
 >echo $var
