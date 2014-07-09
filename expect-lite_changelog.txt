@@ -1391,7 +1391,7 @@ Released 21 Dec 2010 - 4.0.2
 		Bad escaped regex
 
 30 June 2014 - 4.7.2d3
-	Added include file home '~' expansion e.g. ~~fred/include.inc
+	Added include file home '~' expansion e.g. ~~fred/include.inc (user request)
 
 5 July 2014 - 4.7.2d4
 	Added *DVPROMPT (default) & *NODVPROMPT directives - user request
@@ -1401,6 +1401,10 @@ Released 21 Dec 2010 - 4.0.2
 	
 6 July 2014 - 4.7.2d5
 	Added early code to display directives/environment in IDE with <esc>e
+
+8 July 2014 - 4.7.2d6
+	Fixed infinite loop in fuzzy expect code
+
 
 
 	

@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.2d5"
+	variable version "4.7.2d6"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3830,6 +3830,7 @@ namespace eval expectlite {
 										# value is decimal
 										set rtn_val [string trimleft $rtn_val "0"]
 									}
+									"endloop" { # end the loop }
 									default {
 										# continue loop
 										set rtn_val ""
