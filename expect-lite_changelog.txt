@@ -1413,14 +1413,14 @@ Released 21 Dec 2010 - 4.0.2
 		
 Future
 
-o	Update Docs with *NODVPROMPT for 4.7.2
+x	Update Docs with *NODVPROMPT for 4.7.2
 		Add EL_DYN_VAR_PROMPT to Docs
 
 -	Add IDE command to show EL parameters (timeout, fuzzy range, directives? etc)
 		watch out for vi commands (like <esc>:w) under <esc>e
 		Candidate for 4.8
 			Still need to update documentation, add/drop items, add *SHOW ENV
-
+			Add *SHOW ENV
 
 x	bug: print unprinted comment at end of script
 
