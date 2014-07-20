@@ -1,6 +1,13 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+Released 22 July 2014 v4.7.2
+	Added Directives *DVPROMPT, *NODVPROMPT, which control Dynamic Variable
+		capture method. *DVPROMPT (default) requires a trailing prompt. (user request)
+	Added include file home '~' expansion e.g. ~~fred/include.inc (user request)
+	Fixed infinite loop bug in fuzzy expect code
+	Fixed last comment line not printed when last line of file
+
 Released 1 June 2014 v4.7.1
 	Fixed while loop comparison if first value was blank
 		Equal/not-equal comparisons are allowed to have blanks

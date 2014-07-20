@@ -9,8 +9,9 @@
 .\" Updated Man Page for expect-lite - version 4.6.0	5/25/2013
 .\" Updated Man Page for expect-lite - version 4.6.2	11/17/2013
 .\" Updated Man Page for expect-lite - version 4.7.0	4/20/2014
+.\" Updated Man Page for expect-lite - version 4.7.2	7/22/2014
 .\"
-.TH EXPECT-LITE "1" "April 2014" "expect-lite version 4.7.0" "User Commands"
+.TH EXPECT-LITE "1" "July 2014" "expect-lite version 4.7.2" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -210,6 +211,9 @@ Infinite loop protection value, sets N as new value
 *EOLS LF|*EOLS CRLF
 Controls end of line sequence sent to remote host, either line feed, or carriage return + line feed.
 .TP
+*DVPROMPT|*NODVPROMPT
+Enable/disable the Dynamic Variable capture method to require a trailing prompt (default=*DVPROMPT).
+.TP
 *NOINCLUDE
 Once set, will ignore all succeeding include files (lines starting with ~). This was the default behaviour in Library mode (introduced in v4.1). This behaviour is no longer default, and this directive provides a method to previous behavior.
 
@@ -280,6 +284,9 @@ Change to this directory upon login before executing script
 .TP
 EL_SHELL
 Start this shell (default bash) when using EL_CONNECT_METHOD=none
+.TP
+EL_DYN_VAR_PROMPT
+Set the Dynamic Variable capture method to require a prompt (default=1). Disable by setting to 0.
 .TP
 EL_LOG_EXT
 Set the log file name extension string (default=".log") which is appended to the script name when using *LOG without file name argument or used to detect a log file name on the command line.
