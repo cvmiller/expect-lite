@@ -11,9 +11,10 @@
 # Jump to interact
 #
 
-; Press '+++' to end interactive session
+#; Press '+++' to end interactive session
 >
-!interact +++ return
+#!interact +++ return
+*INTERACT
 >
 # allow script to continue
 !set _el(continue) 1

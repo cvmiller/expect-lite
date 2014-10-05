@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.2"
+	variable version "4.7.3d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -560,7 +560,7 @@ namespace eval expectlite {
 					#puts "Infinite loop count: $expectlite::_el_infinite_loop"
 					return 
 					}
-				-re {(^\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
+				-re {^(\x1b|`)(s|k)}	{ #DEBUGGER .s=Next Step, k=skip step
 					# determine next or skip step
 					set param "s" ; # set default to step
 					catch { set param "$interact_out(2,string)" } error 
@@ -752,7 +752,7 @@ namespace eval expectlite {
 						show_environment
 						protected_send "$_el_eols"
 					}
-				-re {\x1bh|`h} {	#DEBUGGER .h Show help
+				-re {^(\x1bh|`h)} {	#DEBUGGER .h Show help
 						interact_help
 						protected_send "$_el_eols"
 					}
@@ -2082,8 +2082,9 @@ namespace eval expectlite {
 		# Parse list to be var-value and directives pairs
 		# append to list in format {var=} {value with spaces}
 		foreach x $varvalue_list {
-			#puts "==x>$x, $val_str"
+			#puts "==x>$x|$val_str|"
 			if {  [regexp {[a-zA-Z0-9_]+[=]}  $x ] == 1 } {
+				# handle var=val pairs
 				if { $val_str != ""} {
 					lappend in_list [string trimright $val_str " "]
 					set val_str ""
@@ -2093,6 +2094,7 @@ namespace eval expectlite {
 				set val_str [lindex $y 1]
 				lappend in_list "[lindex $y 0]="
 			} elseif { [regexp {[*][A-Z0-9_]+}  $x ] == 1 } {
+				# handle directives
 				if { $val_str != ""} {
 					lappend in_list [string trimright $val_str " "]
 					set val_str ""
@@ -2100,12 +2102,13 @@ namespace eval expectlite {
 				lappend in_list $x
 				lappend in_list {}
 			} else {
-				set val_str "$val_str $x "
+				set val_str "$val_str $x"
 			}
 		}
 		# append last value part
 		if { $val_str != ""} {
 			lappend in_list [string trimright $val_str " "]
+			#puts "in_list+++>$in_list|$val_str"
 		}
 		#puts "==in_list>$in_list"
 		# walk through list creating {{var} {value}}
@@ -2206,8 +2209,9 @@ namespace eval expectlite {
 			set ii_blank [string range $blank 1 [expr $blank_len - $ii_len]]
 			# is a constant overiding the var?
 			if { [info exists cli_namespace($ii) ] } {
-				set iii_len [string length $cli_namespace($ii)]
+				set iii_len [string length $user_namespace($ii)]
 				set iii_blank [string range $blank 1 [expr $blank_len - $iii_len]]
+				#puts "iii----->$user_namespace($ii)|$iii_blank|$blank_len|$iii_len"
 			}
 			# don't print array initialization var (zero)
 			if { $ii != 0 } {
@@ -3179,6 +3183,10 @@ namespace eval expectlite {
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				show_vars
 			}
+			"\\*SHOW ENV"	{	# Show expect-lite variables
+				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				show_environment
+			}
 			"\\*INTERACT"	{	# place into expect interact mode
 				# Skip interact if in Library mode
 				# Jump to interact
@@ -3821,14 +3829,16 @@ namespace eval expectlite {
 								if { [ info exists expect_out($i,string)] } { 
 									unset expect_out($i,string)
 								}
-								#puts "====>$i|$rtn_val"
+								puts "====>$i|$rtn_val"
 								switch -regexp $rtn_val {
 									{^0x[0-9a-fA-F]+$} {
 										# look for hex value
 									}
 									{^[0-9.]+$} {
 										# value is decimal
-										set rtn_val [string trimleft $rtn_val "0"]
+										if { [string length $rtn_val ] > 1 } {
+											set rtn_val [string trimleft $rtn_val "0"]
+										}
 									}
 									"endloop" { # end the loop }
 									default {
@@ -3864,7 +3874,10 @@ namespace eval expectlite {
 							cputs "\nfind<<$teststr>>" $_el_debug_color
 							cputs "  in<<$expect_out(buffer)>>" $_el_debug_color
 							#cputs "  fuzz_in<<$expect_out($i,string)>>" $_el_debug_color
-							if { [info exists rtn_val] } { cputs "  fuzz_in<<$rtn_val>>" $_el_debug_color}
+							if { [info exists rtn_val] } { 
+								if { $rtn_val == "endloop" } { set rtn_val "" }
+								cputs "  fuzz_in<<$rtn_val>>" $_el_debug_color
+							}
 							cputs "\n" $_el_debug_color
 							#puts "_el(success) $_el(success)"
 						}

@@ -1406,12 +1406,30 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed infinite loop in fuzzy expect code
 
 
-
+20 July 2014 - 4.7.2 released
 	
+
+28 August 2014 - 4.7.3d1
+	Fixed fuzzy-expect bug if looking for '0'
+
+4 October 2014 - 4.7.3d2
+	Cleaned up IDE <ESC> command code
+	Fixed *SHOW VARS constant display (was ragged)
+	Fixed include file, passing constant values with spaces
+		e.g. ~myinclude.inc var=this is a string
+	Added *SHOW_ENV to show EL environment info
+	
+
+
+
 
 ------------ Future Versions --------------------------
 		
 Future
+
+x	BUG: passing constant to include with spaces - extra spaces added
+
+x	BUG: pasting text VAR=`nc -h` doesn't work
 
 x	Update Docs with *NODVPROMPT for 4.7.2
 		Add EL_DYN_VAR_PROMPT to Docs
@@ -1421,6 +1439,9 @@ x	Update Docs with *NODVPROMPT for 4.7.2
 		Candidate for 4.8
 			Still need to update documentation, add/drop items, add *SHOW ENV
 			Add *SHOW ENV
+
+o	Prompt for echoless password - request by Brian Taylor
+	Solved with test_pass.txt (bash embedded script)
 
 x	bug: print unprinted comment at end of script
 

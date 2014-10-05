@@ -1,7 +1,7 @@
 #!/usr/bin/env expect-lite
 # make this puppy run
 
-*TIMESTAMP
+#*TIMESTAMP
 *EXP_INFO
 ; === set expect buffer big
 !match_max -d 1000
@@ -15,6 +15,15 @@ $PATH=~fred/Downloads
 $PATH=~cvmiller/Expect-lite
 
 >_el_read_args
+
+VAR=`nc -h 2>1 | head`
+
+
+~fail_test.inc var1=val var2=this is a string
+
+>
+
+
 
 *INTERACT
 
