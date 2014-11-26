@@ -1419,6 +1419,10 @@ Released 21 Dec 2010 - 4.0.2
 		e.g. ~myinclude.inc var=this is a string
 	Added *SHOW_ENV to show EL environment info
 	
+25 November 2014 - 4.7.3.d3
+	Updated IDE to require to start a paste of lines
+		'; ' (space)
+		'$Var=' (equals)
 
 
 
@@ -1426,6 +1430,18 @@ Released 21 Dec 2010 - 4.0.2
 ------------ Future Versions --------------------------
 		
 Future
+
+o	add to *SHOW ENV - active log file
+
+x	Update IDE to make ; be [ \n]+;
+		Problem is that 'sed s;this;that; is unusable
+		Look at variable issue in IDE - last change 4.7.2d5
+		ZED=xyz
+		echo $ZED
+		Shows blank
+	Updated IDE to require 
+		'; ' (space)
+		'$VAR=' (equals)
 
 x	BUG: passing constant to include with spaces - extra spaces added
 
@@ -1438,7 +1454,7 @@ x	Update Docs with *NODVPROMPT for 4.7.2
 		watch out for vi commands (like <esc>:w) under <esc>e
 		Candidate for 4.8
 			Still need to update documentation, add/drop items, add *SHOW ENV
-			Add *SHOW ENV
+			x Add *SHOW ENV
 
 o	Prompt for echoless password - request by Brian Taylor
 	Solved with test_pass.txt (bash embedded script)
@@ -1785,19 +1801,22 @@ x	Add deb and rpm to download files
 
 x	Add Env Var validation e.g. connect_method=ssh-key creates BUG!
 
+
+
 ------------ Blogging --------------------------
 
+b	Integration in Python - tale of two scripts redux
 
 b	How-to use string math, search/replace, concat, remove or just assignment
 
-b	pseudo arrays
+k	pseudo arrays
 
 k	Blog: describe "how I test" with loopback
 		run ./install -c to set this up
 	
 k	Updated code blocks - else, foreach
 
-b	Include files, and how they are "searched"
+k	Include files, and how they are "searched"
 	
 b	Logging (once 4.4.0 is out)
 
