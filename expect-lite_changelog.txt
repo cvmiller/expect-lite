@@ -1420,7 +1420,7 @@ Released 21 Dec 2010 - 4.0.2
 	Added *SHOW_ENV to show EL environment info
 	
 25 November 2014 - 4.7.3.d3
-	Updated IDE to require to start a paste of lines
+	Updated IDE to require the following to start a paste of lines
 		'; ' (space)
 		'$Var=' (equals)
 
