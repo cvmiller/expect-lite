@@ -1,0 +1,74 @@
+#!/usr/bin/env expect-lite
+# make this auto-runnable! 
+
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+#	? If statement, use format ?cond?action::else_action
+# For more info see: expect-lite.html
+
+#
+#	Python Dictionary (Tuple) Example
+#
+#
+#
+#	Requires expect-lite version 4.7.2
+#
+*NOINFO
+*EXP_INFO
+
+#define blank
+$blank=
+
+# array of tuples
+$tup1=name joe mac 00:00:06:00:01 rate 101
+$tup2=name fred mac 00:00:07:00:02 rate 102
+$tup3=name jane mac 00:00:08:00:03 rate 103
+$tup4=
+
+
+#$i=1
+## while loop to walk through pseudo array
+#[ $tup$i != $blank
+#	; === unpacking: $tup$i
+#	#expect-lite un-pack a list of tuples in foreach loop
+#	$list=$tup$i
+#	$k=0
+#	[ $item=$list
+#		; $item $k
+#		? [expr $k % 2] == 0 ? $varname=$item
+#		# double dereference varname with $$varname
+#		? [expr $k % 2] == 1 ? $$varname=$item
+#		+$k
+#	]
+#	
+#	+$i
+#	>echo "name:$name	mac:$mac	rate:$rate"	
+#]
+
+$i=1
+# while loop to walk through pseudo array
+[ $tup$i != $blank
+	; === unpacking: $tup$i
+	#expect-lite un-pack a list of tuples in foreach loop
+	$list=$tup$i
+	$k=0
+	[ $item=$list
+		# modulo 2 $k to assign every other $item
+		=$k % 2
+		# set varname from tuple
+		? $k == 0 ? $varname=$item
+		# double dereference varname with $$varname to set value
+		? $k == 1 ? $$varname=$item
+		+$k
+	]
+	
+	+$i
+	>echo "name:$name	mac:$mac	rate:$rate"	
+]
+
+#pau!
