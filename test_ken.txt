@@ -26,9 +26,13 @@ VAR=`nc -h 2>1 | head`
 
 
 *INTERACT
-
+@10
 >echo "hello&$user&there"
+<bbb
+>var=shellvar
 >echo $var
+<shell
+
 ~$PATH/fail.inc
 
 

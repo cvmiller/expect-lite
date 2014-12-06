@@ -1424,13 +1424,31 @@ Released 21 Dec 2010 - 4.0.2
 		'; ' (space)
 		'$Var=' (equals)
 
+28 November 2014 - 4.7.3d4
+	Fixed IDE, paste var with underscore (was being ignored)
+	
+6 December 2014 - 4.8.0.d5
+	Changed version 4.7.3.dx -> 4.8.0dx
+	Added log file name to SHOW ENV
+	Fixed '<' expect code to wait for expected regex/string in 1 sec increments
+		This should permit breaking with ^\ cleaner
+		Fixes return-to-wait for expect, after returning from ^\ 
+	
+
 
 ------------ Future Versions --------------------------
 		
 Future
 
-o	add to *SHOW ENV - active log file
+x	add to *SHOW ENV - active log file
 
+x	Look at improving ^\ when in an expect long time out period (and no prompt) - looks OK in 4.6.0
+	Long expects - think about a different expect function
+		expects - short timeout, loops until long expect time is met, then fail
+		x Need to restore timeout when ^\ is triggered
+		x Need to not continue long expect time after ^\ returns
+		
+		
 x	Update IDE to make ; be [ \n]+;
 		Problem is that 'sed s;this;that; is unusable
 		Look at variable issue in IDE - last change 4.7.2d5
@@ -1603,7 +1621,6 @@ $mydate=
 
 o	implement "case" statement - Peter Fang
 
-o	Look at improving ^\ when in an expect long time out period (and no prompt) - looks OK in 4.6.0
 
 x 	BUG: Documentation - Tao example is missing PLUS $env_list=((.|\n|\r)*)$prompt
 

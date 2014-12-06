@@ -42,10 +42,12 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.7.3d3"
+	variable version "4.8.0d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
+	set _el(timeout) ::timeout
+	set _el(exp_timer) ::timeout
 
 	# EL_LIBRARY when set, places expect-lite in library mode,
 	# used for TCL programming calling expect-lite functions directly
@@ -538,6 +540,10 @@ namespace eval expectlite {
 			protected_send "$_el_eols"
 		}
 
+		# restore global timeout, if in the middle of something
+		set timeout $_el(timeout)
+		set _el(exp_timer) $_el(timeout)
+		
 		while {$restart_interact} {
 			# Interact session connects user to remote session, and also:
 			#	Interprets expect-lite commands and directives (as of 4.0)
@@ -756,7 +762,7 @@ namespace eval expectlite {
 						interact_help
 						protected_send "$_el_eols"
 					}
-				-echo -re  {^(>[a-zA-Z0-9/$.]|\?[iI][fF]|\$[a-zA-Z0-9]+=|~[a-zA-Z0-9]|; [^\r\n]|\*[A-Z]|\+\$|=\$|%[A-Z]|\[ )(.+)\r|(^@[0-9]+\r)|(\]\r)} {
+				-echo -re  {^(>[a-zA-Z0-9/$.]|\?[iI][fF]|\$[a-zA-Z0-9_]+=|~[a-zA-Z0-9]|; [^\r\n]|\*[A-Z]|\+\$|=\$|%[A-Z]|\[ )(.+)\r|(^@[0-9]+\r)|(\]\r)} {
 						#### Support for EL commands in Interact
 						#### Permits pasting of multiple commands into Interact session
 						#### test for expect version - 5.26 does not paste
@@ -2319,6 +2325,14 @@ namespace eval expectlite {
 		foreach ii $env_list_sorted {
 			# double dereference $item to get value using [set $item]
 			print_item $ii [set $ii]
+			# print log file name if used
+			if { $ii == "LOG" } {
+				set log_file [log_file -info]
+				if { $log_file != "" } {
+					set log_file [lindex [split $log_file] 1]
+					print_item LOG_FILE $log_file
+				}
+			}
 		}
 		
 		
@@ -3729,26 +3743,35 @@ namespace eval expectlite {
 						    	}
 						} else {
 							# test for multi-char expect strings
-							#TODO: remove catch and unbalanced fixes, see if this allows ^\ while waiting
-							# catch expect, just in case
-							if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
-								if {$WARN} {
-									cputs "\nWarning: Expect-lite: $error: Attempting to fix\n" $_el_warn_color
-								}
-								# escape parens or square brackets
-								regsub {([^\\])[(]} $teststr {\1\(} teststr
-								regsub {([^\\])[)]} $teststr {\1\)} teststr
-								# fix potential unbalanced square brackets
-								regsub {([^\\])[[]} $teststr {\1\[} teststr
-								regsub {([^\\])[]]} $teststr {\1\]} teststr
-								# escape braces
-								regsub {([^\\])[\{]} $teststr {\1\{} teststr
-								regsub {([^\\])[\}]} $teststr {\1\}} teststr
-								#puts "+>$teststr"
-								if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
-									puts "\nBUG: Expect-lite: $error\n Fix Failed\n"
-								}
-							}
+							
+							set exp_teststr $teststr
+							
+							# new approach for expect, permits breakout with ^\
+							# calculate timeout
+							set _el(timeout) $timeout
+							set timeout 1
+							set _el(exp_timer) 0
+							if { [ catch {
+					    		expect  {
+									 -re $exp_teststr {
+								 		set _el(success) 1
+										#break
+								 		}
+									 timeout {
+								 		#puts "ZZZ: $i $_el(timeout)"
+										incr _el(exp_timer)
+										# cycle thru expect again, no $exp_teststr found
+										if { $_el(exp_timer) < $_el(timeout) } { exp_continue }
+										}
+						    		}; #end expect
+							} error ] != 0 } {
+								if {$WARN} { cputs "\nWarning: $error\n   In line: $_el(line)\n" $_el_warn_color }
+							}; #end if catch
+							
+							# restore global timeout
+							set timeout $_el(timeout)
+
+						
 					 		#puts "\nGood=[_el_strip_char $_el(line) $_in]|$_el(success)|$teststr|\n" 
 						}
 						# look at the expect_out(buffer) for debugging
@@ -3760,7 +3783,7 @@ namespace eval expectlite {
 						}
 						# show expect found string
 						if { $EXP_INFO && $DEBUG==0 && $_el(success)==1} {
-							regsub ".*($teststr)" $expect_out(buffer) {\1} foundstr
+							regsub ".*($exp_teststr)" $expect_out(buffer) {\1} foundstr
 							cputs "$el_color(left_angle)$foundstr" $_el_info_color
 						}
 
