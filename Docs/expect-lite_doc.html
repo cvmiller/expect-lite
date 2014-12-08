@@ -202,8 +202,15 @@ empowers on the spot debugging without having to set breakpoints<span
  style="background-color: rgb(255, 255, 102);"><span
  style="background-color: white;"><a href="expect-lite_tips.html#ide"><span
  style="font-weight: bold;">Powerful Integrated Debugger</span></a> set
-breakpoints, step/skip, copy/paste lines into running script&nbsp; <br>
+breakpoints, step/skip, copy/paste lines into running script <br>
           </span></span></li>
+        <ul>
+          <li><span style="background-color: rgb(255, 255, 102);"><span
+ style="background-color: white;"><span style="font-weight: bold;">Debugger
+improvements</span> show environment, improved paste support, and
+expect timeout operations&nbsp; </span></span><span
+ style="background-color: yellow; font-weight: normal;">new in 4.8.0</span></li>
+        </ul>
       </ul>
       <span style="font-weight: bold;"></span><br>
       <hr style="width: 75%; height: 2px;"><br>
@@ -2167,7 +2174,7 @@ Assigning
 a dynamic variable to a list of items (or multiple lines). The value of
 the dynamic variable will be a space delimited list (replacing end of
 lines with spaces):<br>
-      <pre>#prompt is $ and space after $<br>$prompt=$ <br>&gt;env | sort<br>+$env_list=((.|\n|\r)*)$prompt<br></pre>
+      <pre>#prompt is $ and space after $<br>$prompt=\$ <br>&gt;env | sort<br>+$env_list=((.|\n|\r)*)$prompt<br></pre>
       <span style="font-weight: bold;"><br>
       </span><span style="font-weight: bold;">Allowing multiple
 responses with RegEx</span><br>
@@ -2555,8 +2562,8 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
     </tr>
   </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">22
-July 2014<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15
+Jan 2015<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span
  style="font-style: italic;"><br>
 </span><br>
@@ -2565,7 +2572,7 @@ July 2014<br>
 to expect-list-users</a> Discussion List</small><br>
 <br>
 <small><span style="font-style: italic;">this
-document for version 4.7.2 and above</span><br
+document for version 4.8.0 and above</span><br
  style="font-style: italic;">
 </small>
 <br>

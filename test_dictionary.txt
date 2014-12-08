@@ -70,5 +70,7 @@ $i=1
 	+$i
 	>echo "name:$name	mac:$mac	rate:$rate"	
 ]
-
+*INFO
+*INTERACT
+*SHOW VARS
 #pau!

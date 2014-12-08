@@ -1440,6 +1440,13 @@ Released 21 Dec 2010 - 4.0.2
 		
 Future
 
+o	Update for release of 4.8.0
+	o update docs with *SHOW ENV and IDE
+	o Gather list new things for IDE
+	o Update man page
+	o Target Jan 2015 - EL 10 years old
+	
+
 x	add to *SHOW ENV - active log file
 
 x	Look at improving ^\ when in an expect long time out period (and no prompt) - looks OK in 4.6.0
@@ -1824,6 +1831,10 @@ b	Integration in Python - tale of two scripts redux
 
 b	How-to use string math, search/replace, concat, remove or just assignment
 
+b	tuples technique
+
+b	Tale of two scripts Reprise - Python/expect-lite
+
 k	pseudo arrays
 
 k	Blog: describe "how I test" with loopback
@@ -1833,7 +1844,7 @@ k	Updated code blocks - else, foreach
 
 k	Include files, and how they are "searched"
 	
-b	Logging (once 4.4.0 is out)
+k	Logging (once 4.4.0 is out)
 
 b	sleeping - no native sleep
 
