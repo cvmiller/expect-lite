@@ -22,7 +22,7 @@ VAR=`nc -h 2>1 | head`
 ~fail_test.inc var1=val var2=this is a string
 
 >
-$prompt=$ 
+$prompt=\$ 
 >env | sort
 +$env_list=((.|\n|\r)*)$prompt
 Var:arg0                  Value:test_dictionary.txt
@@ -30,7 +30,7 @@ Var:arg0                  Value:test_dictionary.txt
 
 
 *INTERACT
-@10
+@5
 >echo "hello&$user&there"
 <bbb
 >var=shellvar

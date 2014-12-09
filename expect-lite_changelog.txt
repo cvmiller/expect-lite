@@ -1435,13 +1435,19 @@ Released 21 Dec 2010 - 4.0.2
 		Fixes return-to-wait for expect, after returning from ^\ 
 	
 
+8 December 2014 - 4.8.0d6
+	Fixed uninitialized var exp_teststr - crash on paste
+	
+
+
 
 ------------ Future Versions --------------------------
 		
 Future
 
 o	Update for release of 4.8.0
-	o update docs with *SHOW ENV and IDE
+	- update docs with *SHOW ENV and IDE
+		Update simple page
 	o Gather list new things for IDE
 	o Update man page
 	o Target Jan 2015 - EL 10 years old
