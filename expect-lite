@@ -42,7 +42,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.8.0d6"
+	variable version "4.8.0d7"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3156,14 +3156,50 @@ namespace eval expectlite {
 				# do not disable if CLI has enabled
 				if {$TIMESTAMP != 10 } { set TIMESTAMP 0 }
 			}
-			"\\*PASS" -
-			"\\*TERM"	{	# Terminate but Pass Test
+			"\\*PASS"	{	# Terminate but Pass Test
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
 				### Terminate the test with a pass
 				if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $_el_info_color }
 				exit 0
-				
 			}
+			"\\*TERM*"	{	# Terminate but Pass Test
+				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
+				set term_list [split $g_dir_str]
+				#puts "=====>$term_list"
+				
+				if { [llength $term_list] > 2 } {
+					if {$WARN} {
+						cputs "\n\nWarning: TERM: Too Many Names: $g_dir_str\n" $_el_warn_color
+					}
+					# invalid *TERM command, exit this function
+					return 1
+				} elseif {[llength $term_list] == 2 } {
+					# set the term_id to the passed value
+					set term_id [lindex $term_list 1]
+					# check that term_id is a number between 0-255
+					if {[ catch {  string is integer $term_id } error ]} {
+						#hmm term_id is not a number
+						cputs "\n\nWarning: TERM: non-zero return code: $g_dir_str\n$error" $_el_warn_color
+					} else {
+						#term_id looks to be a number
+						if { $term_id > -1 && $term_id < 256 } {
+							### Terminate the test with a pass
+							if {$INFO} {cputs "\n\n##Overall Result: TERM=$term_id \n\n" $_el_info_color }
+							exit $term_id
+						} else {
+							#hmm term_id is out of range
+							cputs "\n\nWarning: TERM: return code is no between 0 and 255: $g_dir_str\n" $_el_warn_color
+						}
+					}
+					
+				} elseif {[llength $term_list] == 1 } {
+					# no arguments to *FORK, then display current session name
+					### Terminate the test with a pass
+					if {$INFO} {cputs "\n\n##Overall Result: PASS \n\n" $_el_info_color }
+					exit 0					
+				}
+			}
+			
 			"\\*FAIL"	{	# Terminate and Fail Test
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_err_color
 				if { $NOFAIL } {
@@ -4397,7 +4433,12 @@ namespace eval expectlite {
 						regsub {\$} $user_var "" user_var
 
 						# Assign the Var
-						set user_namespace($user_var) $user_value
+						if { [string len $user_value ] > 0 } {
+							set user_namespace($user_var) $user_value
+						} else {
+							# empty value, unset var, make available as a shell var
+							catch { unset user_namespace($user_var) }
+						}
 
 						# Used for debugging
 						#puts "->$user_var $user_value"

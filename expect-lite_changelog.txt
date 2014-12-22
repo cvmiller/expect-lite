@@ -1436,9 +1436,15 @@ Released 21 Dec 2010 - 4.0.2
 	
 
 8 December 2014 - 4.8.0d6
-	Fixed uninitialized var exp_teststr - crash on paste
+	Fixed uninitialized var exp_teststr - crash on paste into IDE
 	
-
+21 December 2014 - 4.8.0d7
+	Setting an empty var will unset the variable
+		e.g. $var=
+		This allows $var to be used as a shell variable
+	Added *TERM N - exit with return code N
+		*TERM without N, returns 0 for backward compatibility
+	
 
 
 ------------ Future Versions --------------------------
@@ -1451,7 +1457,10 @@ o	Update for release of 4.8.0
 	o Gather list new things for IDE
 	o Update man page
 	o Target Jan 2015 - EL 10 years old
-	
+
+x	*TERM n exits with a return code of n
+
+x	empty assignment 'unsets' a variable e.g. $var=	
 
 x	add to *SHOW ENV - active log file
 
@@ -1832,6 +1841,8 @@ x	Add Env Var validation e.g. connect_method=ssh-key creates BUG!
 
 
 ------------ Blogging --------------------------
+
+b	Regex redux - add \W \D \S
 
 b	Integration in Python - tale of two scripts redux
 

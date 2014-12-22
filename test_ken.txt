@@ -27,18 +27,31 @@ $prompt=\$
 +$env_list=((.|\n|\r)*)$prompt
 Var:arg0                  Value:test_dictionary.txt
 
+; === unassign var and set shell var
+>joe=hello
+$joe=
+>echo $joe
+<hello
+>
+
+; === support regex \D
+>uptime
+<users
++$var=\D+(\d.\d+)
+>
 
 
 *INTERACT
 @5
 >echo "hello&$user&there"
 <bbb
+; === unassign EL $var 
+$var=
 >var=shellvar
 >echo $var
 <shell
 
 ~$PATH/fail.inc
-
 
 
 >
