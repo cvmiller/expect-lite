@@ -10,8 +10,9 @@
 .\" Updated Man Page for expect-lite - version 4.6.2	11/17/2013
 .\" Updated Man Page for expect-lite - version 4.7.0	4/20/2014
 .\" Updated Man Page for expect-lite - version 4.7.2	7/22/2014
+.\" Updated Man Page for expect-lite - version 4.8.0	1/15/2015
 .\"
-.TH EXPECT-LITE "1" "July 2014" "expect-lite version 4.7.2" "User Commands"
+.TH EXPECT-LITE "1" "January 2015" "expect-lite version 4.8.0" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -181,11 +182,14 @@ Include a fail script, which expect-lite runs only if the main script fails
 */prompt/
 Set a user defined prompt (defined in regex)
 .TP
-*TERM or *PASS
-Immediately terminates script, but returns 0 (pass) 
+*TERM <N>
+Immediately terminates script, and returns the value of N, if N is not specified returns 0
+.TP
+*PASS
+Immediately terminates script, and returns 0 (pass) 
 .TP
 *FAIL
-Immediately fails script, and returns 1 (fail) 
+Immediately fails script, and returns 1 (fail), unless *NOFAIL is set, then script will run to completion, and return 1 
 .TP
 *NOFAIL
 Script will run to completion, and returns 1, if failure occurred during execution, or 0, if pass (it is a sticky flag, and can not be unset)
@@ -204,6 +208,9 @@ Multiple session support. Directs expect-lite to open a new session and spawns a
 .TP
 *SHOW VARS
 Debug information, displays all expect-lite variables. Can be used in interact mode.
+.TP
+*SHOW ENV
+Debug information, displays expect-lite environment, including state of directives, infinite loop counter, log file name (if used), and environment variables. Can be used in interact mode.
 .TP
 *INFINITE_LOOP N
 Infinite loop protection value, sets N as new value
@@ -245,7 +252,7 @@ Enable/disable debug messages
 Disables color on stdout
 .TP
 *TIMESTAMP <ISO|YMD|DMY|MDY>
-Prints Date and Timestamp for each command sent, ISO is default. Timestamps will be written to log file when *LOG is used.
+Prints Date and Timestamp with milisecond accuracy, for each command sent, ISO is default. Timestamps will be written to log file when *LOG is used.
 .TP
 *NOTIMESTAMP
 Disables timestamp printing
@@ -316,6 +323,9 @@ Continue execution of the script
 <esc>v
 show Vars, display expect-lite variables and values
 .TP
+<esc>e
+show Environment, display expect-lite environment
+.TP
 <esc>0to9
 display next N lines of script
 .TP
@@ -341,7 +351,7 @@ Written by Craig Miller
 .SH "REPORTING BUGS"
 Report bugs to <cvmiller at gmail dot com>.
 .SH COPYRIGHT
-Copyright \(co 2008-2014 Craig Miller
+Copyright \(co 2008-2015 Craig Miller
 .br
 Copyright \(co 2005-2007 FreeScale Semiconductor and Craig Miller
 .br

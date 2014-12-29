@@ -13,5 +13,7 @@ function print_menu_lines (lines) {
 }
 
 print_menu_lines(menu_lines);
+document.writeln("<h2><center>Celebrating 10 years of creating quick solutions</center></h2>")
 
+// simple solutions since 2005
 

@@ -664,11 +664,13 @@ prompt</a>)<br>
                 </td>
               </tr>
               <tr>
-                <td style="vertical-align: top; width: 197px;">*TERM<br>
+                <td style="vertical-align: top; width: 197px;">*TERM
+&lt;N&gt;<br>
                 </td>
                 <td style="vertical-align: top; width: 289px;">Immediately
-terminates script, but returns 0 (pass) (see <a
- href="#directive_term_fail">stopping execution early</a>)<br>
+terminates script, but returns 0 (pass), or if N is specified returns
+the value of N (0..255)&nbsp; (see <a href="#directive_term_fail">stopping
+execution early</a>)<br>
                 </td>
               </tr>
               <tr>
@@ -955,13 +957,123 @@ char-classes and repeats)<br>
         <li>Expect-lite only evaluates lines using regex which
 begin
 with
-'&lt;'&nbsp; '-&lt;' and '+' (dynamic variables)<br>
+'&lt;'&nbsp; '-&lt;'&nbsp; '~&lt;' and '+' (dynamic variables)<br>
         </li>
       </ol>
+The following is a table of supported meta-characters, and repeats<br>
+      <br>
+      <table style="text-align: left; width: 35%; margin-left: 40px;"
+ border="1" cellpadding="2" cellspacing="2">
+        <tbody>
+          <tr>
+            <td
+ style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Meta-Char<br>
+            </td>
+            <td
+ style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Description<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">\d<br>
+            </td>
+            <td style="vertical-align: top;">any digit<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">\D<br>
+            </td>
+            <td style="vertical-align: top;">any non-digit<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">\w<br>
+            </td>
+            <td style="vertical-align: top;">any word char<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">\W<br>
+            </td>
+            <td style="vertical-align: top;">any non-word char<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">\s<br>
+            </td>
+            <td style="vertical-align: top;">any white space<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">\S<br>
+            </td>
+            <td style="vertical-align: top;">any non-white space<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">\t<br>
+            </td>
+            <td style="vertical-align: top;">tab<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">\r<br>
+            </td>
+            <td style="vertical-align: top;">return<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">\n<br>
+            </td>
+            <td style="vertical-align: top;">new line<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">.<br>
+            </td>
+            <td style="vertical-align: top;">any character<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">|<br>
+            </td>
+            <td style="vertical-align: top;">regex OR<br>
+            </td>
+          </tr>
+          <tr>
+            <td
+ style="vertical-align: top; background-color: rgb(204, 204, 204);"><span
+ style="font-weight: bold;">Repeats</span><br>
+            </td>
+            <td
+ style="vertical-align: top; background-color: rgb(204, 204, 204);"><br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">?<br>
+            </td>
+            <td style="vertical-align: top;">0 or 1<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">*<br>
+            </td>
+            <td style="vertical-align: top;">0 or more<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">+<br>
+            </td>
+            <td style="vertical-align: top;">1 or more<br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+      <br>
 As an example, a range of numbers is valid for an IP address.
 The following would permit the last octet of the IP address to be 2
 digits, but not 3.<br>
-      <pre>&gt; /sbin/ifconfig eth0<br>&lt;inet addr:10\.29\.200\.\d\d[ ]</pre>
+      <pre>&gt; /sbin/ifconfig eth0<br>&lt;inet addr:10\.29\.200\.\d\d\s</pre>
 The periods are preceded by a backslash to indicate to regex that a
 period must be returned rather than the regex dot '.' which indicates
 any character. The \d indicates any single digit.<br>
@@ -975,11 +1087,14 @@ must be escaped with a backslash to convey their literal meaning:<br>
  border="1" cellpadding="2" cellspacing="2">
         <tbody>
           <tr>
-            <td style="vertical-align: top; font-weight: bold;">Example<br>
+            <td
+ style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Example<br>
             </td>
-            <td style="vertical-align: top; font-weight: bold;">Escaped<br>
+            <td
+ style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Escaped<br>
             </td>
-            <td style="vertical-align: top; font-weight: bold;">Character<br>
+            <td
+ style="vertical-align: top; font-weight: bold; background-color: rgb(204, 204, 204);">Character<br>
             </td>
           </tr>
           <tr>
@@ -1081,8 +1196,18 @@ script<br>
       </ul>
 Lines starting with a '$' indicate variables which are assigned and set
 at script invocation, and therefore are static. In expect-lite variable
-names will always be preceded with a '$'.<br>
-      <br>
+names will always be preceded with a '$'. Variable names are limited to
+the following set of characters
+[A-Za-z0-9_]. When making variable assignments, there must NOT be a
+space between the variable name and the equals sign:<br>
+      <pre>$myvar=myvalue</pre>
+There are times when it is necessary to unassign a variable, because,
+it is desired to have the variable be dereferenced by the underlying
+shell (see <a href="#bash_shell">bash shell</a>), or that pseudo-
+arrays are being used (see <a href="#pseudo_arrays">pseudo-arrays</a>).
+To unassign a variable (v4.8.0), merely assign it an empty value.<br>
+      <pre>$myvar=</pre>
+      <h3>Dynamic Variables</h3>
 Sometimes it is desirable to bind a variable during the execution of
 the script. Dynamic variables fill this need by utilizing Expect's
 built-in regex capture mechanism. Only the portion of the match inside
@@ -1907,10 +2032,18 @@ debugging a script, it is convenient to stop execution mid way in the
 script while focusing a troublesome section. Or to perform a test, such
 as this is Monday, and terminate the script.<br>
       <br>
-*TERM (and *PASS) will stop
-execution and return 0, or Pass. This is useful for debugging. *FAIL
+*PASS will stop
+execution and return 0, or Pass. This is useful for debugging. *TERM
+&lt;N&gt; (as of version 4.8.0) will terminate the script early, and
+return N (0..255). User defined return can be useful for signalling to
+the calling program that the script returned abnormally (e.g. lab setup
+was not correct).<br>
+      <br>
+*FAIL
 will stop execution and return 1, or Fail. If a fail script has been
-declared earlier, it will be executed before terminating execution.<br>
+declared earlier, it will be executed before terminating execution. If
+*NOFAIL has been used prior to *FAIL, then the script will run to
+completion, but will declare fail at that time, and return 1.<br>
       <br>
       <h3><a name="directive_nofail"></a>No stopping the script with
 *NOFAIL</h3>

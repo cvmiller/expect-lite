@@ -1417,7 +1417,7 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed *SHOW VARS constant display (was ragged)
 	Fixed include file, passing constant values with spaces
 		e.g. ~myinclude.inc var=this is a string
-	Added *SHOW_ENV to show EL environment info
+	Added *SHOW ENV to show EL environment info
 	
 25 November 2014 - 4.7.3.d3
 	Updated IDE to require the following to start a paste of lines
@@ -1454,9 +1454,12 @@ Future
 o	Update for release of 4.8.0
 	- update docs with *SHOW ENV and IDE
 		Update simple page
-	o Gather list new things for IDE
+	o Gather list new things for IDE - show env, instant interact, ocpy & paste
 	o Update man page
 	o Target Jan 2015 - EL 10 years old
+	x Update meta chars supported
+
+o	sleep funtion - step in 1 sec increments, permit instant-interact breaking into sleep
 
 x	*TERM n exits with a return code of n
 
