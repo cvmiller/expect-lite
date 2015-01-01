@@ -1,6 +1,6 @@
 ##################################################################################
 #
-#  Copyright (C) Craig Miller 2008-2013
+#  Copyright (C) Craig Miller 2008-2015
 #
 #  Copyright (C) Freescale Semiconductor, Inc. 2005-2007
 #
@@ -1445,6 +1445,12 @@ Released 21 Dec 2010 - 4.0.2
 	Added *TERM N - exit with return code N
 		*TERM without N, returns 0 for backward compatibility
 	
+1 January 2015 - 4.8.0d8
+	Happy New Year
+	Fixed timeout as 1 sec problem when interrupting '<'
+	Added *TERM N, N>1, with red text
+
+
 
 
 ------------ Future Versions --------------------------
@@ -1455,13 +1461,14 @@ o	Update for release of 4.8.0
 	- update docs with *SHOW ENV and IDE
 		Update simple page
 	o Gather list new things for IDE - show env, instant interact, ocpy & paste
-	o Update man page
+	- Update man page
 	o Target Jan 2015 - EL 10 years old
 	x Update meta chars supported
 
-o	sleep funtion - step in 1 sec increments, permit instant-interact breaking into sleep
+x	sleep funtion - step in 1 sec increments, permit instant-interact breaking into sleep
 
 x	*TERM n exits with a return code of n
+		Update exit print - RED when rtn code is > 0
 
 x	empty assignment 'unsets' a variable e.g. $var=	
 

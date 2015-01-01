@@ -33,16 +33,16 @@ $joe=
 >echo $joe
 <hello
 >
-
+@2
 ; === support regex \D
 >uptime
 <users
 +$var=\D+(\d.\d+)
 >
-
+*SHOW ENV
 
 *INTERACT
-@5
+@8
 >echo "hello&$user&there"
 <bbb
 ; === unassign EL $var 
@@ -50,7 +50,8 @@ $var=
 >var=shellvar
 >echo $var
 <shell
-
+*SHOW ENV
+*INTERACT
 ~$PATH/fail.inc
 
 

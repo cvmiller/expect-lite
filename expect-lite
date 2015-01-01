@@ -2,7 +2,7 @@
 
 ##################################################################################
 #
-#  Copyright (C) 2008-2014 Craig Miller
+#  Copyright (C) 2008-2015 Craig Miller
 #
 #  Copyright (C) 2005-2007 Freescale Semiconductor, Inc. 
 #
@@ -19,16 +19,8 @@
 #
 # by Craig Miller cvmiller@gmail.com	19 Jan 2005
 #
-# Command Arguments:
-#	<Remote-Host|IP>
-#	<command_file>
-#	<user_directory>
-#	[additional constants, see usage]
-#
 #
 # Requires Expect version supported 5.42.1 and later (although earlier versions may work)
-#
-#
 #
 #
 
@@ -42,12 +34,11 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.8.0d7"
+	variable version "4.8.0d8"
 
 	#set starting expect timeout 
 	set ::timeout 10 
-	set _el(timeout) ::timeout
-	set _el(exp_timer) ::timeout
+	set _el(exp_timer) $::timeout
 
 	# EL_LIBRARY when set, places expect-lite in library mode,
 	# used for TCL programming calling expect-lite functions directly
@@ -160,6 +151,9 @@ namespace eval expectlite {
 
 		# declare global array _el (for internal expect-lite vars)
 		set ::expectlite::_el(0) 0
+		
+		# declare global el STOP variable, used to stop paste lines
+		set ::expectlite::_el(STOP) "RUN"
 
 		# clear NOFAIL flag 1=test should have failed
 		set ::expectlite::_el(test_failed) 0 
@@ -320,6 +314,7 @@ namespace eval expectlite {
 				catch { puts stderr "\nPress ^\\ to interupt... returning to instant-interact\n" }
 				# flush the paste buffer
 				catch { expectlite::_el_buffer_stack_clear $expectlite::_el_buf(stack) } error
+				set expectlite::_el(STOP) "STOP"
 				expectlite::instant_interact_sig
 			} else {
 				catch { puts stderr "\nexpect-lite: Interrupt received, exiting...\n" }
@@ -341,7 +336,9 @@ namespace eval expectlite {
 				catch { puts stderr "\nreturning to instant-interact...\n" }
 				# flush the paste buffer
 				catch { expectlite::_el_buffer_stack_clear $expectlite::_el_buf(stack) } error
+				set expectlite::_el(STOP) "STOP"
 			}
+			
 			expectlite::instant_interact_sig
 		} SIGQUIT
 
@@ -500,7 +497,7 @@ namespace eval expectlite {
 	#	This function is also called by *INTERACT, providing similar functionality
 	#
 	proc instant_interact_sig {} {
-		global expect_out errorInfo
+		global expect_out errorInfo timeout
 		upvar expectlite::remote_host		remote_host
 		upvar expectlite::_el				_el
 		upvar expectlite::DEBUG 			DEBUG
@@ -541,12 +538,15 @@ namespace eval expectlite {
 		}
 
 		# restore global timeout, if in the middle of something
-		set timeout $_el(timeout)
-		set _el(exp_timer) $_el(timeout)
-		
+		set _el(exp_timer) $timeout
+				
 		while {$restart_interact} {
 			# Interact session connects user to remote session, and also:
 			#	Interprets expect-lite commands and directives (as of 4.0)
+
+			# ensure in RUN mode
+			set expectlite::_el(STOP) "RUN"
+
 			# reset paste lines flag
 			set _el(ide_paste_lines) 0
 			if { [catch { interact {
@@ -2244,7 +2244,7 @@ namespace eval expectlite {
 		upvar expectlite::_el					_el
 		
 		# clean up names for printout
-		global env
+		global env timeout
 		upvar expectlite::INFO					INFO
 		upvar expectlite::EXP_INFO				EXP_INFO
 		upvar expectlite::WARN					WARN
@@ -2676,6 +2676,7 @@ namespace eval expectlite {
 	#
 	proc _el_buffer_stack_clear { stack_number } {
 		upvar expectlite::_el_buf					_el_buf
+		upvar expectlite::_el					_el
 
 		# set buffer to empty list
 		if { [info exists _el_buf($stack_number) ] } {
@@ -3183,8 +3184,13 @@ namespace eval expectlite {
 					} else {
 						#term_id looks to be a number
 						if { $term_id > -1 && $term_id < 256 } {
-							### Terminate the test with a pass
-							if {$INFO} {cputs "\n\n##Overall Result: TERM=$term_id \n\n" $_el_info_color }
+							if { $term_id > 0 } {
+								### Terminate the script with a non zero
+								if {$INFO} {cputs "\n\n##Overall Result: TERM=$term_id \n\n" $_el_err_color }
+							} else {
+								### Terminate the script with a pass
+								if {$INFO} {cputs "\n\n##Overall Result: TERM=$term_id \n\n" $_el_info_color }
+							}
 							exit $term_id
 						} else {
 							#hmm term_id is out of range
@@ -3644,6 +3650,8 @@ namespace eval expectlite {
 		while { -1 != $_el(line) } {
 			# deref line
 			_el_deref_line
+			# ensure we are in RUN mode
+			set expectlite::_el(STOP) "RUN"
 
 
 			#puts "el(line):$_el(line)"
@@ -3785,29 +3793,26 @@ namespace eval expectlite {
 							
 							# new approach for expect, permits breakout with ^\
 							# calculate timeout
-							set _el(timeout) $timeout
-							set timeout 1
 							set _el(exp_timer) 0
 							if { [ catch {
 					    		expect  {
-									 -re $exp_teststr {
+									 -timeout 1 -re $exp_teststr {
 								 		set _el(success) 1
-										#break
 								 		}
 									 timeout {
-								 		#puts "ZZZ: $i $_el(timeout)"
+								 		#puts "ZZZ: $_el(exp_timer) $timeout"
 										incr _el(exp_timer)
-										# cycle thru expect again, no $exp_teststr found
-										if { $_el(exp_timer) < $_el(timeout) } { exp_continue }
-										}
+										# if ^\ has not been preseed
+										if { $_el(STOP) != "STOP" } { 
+											# cycle thru expect again, no $exp_teststr found
+											if { $_el(exp_timer) < $timeout } { exp_continue }
+										  }
+										}; # timeout
 						    		}; #end expect
 							} error ] != 0 } {
 								if {$WARN} { cputs "\nWarning: $error\n   In line: $_el(line)\n" $_el_warn_color }
 							}; #end if catch
 							
-							# restore global timeout
-							set timeout $_el(timeout)
-
 						
 					 		#puts "\nGood=[_el_strip_char $_el(line) $_in]|$_el(success)|$teststr|\n" 
 						}
@@ -4030,6 +4035,7 @@ namespace eval expectlite {
 								set timeout $t_timeout
 							}
 						}
+
 						# print new timeout value if one_line is set (e.g. from IDE)
 						if { $_one_line == 1 } {
 							if {$INFO} {
