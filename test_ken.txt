@@ -13,6 +13,7 @@ $user=bob
 
 $PATH=~fred/Downloads
 $PATH=~cvmiller/Expect-lite
+#**SHELL=bash
 
 >_el_read_args
 
@@ -20,18 +21,21 @@ VAR=`nc -h 2>1 | head`
 
 
 ~fail_test.inc var1=val var2=this is a string
+*~fail_test.inc
 
 >
 $prompt=\$ 
 >env | sort
-+$env_list=((.|\n|\r)*)$prompt
++$env_list=\n((.|\n|\r)*)$prompt
 Var:arg0                  Value:test_dictionary.txt
+
 
 ; === unassign var and set shell var
 >joe=hello
 $joe=
 >echo $joe
 <hello
+!sleep 5
 >
 @2
 ; === support regex \D

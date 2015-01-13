@@ -1450,6 +1450,12 @@ Released 21 Dec 2010 - 4.0.2
 	Fixed timeout as 1 sec problem when interrupting '<'
 	Added *TERM N, N>1, with red text
 
+3 January 2015 - 4.8.0d9
+	Added **SHELL & *~fail_script to *SHOW ENV
+	
+11 January 2015 - 4.8.0
+	Released (same as d9)
+	
 
 
 
@@ -1460,10 +1466,13 @@ Future
 o	Update for release of 4.8.0
 	- update docs with *SHOW ENV and IDE
 		Update simple page
-	o Gather list new things for IDE - show env, instant interact, ocpy & paste
-	- Update man page
+	o Gather list new things for IDE - show env, instant interact improvements, copy & paste, unassign vars
+	- Update man page - add meta-chars?
 	o Target Jan 2015 - EL 10 years old
 	x Update meta chars supported
+	x add **SHELL *~fail_script to Show Env
+
+o	Pass fail script parms (just like a regular include file
 
 x	sleep funtion - step in 1 sec increments, permit instant-interact breaking into sleep
 

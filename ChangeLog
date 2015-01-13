@@ -1,6 +1,19 @@
 
 All changes by Craig Miller cvmiller at gmail dot com
 
+
+Released 15 January 2015 v4.8.0
+	Expect-lite is 10 years old!
+	Fixed fuzzy-expect bug if looking for '0'
+	Fixed *SHOW VARS constant display (was ragged)
+	Fixed include file, passing constant values with spaces
+	Added IDE debug command: SHOW ENV
+		Displays expect-lite flags (e.g. *DEBUG), counters e.g.
+			*INFINITE_LOOP, fuzzy range, Env Vars
+	Improved expect '<' wait mechanism interaction with IDE
+	Added unset variable e.g. $var=
+	Added *TERM N - exit with retun code N (0-255)
+	
 Released 22 July 2014 v4.7.2
 	Added Directives *DVPROMPT, *NODVPROMPT, which control Dynamic Variable
 		capture method. *DVPROMPT (default) requires a trailing prompt. (user request)

@@ -43,9 +43,8 @@ character for send and expect '&gt;' '&lt;' <br>
 This creates many lines of expect with minimal "code" (<a
  href="#special_characters">table of interpreted characters</a>)</li>
         <li><a href="#fuzzy_expect"><span style="font-weight: bold;">Fuzzy
-Expect</span></a> '~&lt;' expect an approximate value <span
- style="font-weight: normal;"></span><span
- style="background-color: yellow; font-weight: normal;">new in 4.7.0</span>
+Expect</span></a> '~&lt;' expect an approximate value&nbsp;<span
+ style="background-color: orange; font-weight: normal;"> in 4.7.0</span>
         </li>
         <li><a href="expect-lite_doc.html#executable_script"><span
  style="font-weight: bold;">Scripts
@@ -1201,7 +1200,8 @@ the following set of characters
 [A-Za-z0-9_]. When making variable assignments, there must NOT be a
 space between the variable name and the equals sign:<br>
       <pre>$myvar=myvalue</pre>
-There are times when it is necessary to unassign a variable, because,
+There are times when it is necessary to unassign or unset a variable,
+because,
 it is desired to have the variable be dereferenced by the underlying
 shell (see <a href="#bash_shell">bash shell</a>), or that pseudo-
 arrays are being used (see <a href="#pseudo_arrays">pseudo-arrays</a>).

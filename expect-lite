@@ -34,7 +34,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.8.0d8"
+	variable version "4.8.0"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -2262,6 +2262,7 @@ namespace eval expectlite {
 		upvar expectlite::el_log_ext			LOG_EXT
 		upvar expectlite::SHOW_HELP				SHOW_HELP
 		upvar expectlite::DVARPROMPT			DVPROMPT
+		upvar expectlite::remote_shell			remote_shell
 
 
 		#generic print utility
@@ -2307,13 +2308,23 @@ namespace eval expectlite {
 		# additional values
 		set timeout $::timeout
 		set USER_DEFINED_PROMPT $_el(prompt)
+		# fail script
+		if { [info exists _el(fail_script) ] } {
+			set FAIL_SCRIPT $_el(fail_script)
+		} else {
+			set FAIL_SCRIPT "none"
+		}
+		# remote shell **SHELL
+		set REMOTE_SHELL $remote_shell
+		if { $REMOTE_SHELL == "" } { set REMOTE_SHELL "none" }
 		# handle EOLS
 		if { $_el_eols == "\n" } { set EOLS LF } else { set EOLS CRLF}
 		set fuzzy_range $_el(fuzz)
 
 		set env_list { INFO EXP_INFO WARN DEBUG  CURRENT_FORK_SESSION \
 		INFINTE_LOOP_COUNT NOFAIL TIMESTAMP NOINTERACT NOINCLUDE LOG  LOG_EXT  \
-	 	DVPROMPT timeout USER_DEFINED_PROMPT EOLS fuzzy_range }
+	 	DVPROMPT timeout USER_DEFINED_PROMPT EOLS fuzzy_range FAIL_SCRIPT \
+		REMOTE_SHELL }
 		
 		set env_list_sorted [lsort $env_list]
 
@@ -4645,6 +4656,8 @@ namespace eval expectlite {
 								uplevel {cputs "\nFail Include Script: $_el_fail_script\n" $_el_info_color}
 							}
 						}
+						# update global fail_script value (for SHOW ENV)
+						set _el(fail_script) $_el_fail_script
 
 					}
 				^\\*/.*/$	{	# Set a user defined prompt
