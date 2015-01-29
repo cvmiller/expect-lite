@@ -1463,7 +1463,10 @@ Released 21 Dec 2010 - 4.0.2
 		
 Future
 
-o	Update for release of 4.8.0
+o	Multisession improvement - when disconnect occurs, close session rather then quit script
+
+
+x	Update for release of 4.8.0
 	- update docs with *SHOW ENV and IDE
 		Update simple page
 	o Gather list new things for IDE - show env, instant interact improvements, copy & paste, unassign vars
@@ -1863,13 +1866,11 @@ x	Add Env Var validation e.g. connect_method=ssh-key creates BUG!
 
 b	Regex redux - add \W \D \S
 
-b	Integration in Python - tale of two scripts redux
-
 b	How-to use string math, search/replace, concat, remove or just assignment
 
 b	tuples technique
 
-b	Tale of two scripts Reprise - Python/expect-lite
+k	Tale of two scripts Reprise - Python/expect-lite
 
 k	pseudo arrays
 

@@ -28,6 +28,10 @@
 //   	Recorganized, created el_run() function which actually runs the script
 //
 
+// Updated 28 Jan 2015 - v0.96
+//   Updated to add check box for bw (black and white)
+//   	When checked output will be in black and white, and ignore spurious < > in the output
+//
 
 
 //
@@ -47,10 +51,10 @@
 
 // ===== Change these vars to valid values in your environment ====
 // path to this script and expect-lite scripts
-$path="/home/cvmiller/public_html";
+$path="/home/cmiller/public_html/EL/demo";
 // default test
-$el_app="simple.elt";
-$el_args="IP=3930-184";
+$el_app="ssh_controller.elt";
+$el_args="IP=yow-cgcs-ironpass-1";
 // ================================================================
 
 // initialize vars - Don't change
@@ -107,15 +111,20 @@ function calc_path($path) {
 	return $el_path;
 }
 
-function el_run($el_app,$el_args,$el_help,$el_path,$cdir) {
+function el_run($el_app,$el_args,$el_help,$el_bw,$el_path,$cdir) {
 	// encode the el_args properly for putting on a URL
 	$ARGS=urlencode("$el_args");
- 	echo "You are looking at: <a href=\"el_run.php?el_path=$el_path&el_app=$el_app&el_args=$ARGS&el_get=true\">$el_app</a>   ";
-	echo " <PRE>";
-	// set ENV variables before running expect-lite 
-	putenv("TERM=web");
+ 	echo "You are looking at: <a href=\"el_run.php?el_path=$el_path&el_app=$el_app&el_bw=$el_bw&el_args=$ARGS&el_get=true\">$el_app</a>   ";
+	echo " <PRE>\n";
+	if ($el_bw == true) {
+		echo "<xmp>";
+		// set ENV variables before running expect-lite 
+		putenv("TERM=tty");
+	} else {
+		putenv("TERM=web");
+	}
 	putenv("PATH=/usr/bin:/bin");
-	//putenv("PS1=\'# \'");
+	#putenv("PS1=\'# \'");
 	putenv("COLUMNS=256");
 	if ($el_help == false) {
 		$pipe = popen ("$cdir/$el_app $el_args *NOINTERACT", "r");
@@ -131,6 +140,9 @@ function el_run($el_app,$el_args,$el_help,$el_path,$cdir) {
 		flush();	
 	}
 	pclose($pipe);
+	if ($el_bw == true) {
+		echo "</xmp>";
+	}
 	echo "</PRE>";
 
 }
@@ -171,8 +183,9 @@ function el_run($el_app,$el_args,$el_help,$el_path,$cdir) {
 		//echo getcwd() . "/$el_app $el_args";
 		$cdir=getcwd();
 		$el_help="";
+		$el_bw=$_GET["el_bw"];
 		// run the script
-		el_run($el_app,$el_args,$el_help,$el_path,$cdir);
+		el_run($el_app,$el_args,$el_help,$el_bw,$el_bw,$el_path,$cdir);
 	 
 	 }
  }
@@ -189,6 +202,7 @@ function el_run($el_app,$el_args,$el_help,$el_path,$cdir) {
  		echo "<form action=\"el_run.php\" method=\"POST\">";
 		echo "  Run: <input type=\"text\" name=\"el_app\" value=\"$el_app\" style=\"width: 150px\"/>";
 		echo " <small>with help </small><input type=\"checkbox\" name=\"with_help\" checked=\"checked\" value=\"true\">";
+		echo " <small>in bw </small><input type=\"checkbox\" name=\"in_bw\" value=\"true\">";
 		echo " args: <input type=\"text\" name=\"el_args\"value=\"$el_args\" style=\"width: 350px\" />";
 		//echo " in Week: <input type=\"text\" name=\"week\" />";
 		echo "  <input type=\"hidden\" name=\"el_path\" value=\"$el_path\" >";
@@ -212,8 +226,14 @@ function el_run($el_app,$el_args,$el_help,$el_path,$cdir) {
 			$el_help=true;
 		}
 
+		if (!isset($_POST["in_bw"])) {
+			$el_bw=false;
+		} else {
+			$el_bw=true;
+		}
+
 		// run the script
-		el_run($el_app,$el_args,$el_help,$el_path,$cdir);
+		el_run($el_app,$el_args,$el_help,$el_bw,$el_path,$cdir);
 
 		// show form again without help checkbox checked
 
@@ -221,6 +241,7 @@ function el_run($el_app,$el_args,$el_help,$el_path,$cdir) {
  		echo "<form action=\"el_run.php\" method=\"POST\">";
 		echo "  Run: <input type=\"text\" name=\"el_app\" value=\"$el_app\" style=\"width: 150px\"/>";
 		echo " <small>with help </small><input type=\"checkbox\" name=\"with_help\" value=\"true\">";
+		echo " <small>in bw </small><input type=\"checkbox\" name=\"in_bw\" value=\"true\">";
 		echo " args: <input type=\"text\" name=\"el_args\"value=\"$el_args\" style=\"width: 350px\" />";
 		//echo " in Week: <input type=\"text\" name=\"week\" />";
 		echo "  <input type=\"hidden\" name=\"el_path\" value=\"$el_path\" >";
