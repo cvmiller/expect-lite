@@ -1456,15 +1456,33 @@ Released 21 Dec 2010 - 4.0.2
 11 January 2015 - 4.8.0
 	Released (same as d9)
 	
+15 February 2015 - 4.8.1d1
+	Removed debug print line from fuzzy expect
+	
+28 April 2015 - 4.8.1d2
+	Added short timeout (with preservation) when using ^\ trap
+	Fixed unpaired ';;;', ignores rest of script
 
+4 May 2015 - 4.8.1d3
+	Fixed deref of variable name that starts with underscore e.g. $_test
 
 
 ------------ Future Versions --------------------------
 		
 Future
 
+		
+o	Fix double deref of variable if var is on right side of '='
+		Problem is that proc parse_var is splitting on $, so $$joe become "" + "joe" rather than $joe
+		
+
 o	Multisession improvement - when disconnect occurs, close session rather then quit script
 
+o	Add sleep , print sleep length and  dots per/second
+	 What character to use for sleep, comma, period, plus?
+	o	Improved Sleep Function (Candidate for release 4.9.0)
+			Prototyped in sleep.inc
+	 
 
 x	Update for release of 4.8.0
 	- update docs with *SHOW ENV and IDE
@@ -1502,6 +1520,9 @@ x	Update IDE to make ; be [ \n]+;
 	Updated IDE to require 
 		'; ' (space)
 		'$VAR=' (equals)
+
+o	BUG: TCL code in an include file, does not execute correctly
+		e.g. local variable never increments
 
 x	BUG: passing constant to include with spaces - extra spaces added
 

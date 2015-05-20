@@ -34,7 +34,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.8.0"
+	variable version "4.8.1d3"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -331,6 +331,10 @@ namespace eval expectlite {
 			if {[catch {fconfigure stdout -mode}]} {
     			puts stderr "expect-lite: Warning: Output is redirected from tty.\n The script quit unexpectantly.\n"
 			} 
+			# twiggle timeout, so that control is passed back to user
+			#puts "twiggleing timeout"
+			set _tm_out $::timeout
+			set timeout 3
 
 			if { $expectlite::_el(ide_paste_lines) } {
 				catch { puts stderr "\nreturning to instant-interact...\n" }
@@ -338,8 +342,10 @@ namespace eval expectlite {
 				catch { expectlite::_el_buffer_stack_clear $expectlite::_el_buf(stack) } error
 				set expectlite::_el(STOP) "STOP"
 			}
-			
+
 			expectlite::instant_interact_sig
+			#puts "restoring timeout"
+			set ::timeout $_tm_out
 		} SIGQUIT
 
 	}
@@ -2530,6 +2536,7 @@ namespace eval expectlite {
 	#
 	proc _el_buffer {{cmd_file ""} {in_list ""}} {
 		upvar expectlite::_el_buf					_el_buf
+		upvar expectlite::_el_err_color 		_el_err_color
 
 		
 		# generic get next proc to get from file or list
@@ -2596,7 +2603,7 @@ namespace eval expectlite {
 			}
 			
 			# process block lines ] pop
-			if { [regexp {^[\]]} $buf_line ] } {
+			if { [regexp {^[\]]} $buf_line ] && $read_help == 0 } {
 				set meta_line_blob [join [_el_buffer_block_pop ]]
 				# poor man's lassign (8.5 feature) - unpack list into vars
 				foreach {meta_line meta_line_type} $meta_line_blob {break}
@@ -2607,7 +2614,10 @@ namespace eval expectlite {
 				#puts "======>$buf_line | $meta_line | $t_line_data | $meta_line_type"
 				# update [ line meta-data with valid line number (read: not -1)
 				if { $meta_line > 0 } {
-					lset line_buffer $meta_line "{$t_line_data} {[llength $line_buffer]}"
+					if {[ catch { lset line_buffer $meta_line "{$t_line_data} {[llength $line_buffer]}"}  error ]} {
+						cputs "expect-lite: ERROR: expect-lite BUG.. \n$error\n" $_el_err_color
+						exit -1
+					}
 				}
 				# is the popped line an if statement?
 				if { $meta_line_type == "if" } {
@@ -3460,7 +3470,7 @@ namespace eval expectlite {
 			upvar expectlite::_var					_var
 			upvar expectlite::_cond					_cond
 			
-			if { [regexp {.*\$[A-Za-z0-9]+.*} $_el(line) ] } {
+			if { [regexp {.*\$[A-Za-z0-9_]+.*} $_el(line) ] } {
 				# Detect the use of a user_var
 				#puts "l0>$_el(line)"
 				switch -regexp -- $_el(line) {
@@ -3497,6 +3507,7 @@ namespace eval expectlite {
 							#set _el_assignment [parse_var [lindex $parse_list1 1] $_var]
 							#puts "====RV>$_right_value"
 							set _el_assignment [parse_var $_right_value $_var]
+							#set _el_assignment [parse_var $_right_value "$"]
 							# 2nd pass of dereferencing assignment variables
 							set _el(line) "$_left_vars=[parse_var $_el_assignment $_var]"
 						}
@@ -3905,7 +3916,7 @@ namespace eval expectlite {
 								if { [ info exists expect_out($i,string)] } { 
 									unset expect_out($i,string)
 								}
-								puts "====>$i|$rtn_val"
+								#puts "====>$i|$rtn_val"
 								switch -regexp $rtn_val {
 									{^0x[0-9a-fA-F]+$} {
 										# look for hex value
@@ -4451,6 +4462,8 @@ namespace eval expectlite {
 
 						# Assign the Var
 						if { [string len $user_value ] > 0 } {
+							# set single space to blank var
+							#if { $user_value == " " } { set user_value "" }
 							set user_namespace($user_var) $user_value
 						} else {
 							# empty value, unset var, make available as a shell var
@@ -4458,7 +4471,7 @@ namespace eval expectlite {
 						}
 
 						# Used for debugging
-						#puts "->$user_var $user_value"
+						#puts "->$user_var|$user_value|"
 						#parray user_namespace
 						}
 				^\\+\\$[A-Za-z0-9_]+	{ 	# increment Var, decimal 

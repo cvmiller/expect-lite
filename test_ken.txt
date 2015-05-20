@@ -1,6 +1,15 @@
 #!/usr/bin/env expect-lite
 # make this puppy run
 
+;;;
+junk
+;;;
+
+#include improved sleep function
+~sleep.inc
+
+
+
 #*TIMESTAMP
 *EXP_INFO
 ; === set expect buffer big
@@ -8,8 +17,10 @@
 @2
 $dummy_var= this   is just to   show a var abcdefghijklmnopqrstuvwxyz
 $joe=dude
+$dude=joe-bob
 $user=bob
 #*LOGAPPEND
+
 
 $PATH=~fred/Downloads
 $PATH=~cvmiller/Expect-lite
@@ -19,6 +30,35 @@ $PATH=~cvmiller/Expect-lite
 
 VAR=`nc -h 2>1 | head`
 
+$mylist=this that and the other
+$space=``
+
+$_test=TEST
+?if $_test == TEST ? >echo $_test
+
+? $space == $blank? ; it looks like$space-space :: ; I guess not
+
+[ $my=$mylist
+	>echo $my
+
+]
+
+$test=$joe
+>
+;; $test $joe
+$test=$$joe
+>
+;; $test $$joe
+>
+
+
+; === sleeping...
+!zzz 8
+
+
+>
+
+*INTERACT
 
 ~fail_test.inc var1=val var2=this is a string
 *~fail_test.inc
@@ -37,6 +77,12 @@ $joe=
 <hello
 !sleep 5
 >
+@10
+>pwd
+#<junk
+
+
+
 @2
 ; === support regex \D
 >uptime
@@ -48,7 +94,7 @@ $joe=
 *INTERACT
 @8
 >echo "hello&$user&there"
-<bbb
+#<bbb
 ; === unassign EL $var 
 $var=
 >var=shellvar
@@ -61,7 +107,7 @@ $var=
 
 >
 
-*TERM
+#*TERM
 
 ## Define Additional Functions
 #!proc mark_time { var_name } {
@@ -120,38 +166,39 @@ $mydate=
 >
 
 *NOTIMESTAMP
+*INTERACT
 
 ; === un initialized math var $num
 =$num + 10
 
 ; == string math
-$junk=
+$junk= 
 =$junk + $mytime1 is $mytime2
 ; === $junk and math var:$num
 >
 
-; === get top processes
->top -n 1 | cat
-$i=0
-$proc$i=none
-[ $proc$i != __NO_STRING_CAPTURED__
-	+$i
-	# get real time process
-	+$proc$i=rt   0     0    0    0 S   0.0  0.0   [0-9:.]+ (\w+/\d+)
-	# consume buffer
-	? $proc$i != __NO_STRING_CAPTURED__ ? <$proc$i
-]
-# decrement counter $i
-=$i
-$total_proc=$i
-
-; == display processes
-$i=1
-
-[ $i < $total_proc
-	>pgrep -l $proc$i 
-	+$i
-]
+#; === get top processes
+#>top -n 1 | cat
+#$i=0
+#$proc$i=none
+#[ $proc$i != __NO_STRING_CAPTURED__
+#	+$i
+#	# get real time process
+#	+$proc$i=rt   0     0    0    0 S   0.0  0.0   [0-9:.]+ (\w+/\d+)
+#	# consume buffer
+#	? $proc$i != __NO_STRING_CAPTURED__ ? <$proc$i
+#]
+## decrement counter $i
+#=$i
+#$total_proc=$i
+#
+#; == display processes
+#$i=1
+#
+#[ $i < $total_proc
+#	>pgrep -l $proc$i 
+#	+$i
+#]
 >
 *INTERACT
 >
