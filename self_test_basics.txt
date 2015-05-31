@@ -87,8 +87,15 @@
 >echo "9"
 -<8
 
-
 *EXP_INFO
+; === check variable name starts with underscore (v4.8.1)
+$_myvar=underscore
+>echo $_myvar
+<under
+<score
+
+
+
 ; === test fuzzy expect read var before set
 ~=$FUZZ
 

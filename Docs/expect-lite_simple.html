@@ -49,7 +49,7 @@ expect is required!</p>
       <p>Includes a Powerful Debugger with breakpoints, step/skip,
 copy/paste expect-lite lines right into a running script.</p>
       <p>Structured programming via Code Blocks, enables easy to create
-while loops, and conditionals (if statements).</p>
+while loops, foreach loops and conditionals (if statements).</p>
       <p>Full IPv6 support, using telnet or ssh over IPv6, and IPv6
 addresses in the script.<br>
       </p>
@@ -67,23 +67,26 @@ A simple to use automation tool to do:<br>
         <li>etc.</li>
       </ul>
       <h2>What New?</h2>
-Latest version 4.8.0 improvements include:<br>
+Latest version 4.8.1 improvements include:<br>
       <ul>
-        <li>Integrated Debugger Improvements</li>
+        <li>Minor fixes:</li>
         <ul>
-          <li>Show Env - displays expect-lite counters, directive
-status, logging file name (if used), EL environment variables</li>
-          <li>Improved instant-interact (break point) when stopped on a
-long expect wait time<br>
+          <li>Unpaired user defined help ';;;' caused crash</li>
+          <li>Variable names can now start with underscore e.g. $_myvar</li>
+        </ul>
+        <li>Time functions (added to tcl_functions.inc) with
+mili-second resolution</li>
+        <ul>
+          <li>mark_time &lt;varname&gt; - takes system time and places
+into varname</li>
+          <li>show_time &lt;varname&gt; &lt;formatted_var_name&gt; -
+converts time value (previously used in mark_time) to human readable
+format and places in formatted_var_name</li>
+          <li>See examples/mark_time_demo.txt<br>
           </li>
         </ul>
-        <li>Added Variable unset, useful for shell variables, and
-pseudo-arrays</li>
-        <li>Added user defined return code with *TERM &lt;N&gt;<br>
-        </li>
-        <li>Fixed fuzzy expect when looking for zero e.g. ~&lt;(0)<br>
-        </li>
       </ul>
+      <br>
       <p>The main purpose is keep it simple.
 However, the advanced features allow pretty creative scripting.</p>
       <p>The central ideas behind the design are:<br>
@@ -122,14 +125,14 @@ expect-lite</big></a></p>
     </tr>
   </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15
-January 2015<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">31
+May 2015<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span
  style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this
 document for version
-4.8.0 and above</span><br style="font-style: italic;">
+4.8.1 and above</span><br style="font-style: italic;">
 </small>
 <br>
 </body>

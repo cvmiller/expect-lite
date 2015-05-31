@@ -2,6 +2,12 @@
 All changes by Craig Miller cvmiller at gmail dot com
 
 
+Released 31 May 2015 v4.8.1
+	Minor fixes
+		Unpaired user defined help ';;;' caused crash
+		Variable names can now start with underscore e.g. $_myvar
+	Added example for using tcl_functions.inc, mark_time and show_time
+
 Released 15 January 2015 v4.8.0
 	Expect-lite is 10 years old!
 	Fixed fuzzy-expect bug if looking for '0'
@@ -29,7 +35,6 @@ Released 1 June 2014 v4.7.1
 	Fixed IDE when typing a line which ended in semicolon
 	Fixed CLI with no script and *INTERACT, now exits cleaner
 	Added/Updated examples in examples directory
-
 
 Released 20 April 2014 v4.7.0
 	Added fuzzy expect ~<

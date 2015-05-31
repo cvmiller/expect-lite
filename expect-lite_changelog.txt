@@ -1482,7 +1482,10 @@ o	Add sleep , print sleep length and  dots per/second
 	 What character to use for sleep, comma, period, plus?
 	o	Improved Sleep Function (Candidate for release 4.9.0)
 			Prototyped in sleep.inc
-	 
+			
+o	Improve expect to be more like Dyn Var capture
+		If the prompt appears, then expect fails, rather than waiting for timeout
+ 
 
 x	Update for release of 4.8.0
 	- update docs with *SHOW ENV and IDE
