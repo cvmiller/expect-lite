@@ -75,10 +75,11 @@ $LOCALHOST=localhost
 <Var:arg0
 
 ; === Continue
+*NOEXPPROMPT
 >`c
 <line 9
 <##Overall Result: PASS
-
+*EXPPROMPT
 >echo $?
 <\n0
 ; *********** Expect-lite IDE Test Pass! ************

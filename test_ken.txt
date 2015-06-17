@@ -47,6 +47,27 @@ $sleeper=0.9
 
 
 
+
+>
+; === test conditional1
+? 1 == 1?[
+ >echo $joe
+]
+<dude
+>
+; === test conditional2
+? 2 == 2?>echo $joe
+<dude
+
+; === no regex
+>echo $joe
+<<dude
+
+>echo $joe
+<<dudee
+>
+
+
 ; === sleeping...
 :$sleeper
 ?if 5 < 6 ? :.5 :: :.7
