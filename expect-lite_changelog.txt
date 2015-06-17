@@ -1466,6 +1466,20 @@ Released 21 Dec 2010 - 4.0.2
 4 May 2015 - 4.8.1d3
 	Fixed deref of variable name that starts with underscore e.g. $_test
 
+31 May 2015 - 4.8.1
+	Released (same as d3)
+	
+14 June 2015 - 4.9.1d1
+	Added sleep function e.g. :05  (sleeps 5 seconds)
+	
+17 June 2015 - 4.8.1d2
+	Added DVPROMPT-like behaviour to < lines
+		If no expected value is received, and  a prompt _is_ received, 
+			then the line will fail, without waiting for timeout
+		This will greatly speed up scripts with are failing many lines
+		Disable with *NODVPROMPT (will later add *NOEXPPROMPT)
+		
+
 
 ------------ Future Versions --------------------------
 		
@@ -1474,6 +1488,14 @@ Future
 		
 o	Fix double deref of variable if var is on right side of '='
 		Problem is that proc parse_var is splitting on $, so $$joe become "" + "joe" rather than $joe
+
+o	Add DVPROMPT-like behaviour (called EXPPROMPT) to expect lines.
+		If a prompt appears before expected value, declare failure, and move on, rather than waiting for time out
+		Need to add to:
+			-	<
+			o	<<
+			o	~<
+		
 		
 
 o	Multisession improvement - when disconnect occurs, close session rather then quit script

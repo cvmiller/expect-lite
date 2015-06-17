@@ -14,7 +14,7 @@ junk
 *EXP_INFO
 ; === set expect buffer big
 !match_max -d 1000
-@2
+@5
 $dummy_var= this   is just to   show a var abcdefghijklmnopqrstuvwxyz
 $joe=dude
 $dude=joe-bob
@@ -43,18 +43,21 @@ $_test=TEST
 
 ]
 
-$test=$joe
->
-;; $test $joe
-$test=$$joe
->
-;; $test $$joe
->
+$sleeper=0.9
+
 
 
 ; === sleeping...
-!zzz 8
+:$sleeper
+?if 5 < 6 ? :.5 :: :.7
 
+>joe=hello
+$joe=
+>echo $joe
+<hello
+>echo $joe
+<hellow
+<z
 
 >
 
@@ -75,12 +78,20 @@ Var:arg0                  Value:test_dictionary.txt
 $joe=
 >echo $joe
 <hello
-!sleep 5
+:5
 >
 @10
 >pwd
 #<junk
 
+# double deref testing
+$test=$joe
+>
+;; $test $joe
+$test=$$joe
+>
+;; $test $$joe
+>
 
 
 @2

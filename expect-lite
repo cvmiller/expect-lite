@@ -34,7 +34,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.8.1"
+	variable version "4.9.0d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -240,6 +240,7 @@ namespace eval expectlite {
 		variable _in_fuzzy "~<"
 		variable _not_in "-<"
 		variable _timeout "@"
+		variable _sleepchar ":"
 		variable _exec "!"
 		variable _stdout_comment ";"
 		variable _stdout_comment_nobuf ";;"
@@ -3398,6 +3399,7 @@ namespace eval expectlite {
 		upvar expectlite::_in_fuzzy					_in_fuzzy
 		upvar expectlite::_not_in					_not_in
 		upvar expectlite::_timeout					_timeout
+		upvar expectlite::_sleepchar				_sleepchar
 		upvar expectlite::_var						_var
 		upvar expectlite::_cond 					_cond
 		upvar expectlite::_cond_regex				_cond_regex
@@ -3796,6 +3798,16 @@ namespace eval expectlite {
 						# execute expect lines if present
 						_el_exec_expect
 						set teststr [_el_strip_char $_el(line) $_in]
+						
+						# setup exp prompt info
+						set exp_promptstr "$teststr|\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $"
+
+						# Borrowed from DVPROPMT Require dynamic variable to capture with a prompt?
+						if { $DVARPROMPT == 0 } {
+							# Backward compatibility mode: no prompt required, look for NULL
+							set exp_promptstr "^\x00$"
+						} 
+
 
 						# test for single num expect string
 						if {([string length $teststr]==1) && ([regexp \[0-9\] $teststr])} {
@@ -3806,6 +3818,10 @@ namespace eval expectlite {
 							    	}
 								 -re $teststr {
 								 	set _el(success) 1
+								 	}
+								  -timeout 1 -notransfer -re $exp_promptstr {
+									 	# prompt found, fail it
+									 	set _el(success) 0
 								 	}
 						    	}
 						} else {
@@ -3821,9 +3837,15 @@ namespace eval expectlite {
 									 -timeout 1 -re $exp_teststr {
 								 		set _el(success) 1
 								 		}
+									 -timeout 1 -notransfer -re $exp_promptstr {
+									 	# prompt found, fail it
+									 	set _el(success) 0
+								 		}
+
 									 timeout {
 								 		#puts "ZZZ: $_el(exp_timer) $timeout"
 										incr _el(exp_timer)
+
 										# if ^\ has not been preseed
 										if { $_el(STOP) != "STOP" } { 
 											# cycle thru expect again, no $exp_teststr found
@@ -4639,6 +4661,48 @@ namespace eval expectlite {
 
 						}
 					}
+					
+				^\:[0-9.]	{	# sleep function - part of v4.9.0
+						# prints row of dots to help user know script is sleeping
+						print_comment_line
+						# execute expect lines if present
+						_el_exec_expect
+						# validate that the sleep value is a number
+						if {[string is double [_el_strip_char $_el(line) $_sleepchar]] == 0} {
+							if {$WARN} {
+								cputs "WARN: Bad Sleep Value: [_el_strip_char $_el(line) $_sleepchar] " $_el_warn_color
+							}
+						} else {
+							set sleep_int [_el_strip_char $_el(line) $_sleepchar]
+							if {$INFO} {
+								cputs "\nSleeping: $sleep_int " $_el_info_color
+							}
+							#handle miliseconds
+							set sleep_milisec [expr int($sleep_int * 1000) % int(1000)]
+							#puts "=>$sleep_milisec"
+							set _i 1
+							while {$_i <= $sleep_int} {
+								if {$INFO} {
+									if {$_i % 10 == 0 } {
+										cputs "$_i" $_el_info_color "-nonewline"
+										flush stdout
+									} elseif { $_i % 5 == 0 } {
+										cputs "+" $_el_info_color "-nonewline"
+										flush stdout
+									} else {
+										cputs "." $_el_info_color "-nonewline"
+										flush stdout
+									}
+								}
+								incr _i
+								if {$_i <= $sleep_int} {sleep 1}
+							}
+							#milisecond sleep
+							if {$sleep_milisec > 0} { after $sleep_milisec}
+							if {$INFO} {puts " \n"}
+						}; #end if
+					}
+					
 				^\\*~ 	{	# include file of failure script - called when test fails
 							# Uses recursion to interpret included file
 							# expect-lite directive
