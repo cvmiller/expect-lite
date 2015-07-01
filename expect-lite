@@ -34,7 +34,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.9.0d2"
+	variable version "4.9.0d5"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3799,15 +3799,6 @@ namespace eval expectlite {
 						_el_exec_expect
 						set teststr [_el_strip_char $_el(line) $_in]
 						
-						# setup exp prompt info
-						set exp_promptstr "$teststr|\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $"
-
-						# Borrowed from DVPROPMT Require dynamic variable to capture with a prompt?
-						if { $DVARPROMPT == 0 } {
-							# Backward compatibility mode: no prompt required, look for NULL
-							set exp_promptstr "^\x00$"
-						} 
-
 
 						# test for single num expect string
 						if {([string length $teststr]==1) && ([regexp \[0-9\] $teststr])} {
@@ -3818,10 +3809,6 @@ namespace eval expectlite {
 							    	}
 								 -re $teststr {
 								 	set _el(success) 1
-								 	}
-								  -timeout 1 -notransfer -re $exp_promptstr {
-									 	# prompt found, fail it
-									 	set _el(success) 0
 								 	}
 						    	}
 						} else {
@@ -3836,10 +3823,6 @@ namespace eval expectlite {
 					    		expect  {
 									 -timeout 1 -re $exp_teststr {
 								 		set _el(success) 1
-								 		}
-									 -timeout 1 -notransfer -re $exp_promptstr {
-									 	# prompt found, fail it
-									 	set _el(success) 0
 								 		}
 
 									 timeout {
