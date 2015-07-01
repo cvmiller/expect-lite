@@ -34,7 +34,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.9.0d4"
+	variable version "4.9.0d2"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -110,9 +110,6 @@ namespace eval expectlite {
 
 	# Set dynamic var capture uses prompt or not (default=yes, use prompt)
 	variable DVARPROMPT 1
-
-	# Set expect shortcuts failures when it sees a  prompt or not (default=yes, use prompt)
-	variable EXPPROMPT 1
 
 
 
@@ -1059,8 +1056,7 @@ namespace eval expectlite {
 		upvar expectlite::_el_debug_color		_el_debug_color
 		upvar expectlite::SHOW_HELP				SHOW_HELP
 		upvar expectlite::el_log_ext			el_log_ext
-		upvar expectlite::DVARPROMPT			DVARPROMPT
-		upvar expectlite::EXPPROMPT				EXPPROMPT
+		upvar expectlite::DVARPROMPT	DVARPROMPT
 
 		# default timeout_multiplier multiplier to 1
 		set cli_namespace($timeout_multiplier) 1
@@ -1100,9 +1096,6 @@ namespace eval expectlite {
 		if { [info exists env(EL_DELAY_WAIT_FOR_HOST)] } { catch { set delay_wait_for_host $env(EL_DELAY_WAIT_FOR_HOST)} }
 		if { $delay_wait_for_host == "" } { set delay_wait_for_host "100" }
 		if { [info exists env(EL_SHELL)] } { catch { set remote_shell $env(EL_SHELL)} }
-		# user can set expprompt to anything, if it set, then we'll use it
-		if { [info exists env(EL_EXPPROMPT)] } { catch { set EXPPROMPT 10} }
-		if { [info exists env(EL_NOEXPPROMPT)] } { catch { set EXPPROMPT 0} }
 
 		# ensure arg list is separated by spaces - removed in 4.2.0
 # 		set argvstr [ join $argv ]
@@ -1227,8 +1220,6 @@ namespace eval expectlite {
 			if { $WARN > 1 } { set WARN 10 }
 			if { $DEBUG } { set DEBUG 10 }
 			if { $EXP_INFO } { set EXP_INFO 10 }
-			if { $EXPPROMPT > 1 } { set EXPPROMPT 10 }
-			if { $EXPPROMPT == 0 } { set EXPPROMPT -10 }
 
 			#puts "->$remote_host|$cmd_file|$user_dir"
 
@@ -1261,7 +1252,6 @@ namespace eval expectlite {
 			cputs "expect-lite version $expectlite::version" $_el_debug_color
 			cputs "Env Vars -> Constants:" $_el_debug_color
 		}
-		
 		foreach key [array names env] {
 			if {[regexp {^EL_} $key] == 1 } {
 				if { $DEBUG && [info exists ::EL_LIBRARY] != 1} {
@@ -2279,7 +2269,6 @@ namespace eval expectlite {
 		upvar expectlite::el_log_ext			LOG_EXT
 		upvar expectlite::SHOW_HELP				SHOW_HELP
 		upvar expectlite::DVARPROMPT			DVPROMPT
-		upvar expectlite::EXPPROMPT				EXPPROMPT
 		upvar expectlite::remote_shell			remote_shell
 
 
@@ -2298,10 +2287,9 @@ namespace eval expectlite {
 			
 			if { [string is integer $value ] } {
 				set val "on"
-				if { $value < 1 } { set val "off"} 
+				if { $value == 0 } { set val "off"} 
 				# print on/off if value is a flag, otherwise print value
 				switch -glob $value {
-					-10 -
 					0 -
 					1 -
 					10  {
@@ -2342,7 +2330,7 @@ namespace eval expectlite {
 
 		set env_list { INFO EXP_INFO WARN DEBUG  CURRENT_FORK_SESSION \
 		INFINTE_LOOP_COUNT NOFAIL TIMESTAMP NOINTERACT NOINCLUDE LOG  LOG_EXT  \
-	 	DVPROMPT EXPPROMPT timeout USER_DEFINED_PROMPT EOLS fuzzy_range FAIL_SCRIPT \
+	 	DVPROMPT timeout USER_DEFINED_PROMPT EOLS fuzzy_range FAIL_SCRIPT \
 		REMOTE_SHELL }
 		
 		set env_list_sorted [lsort $env_list]
@@ -3043,7 +3031,6 @@ namespace eval expectlite {
 		upvar expectlite::el_log_ext			el_log_ext
 		upvar expectlite::SHOW_HELP				SHOW_HELP
 		upvar expectlite::DVARPROMPT			DVARPROMPT
-		upvar expectlite::EXPPROMPT				EXPPROMPT
 		
 
 
@@ -3269,17 +3256,6 @@ namespace eval expectlite {
 				# do not change if CLI has enabled
 				if {$DVARPROMPT < 10 } { set DVARPROMPT 0 }
 			}
-			"\\*EXPPROMPT"	{	# expect looks for prompt (default)
-				if {$INFO} { cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color }
-				# do not change if CLI has enabled
-				if {$EXPPROMPT < 10  && $EXPPROMPT >=0 } { incr EXPPROMPT }
-				
-			}
-			"\\*NOEXPPROMPT"	{	# expect does not look prompt
-				if {$INFO} { cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color }
-				# do not change if CLI has enabled
-				if {$EXPPROMPT < 10 } { set EXPPROMPT 0 }
-			}
 			
 			"\\*SHOW VARS"	{	# Show expect-lite variables
 				cputs "\nexpect-lite directive: $g_dir_str " $_el_info_color
@@ -3464,8 +3440,7 @@ namespace eval expectlite {
 		upvar expectlite::NOFAIL					NOFAIL
 		upvar expectlite::NOINCLUDE					NOINCLUDE
 		upvar expectlite::TIMESTAMP 				TIMESTAMP
-		upvar expectlite::DVARPROMPT 				DVARPROMPT
-		upvar expectlite::EXPPROMPT					EXPPROMPT
+		upvar expectlite::DVARPROMPT 		DVARPROMPT
 
 
 
@@ -3487,12 +3462,6 @@ namespace eval expectlite {
 		# set default session (aka fork)
 		set _el_current_session $_el(fork_current)
 		#fork_id
-
-		# setup exp prompt info
-		set exp_promptstr "\n$_el(prompt)|\n.*\\\$ $|\n.*# $"
-
-		# exp prompt delay
-		set exp_prompt_delay 5
 
 		#
 		# Dereference Vars if needed in $_el(line) as read from cmd file	
@@ -3768,11 +3737,9 @@ namespace eval expectlite {
 				^\>	{	# Wait for Prompt and send the line
 
 						# do not wait for prompt if only one_line
-#						if { $_one_line == 0 } {
-#							wait_for_prompt
-#						}
-						wait_for_prompt
-						
+						if { $_one_line == 0 } {
+							wait_for_prompt
+						}
 						print_comment_line
 						# execute expect lines if present
 						_el_exec_expect
@@ -3806,37 +3773,8 @@ namespace eval expectlite {
 						_el_exec_expect
 						set teststr [_el_strip_char $_el(line) $_in_noregex]
 
-						# if expprompt is disabled, then set prompt to unlikely value 
-#						if { $EXPPROMPT < 1 } {
-#							# Backward compatibility mode: no prompt required, look for NULL
-#							set exp_promptstr "^\x00$"
-#						} 
-						set exp_promptstr_val "^\x00$"
-
 						# catch expect, just in case
-						if {[catch {
-							expect {
-								  -timeout 1 -ex "$teststr" { set _el(success) 1 } 
-								  -notransfer -re $exp_promptstr_val {
-									 	# prompt found, fail it
-									 	set _el(success) 0
-								 	}
-									 timeout {
-								 		#puts "ZZZ: $_el(exp_timer) $timeout"
-										incr _el(exp_timer)
-
-										# if ^\ has not been preseed
-										if { $_el(STOP) != "STOP" } { 
-											# After delay, look for prompt
-											if { $EXPPROMPT > 0 } {
-												if { $_el(exp_timer) > $exp_prompt_delay } { set exp_promptstr_val $exp_promptstr }
-											}
-											# cycle thru expect again, no $exp_teststr found
-											if { $_el(exp_timer) < $timeout } { exp_continue }
-										  }
-										}; # timeout
-								}; #end expect
-							} error  ] } {
+						if {[catch {expect -ex "$teststr" { set _el(success) 1 } } error  ] } {
 							if {$WARN} {
 								cputs "\nExpect error: Expect-lite: $error\n" $_el_err_color
 							}
@@ -3861,14 +3799,16 @@ namespace eval expectlite {
 						_el_exec_expect
 						set teststr [_el_strip_char $_el(line) $_in]
 						
-						# if expprompt is disabled, then set prompt to unlikely value 
-						if { $EXPPROMPT < 1 } {
+						# setup exp prompt info
+						set exp_promptstr "$teststr|\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $"
+
+						# Borrowed from DVPROPMT Require dynamic variable to capture with a prompt?
+						if { $DVARPROMPT == 0 } {
 							# Backward compatibility mode: no prompt required, look for NULL
 							set exp_promptstr "^\x00$"
 						} 
-#						set exp_promptstr_val "^\x00$"
-						set exp_prompt_found 0
-						
+
+
 						# test for single num expect string
 						if {([string length $teststr]==1) && ([regexp \[0-9\] $teststr])} {
 					    	expect {
@@ -3898,24 +3838,16 @@ namespace eval expectlite {
 								 		set _el(success) 1
 								 		}
 									 -timeout 1 -notransfer -re $exp_promptstr {
-									 		# prompt found, fail it
-											#set _el(success) 0
-											#puts "YYY: $_el(exp_timer) $timeout"
-											set exp_prompt_found 1
+									 	# prompt found, fail it
+									 	set _el(success) 0
 								 		}
 
 									 timeout {
-								 		puts "ZZZ: $_el(exp_timer) $timeout|$exp_promptstr_val"
+								 		#puts "ZZZ: $_el(exp_timer) $timeout"
 										incr _el(exp_timer)
 
 										# if ^\ has not been preseed
 										if { $_el(STOP) != "STOP" } { 
-											# After delay, look for prompt
-											if { $EXPPROMPT > 0 } {
-												if { $_el(exp_timer) > $exp_prompt_delay && $exp_prompt_found == 1 } { 
-													set _el(success) 0
-												}
-											}
 											# cycle thru expect again, no $exp_teststr found
 											if { $_el(exp_timer) < $timeout } { exp_continue }
 										  }
@@ -4478,7 +4410,7 @@ namespace eval expectlite {
 						regsub {\$} $user_var "" user_var
 
 						# Require dynamic variable to capture with a prompt?
-						if { $DVARPROMPT > 0 } {
+						if { $DVARPROMPT } {
 							set _expect_str "\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $"
 						} else {
 							# no prompt required for dynamic variable capture

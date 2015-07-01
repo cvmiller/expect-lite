@@ -27,7 +27,7 @@ exit $?
 #
 #	Requires expect-lite version 3.5.0
 #
-*NOEXPPROMPT
+
 # default expect-lite app
 
 # force use of Localhost (rather than none)
@@ -71,6 +71,5 @@ $LOCALHOST=localhost
 # test over check status
 >echo $?
 <\n1
-*EXPPROMPT
 ; *********** Expect-lite Directive Test Pass! ************
 >

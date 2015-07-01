@@ -32,7 +32,7 @@ $LOCALHOST=localhost
 
 @10
 >$el r=$LOCALHOST c=self_test_ide.txt el=$el 
-<expect-lite directive: \*INTERACT
+<<expect-lite directive: *INTERACT
 <line 4
 
 # script is in IDE
@@ -67,7 +67,7 @@ $LOCALHOST=localhost
 
 >`0
  Printing current line of script:
-<>echo "do not run this line"
+>echo "do not run this line"
 
 ; === show vars
 >`v
@@ -75,11 +75,10 @@ $LOCALHOST=localhost
 <Var:arg0
 
 ; === Continue
-#*NOEXPPROMPT
 >`c
 <line 9
 <##Overall Result: PASS
-#*EXPPROMPT
+
 >echo $?
 <\n0
 ; *********** Expect-lite IDE Test Pass! ************

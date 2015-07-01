@@ -47,27 +47,6 @@ $sleeper=0.9
 
 
 
-
->
-; === test conditional1
-? 1 == 1?[
- >echo $joe
-]
-<dude
->
-; === test conditional2
-? 2 == 2?>echo $joe
-<dude
-
-; === no regex
->echo $joe
-<<dude
-
->echo $joe
-<<dudee
->
-
-@8
 ; === sleeping...
 :$sleeper
 ?if 5 < 6 ? :.5 :: :.7
@@ -76,11 +55,9 @@ $sleeper=0.9
 $joe=
 >echo $joe
 <hello
->echo "prompt\$ "
 >echo $joe
 <hellow
-<k
->>echo "prompt\$ "
+<z
 
 >
 

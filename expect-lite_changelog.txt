@@ -1479,13 +1479,6 @@ Released 21 Dec 2010 - 4.0.2
 		This will greatly speed up scripts with are failing many lines
 		Disable with *NODVPROMPT (will later add *NOEXPPROMPT)
 		
-17 June 2015 - 4.8.1d3
-	Changed DVPROMPT-like behaviour *EXPPROMPT
-		Added to << lines
-		Added to CLI override, and to environment EL_EXPPROMPT, EL_NOEXPPROMPT
-
-
-
 
 
 ------------ Future Versions --------------------------
@@ -1499,12 +1492,10 @@ o	Fix double deref of variable if var is on right side of '='
 o	Add DVPROMPT-like behaviour (called EXPPROMPT) to expect lines.
 		If a prompt appears before expected value, declare failure, and move on, rather than waiting for time out
 		Need to add to:
-			x	<
-			x	<<
+			-	<
+			o	<<
 			o	~<
-			x	reduced prompt to $ #, as others were causing false positives, can still use user-defined-prompt to add back
-		Idea: don't use flag, but use modifier, like <<< or +< or @<  or |< |<< |~< 
-		Idea2: wait for 10 seconds before shortcutting to prompt
+		
 		
 
 o	Multisession improvement - when disconnect occurs, close session rather then quit script
