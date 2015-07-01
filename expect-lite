@@ -34,7 +34,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.9.0d3"
+	variable version "4.9.0d4"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3489,7 +3489,10 @@ namespace eval expectlite {
 		#fork_id
 
 		# setup exp prompt info
-		set exp_promptstr "\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $"
+		set exp_promptstr "\n$_el(prompt)|\n.*\\\$ $|\n.*# $"
+
+		# exp prompt delay
+		set exp_prompt_delay 5
 
 		#
 		# Dereference Vars if needed in $_el(line) as read from cmd file	
@@ -3804,19 +3807,34 @@ namespace eval expectlite {
 						set teststr [_el_strip_char $_el(line) $_in_noregex]
 
 						# if expprompt is disabled, then set prompt to unlikely value 
-						if { $EXPPROMPT < 1 } {
-							# Backward compatibility mode: no prompt required, look for NULL
-							set exp_promptstr "^\x00$"
-						} 
+#						if { $EXPPROMPT < 1 } {
+#							# Backward compatibility mode: no prompt required, look for NULL
+#							set exp_promptstr "^\x00$"
+#						} 
+						set exp_promptstr_val "^\x00$"
 
 						# catch expect, just in case
 						if {[catch {
 							expect {
-								  -ex "$teststr" { set _el(success) 1 } 
-								  -notransfer -re $exp_promptstr {
+								  -timeout 1 -ex "$teststr" { set _el(success) 1 } 
+								  -notransfer -re $exp_promptstr_val {
 									 	# prompt found, fail it
 									 	set _el(success) 0
 								 	}
+									 timeout {
+								 		#puts "ZZZ: $_el(exp_timer) $timeout"
+										incr _el(exp_timer)
+
+										# if ^\ has not been preseed
+										if { $_el(STOP) != "STOP" } { 
+											# After delay, look for prompt
+											if { $EXPPROMPT > 0 } {
+												if { $_el(exp_timer) > $exp_prompt_delay } { set exp_promptstr_val $exp_promptstr }
+											}
+											# cycle thru expect again, no $exp_teststr found
+											if { $_el(exp_timer) < $timeout } { exp_continue }
+										  }
+										}; # timeout
 								}; #end expect
 							} error  ] } {
 							if {$WARN} {
@@ -3848,7 +3866,9 @@ namespace eval expectlite {
 							# Backward compatibility mode: no prompt required, look for NULL
 							set exp_promptstr "^\x00$"
 						} 
-
+#						set exp_promptstr_val "^\x00$"
+						set exp_prompt_found 0
+						
 						# test for single num expect string
 						if {([string length $teststr]==1) && ([regexp \[0-9\] $teststr])} {
 					    	expect {
@@ -3878,16 +3898,24 @@ namespace eval expectlite {
 								 		set _el(success) 1
 								 		}
 									 -timeout 1 -notransfer -re $exp_promptstr {
-									 	# prompt found, fail it
-									 	set _el(success) 0
+									 		# prompt found, fail it
+											#set _el(success) 0
+											#puts "YYY: $_el(exp_timer) $timeout"
+											set exp_prompt_found 1
 								 		}
 
 									 timeout {
-								 		#puts "ZZZ: $_el(exp_timer) $timeout"
+								 		puts "ZZZ: $_el(exp_timer) $timeout|$exp_promptstr_val"
 										incr _el(exp_timer)
 
 										# if ^\ has not been preseed
 										if { $_el(STOP) != "STOP" } { 
+											# After delay, look for prompt
+											if { $EXPPROMPT > 0 } {
+												if { $_el(exp_timer) > $exp_prompt_delay && $exp_prompt_found == 1 } { 
+													set _el(success) 0
+												}
+											}
 											# cycle thru expect again, no $exp_teststr found
 											if { $_el(exp_timer) < $timeout } { exp_continue }
 										  }
@@ -4451,7 +4479,7 @@ namespace eval expectlite {
 
 						# Require dynamic variable to capture with a prompt?
 						if { $DVARPROMPT > 0 } {
-							set _expect_str $exp_promptstr
+							set _expect_str "\n$_el(prompt)|\n.*\\\$ $|\n.*# $|\n.*> $|\n.*% $"
 						} else {
 							# no prompt required for dynamic variable capture
 							set _expect_str ".*$user_value"

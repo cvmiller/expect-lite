@@ -67,7 +67,7 @@ $sleeper=0.9
 <<dudee
 >
 
-
+@8
 ; === sleeping...
 :$sleeper
 ?if 5 < 6 ? :.5 :: :.7
@@ -76,9 +76,11 @@ $sleeper=0.9
 $joe=
 >echo $joe
 <hello
+>echo "prompt\$ "
 >echo $joe
 <hellow
-<z
+<k
+>>echo "prompt\$ "
 
 >
 

@@ -1502,7 +1502,9 @@ o	Add DVPROMPT-like behaviour (called EXPPROMPT) to expect lines.
 			x	<
 			x	<<
 			o	~<
-		
+			x	reduced prompt to $ #, as others were causing false positives, can still use user-defined-prompt to add back
+		Idea: don't use flag, but use modifier, like <<< or +< or @<  or |< |<< |~< 
+		Idea2: wait for 10 seconds before shortcutting to prompt
 		
 
 o	Multisession improvement - when disconnect occurs, close session rather then quit script
