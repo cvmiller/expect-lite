@@ -1488,6 +1488,8 @@ Released 21 Dec 2010 - 4.0.2
 	Reverted all EXPPROMT changes. Caused too many false FAILs
 		Need to rethink approach
 	
+18 July 2015 - 4.9.0d6
+	Added sleep/wait print dots to expect lines: <, <<
 
 
 
@@ -1509,18 +1511,21 @@ o	Add DVPROMPT-like behaviour (called EXPPROMPT) to expect lines.
 		Idea: don't use flag, but use modifier, like <<< or +< or @<  or |< |<< |~< 
 		Idea2: wait for 10 seconds before shortcutting to prompt
 		
-o	Improve expect to be more like Dyn Var capture
-		If the prompt appears, then expect fails, rather than waiting for timeout
- 
+		ON HOLD: Found several instances where prompt would be in return data, give false fail
+ 			Code moved to 2expect
 		
-
 o	Multisession improvement - when disconnect occurs, close session rather then quit script
+
 
 x	Add sleep , print sleep length and  dots per/second
 	 What character to use for sleep, comma, period, plus?
-	o	Improved Sleep Function (Candidate for release 4.9.0)
+	 Support mili-second sleep
+	x	Improved Sleep Function (Candidate for release 4.9.0)
 			Prototyped in sleep.inc
-			
+	o	Add generalized sleep/wait print_dot function
+		x add to sleep
+		x add to <, <<
+		o add to ~<			
 
 x	Update for release of 4.8.0
 	- update docs with *SHOW ENV and IDE
@@ -1533,7 +1538,6 @@ x	Update for release of 4.8.0
 
 o	Pass fail script parms (just like a regular include file
 
-x	sleep funtion - step in 1 sec increments, permit instant-interact breaking into sleep
 
 x	*TERM n exits with a return code of n
 		Update exit print - RED when rtn code is > 0
@@ -1559,8 +1563,10 @@ x	Update IDE to make ; be [ \n]+;
 		'; ' (space)
 		'$VAR=' (equals)
 
-o	BUG: TCL code in an include file, does not execute correctly
+-	BUG: TCL code in an include file, does not execute correctly
 		e.g. local variable never increments
+		TCL code in an include file is not supported (TCL includes are limited to the 
+			instance of _el_scirpt_exec, no includes get a new instance of _el_script_exec
 
 x	BUG: passing constant to include with spaces - extra spaces added
 

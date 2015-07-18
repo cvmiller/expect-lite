@@ -34,7 +34,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.9.0d5"
+	variable version "4.9.0d6"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3463,6 +3463,37 @@ namespace eval expectlite {
 		set _el_current_session $_el(fork_current)
 		#fork_id
 
+
+		#
+		# Print dots to help user know expect-lite is waiting/sleeping	
+		#	
+		proc _el_print_dot {_i {reason ""} } {
+			#global _el _var _cond
+			upvar expectlite::_el					_el
+			upvar expectlite::INFO					INFO
+			upvar expectlite::_el_info_color		_el_info_color
+			
+			if {$INFO} {
+				if {$_i == 0 } {
+					#print why 
+					if { $reason != "" } {
+					cputs "\n$reason: " $_el_info_color "-nonewline"
+					}
+				} elseif {$_i % 10 == 0 } {
+					cputs "$_i" $_el_info_color "-nonewline"
+				} elseif { $_i % 5 == 0 } {
+					cputs "+" $_el_info_color "-nonewline"
+				} else {
+					cputs "." $_el_info_color "-nonewline"
+				}
+				flush stdout
+			}
+
+
+		} 
+		#proc _el_print_dot
+
+
 		#
 		# Dereference Vars if needed in $_el(line) as read from cmd file	
 		#	
@@ -3773,12 +3804,37 @@ namespace eval expectlite {
 						_el_exec_expect
 						set teststr [_el_strip_char $_el(line) $_in_noregex]
 
+#						# catch expect, just in case
+#						if {[catch {expect -ex "$teststr" { set _el(success) 1 } } error  ] } {
+#							if {$WARN} {
+#								cputs "\nExpect error: Expect-lite: $error\n" $_el_err_color
+#							}
+#						}
+
+						set _el(exp_timer) 0
 						# catch expect, just in case
-						if {[catch {expect -ex "$teststr" { set _el(success) 1 } } error  ] } {
+						if {[catch {
+							expect {
+								  -timeout 1 -ex "$teststr" { set _el(success) 1 } 
+								  timeout {
+								 		#puts "ZZZ: $_el(exp_timer) $timeout"
+										_el_print_dot $_el(exp_timer) "Waiting"
+										incr _el(exp_timer)
+
+										# if ^\ has not been preseed
+										if { $_el(STOP) != "STOP" } { 
+
+											# cycle thru expect again, no $exp_teststr found
+											if { $_el(exp_timer) < $timeout } { exp_continue }
+										  }
+										}; # timeout
+								}; #end expect
+							} error  ] } {
 							if {$WARN} {
 								cputs "\nExpect error: Expect-lite: $error\n" $_el_err_color
 							}
 						}
+
 
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
@@ -3801,17 +3857,17 @@ namespace eval expectlite {
 						
 
 						# test for single num expect string
-						if {([string length $teststr]==1) && ([regexp \[0-9\] $teststr])} {
-					    	expect {
-								 -re \n$teststr\r { 
-					 		    	#puts "\nGood=[_el_strip_char $_el(line) $_in]\n" 
-							    	set _el(success) 1
-							    	}
-								 -re $teststr {
-								 	set _el(success) 1
-								 	}
-						    	}
-						} else {
+#						if {([string length $teststr]==1) && ([regexp \[0-9\] $teststr])} {
+#					    	expect {
+#								 -re \n$teststr\r { 
+#					 		    	#puts "\nGood=[_el_strip_char $_el(line) $_in]\n" 
+#							    	set _el(success) 1
+#							    	}
+#								 -re $teststr {
+#								 	set _el(success) 1
+#								 	}
+#						    	}
+#						} else {
 							# test for multi-char expect strings
 							
 							set exp_teststr $teststr
@@ -3819,14 +3875,23 @@ namespace eval expectlite {
 							# new approach for expect, permits breakout with ^\
 							# calculate timeout
 							set _el(exp_timer) 0
+							#_el_print_dot $_el(exp_timer) "Waiting"
+							
 							if { [ catch {
 					    		expect  {
+									 -timeout 1 -re \n$teststr\r {
+									 	# special case for single char expects
+								 		set _el(success) 1
+								 		}
+								
 									 -timeout 1 -re $exp_teststr {
 								 		set _el(success) 1
 								 		}
 
 									 timeout {
 								 		#puts "ZZZ: $_el(exp_timer) $timeout"
+										_el_print_dot $_el(exp_timer) "Waiting"
+										
 										incr _el(exp_timer)
 
 										# if ^\ has not been preseed
@@ -3840,9 +3905,10 @@ namespace eval expectlite {
 								if {$WARN} { cputs "\nWarning: $error\n   In line: $_el(line)\n" $_el_warn_color }
 							}; #end if catch
 							
-						
+							# finish dots
+							if {$INFO} {puts " \n"}
 					 		#puts "\nGood=[_el_strip_char $_el(line) $_in]|$_el(success)|$teststr|\n" 
-						}
+#						}
 						# look at the expect_out(buffer) for debugging
 						if { $DEBUG } {
 							cputs "\nfind<<$teststr>>" $_el_debug_color
@@ -4665,18 +4731,8 @@ namespace eval expectlite {
 							#puts "=>$sleep_milisec"
 							set _i 1
 							while {$_i <= $sleep_int} {
-								if {$INFO} {
-									if {$_i % 10 == 0 } {
-										cputs "$_i" $_el_info_color "-nonewline"
-										flush stdout
-									} elseif { $_i % 5 == 0 } {
-										cputs "+" $_el_info_color "-nonewline"
-										flush stdout
-									} else {
-										cputs "." $_el_info_color "-nonewline"
-										flush stdout
-									}
-								}
+								_el_print_dot $_i
+															
 								incr _i
 								if {$_i <= $sleep_int} {sleep 1}
 							}
