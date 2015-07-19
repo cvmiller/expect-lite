@@ -34,7 +34,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.9.0d6"
+	variable version "4.9.0d7"
 
 	#set starting expect timeout 
 	set ::timeout 10 
@@ -3875,7 +3875,6 @@ namespace eval expectlite {
 							# new approach for expect, permits breakout with ^\
 							# calculate timeout
 							set _el(exp_timer) 0
-							#_el_print_dot $_el(exp_timer) "Waiting"
 							
 							if { [ catch {
 					    		expect  {
@@ -3965,11 +3964,36 @@ namespace eval expectlite {
 						if {$str_val != "" } {
 							#parsing looks OK
 							# catch expect, just in case
-							if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
-								if {$WARN} {
-									cputs "\nWarning: Expect error: $error\n" $_el_warn_color
-								}
-							}
+#							if {[catch {expect -re "$teststr" { set _el(success) 1 } } error  ] } {
+#								if {$WARN} {
+#									cputs "\nWarning: Expect error: $error\n" $_el_warn_color
+#								}
+#							}
+							set _i 0
+							if { [ catch {
+					    		expect  {
+									 -timeout 1 -re $teststr {
+								 		set _el(success) 1
+								 		}
+									 timeout {
+								 		#puts "FZZ: $_i $timeout"
+										_el_print_dot $_i "Fuzz Waiting"
+										
+										incr _i
+
+										# if ^\ has not been preseed
+										if { $_el(STOP) != "STOP" } { 
+											# cycle thru expect again, no $exp_teststr found
+											if { $_i < $timeout } { exp_continue }
+										  }
+										}; # timeout
+						    		}; #end expect
+							} error ] != 0 } {
+								if {$WARN} { cputs "\nWarning: $error\n   In line: $_el(line)\n" $_el_warn_color }
+							}; #end if catch
+							# finish dots
+							if {$INFO} {puts " \n"}
+														
 						}
 						
 						if {$_el(success) == 1 } {
@@ -4004,6 +4028,7 @@ namespace eval expectlite {
 										set rtn_val ""
 									}
 								}; #switch
+
 								incr i
 							}
 							incr i -1

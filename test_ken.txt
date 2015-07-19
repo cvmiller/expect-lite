@@ -14,7 +14,7 @@ junk
 *EXP_INFO
 ; === set expect buffer big
 !match_max -d 1000
-@7
+@8
 $dummy_var= this   is just to   show a var abcdefghijklmnopqrstuvwxyz
 $joe=dude
 $dude=joe-bob
@@ -57,8 +57,14 @@ $joe=
 >echo $joe
 <<hello
 >echo $joe
-<<hellow
-<z
+#<<hellow
+#<z
+
+$FUZZ=2
+~=1
+>sleep 9 && uptime
+~<load average: (1.00), \d.\d\d, \d.\d\d
+>
 
 >
 

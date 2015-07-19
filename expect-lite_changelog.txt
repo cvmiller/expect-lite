@@ -1491,6 +1491,10 @@ Released 21 Dec 2010 - 4.0.2
 18 July 2015 - 4.9.0d6
 	Added sleep/wait print dots to expect lines: <, <<
 
+19 July 2015 - 4.9.0d7
+	Added sleep/wait print dots to fuzzy expect ~<
+
+
 
 
 ------------ Future Versions --------------------------
@@ -1525,7 +1529,8 @@ x	Add sleep , print sleep length and  dots per/second
 	o	Add generalized sleep/wait print_dot function
 		x add to sleep
 		x add to <, <<
-		o add to ~<			
+		x add to ~<	
+	o update docs (HTML & Man page)		
 
 x	Update for release of 4.8.0
 	- update docs with *SHOW ENV and IDE
