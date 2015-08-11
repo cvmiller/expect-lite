@@ -6,7 +6,7 @@ junk
 ;;;
 
 #include improved sleep function
-~sleep.inc
+#~sleep.inc
 
 
 
@@ -51,6 +51,11 @@ $sleeper=0.9
 ; === sleeping...
 :$sleeper
 ?if 5 < 6 ? :.5 :: :.7
+
+>ip link show dev eth0
++$eth_status=(DOWN|UP)
+:5
+
 
 >joe=hello
 $joe=

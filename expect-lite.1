@@ -11,8 +11,9 @@
 .\" Updated Man Page for expect-lite - version 4.7.0	4/20/2014
 .\" Updated Man Page for expect-lite - version 4.7.2	7/22/2014
 .\" Updated Man Page for expect-lite - version 4.8.0	1/15/2015
+.\" Updated Man Page for expect-lite - version 4.9.0	8/15/2015
 .\"
-.TH EXPECT-LITE "1" "January 2015" "expect-lite version 4.8.0" "User Commands"
+.TH EXPECT-LITE "1" "August 2015" "expect-lite version 4.9.0" "User Commands"
 .SH NAME
 expect-lite \- a quick and easy command line automation tool
 .SH SYNOPSIS
@@ -103,6 +104,9 @@ marks beginning and ending of a block of help text. Help Text is user defined he
 .TP
 @num
 changes the expect timeout to num of seconds
+.TP
+:num
+sleeps for num seconds. Mili-seconds also supported e.g. :1.005 is 1005 mili-seconds
 .TP
 $var=
 static variable assignment at script invocation. Variable names limited to letters, numbers, and underscore 

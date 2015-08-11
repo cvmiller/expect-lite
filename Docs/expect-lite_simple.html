@@ -67,22 +67,28 @@ A simple to use automation tool to do:<br>
         <li>etc.</li>
       </ul>
       <h2>What New?</h2>
-Latest version 4.8.1 improvements include:<br>
+Latest version 4.9.0 improvements include:<br>
       <ul>
-        <li>Minor fixes:</li>
-        <ul>
-          <li>Unpaired user defined help ';;;' caused crash</li>
-          <li>Variable names can now start with underscore e.g. $_myvar</li>
-        </ul>
-        <li>Time functions (added to tcl_functions.inc) with
+        <li>Native Sleep support with
 mili-second resolution</li>
         <ul>
-          <li>mark_time &lt;varname&gt; - takes system time and places
-into varname</li>
-          <li>show_time &lt;varname&gt; &lt;formatted_var_name&gt; -
-converts time value (previously used in mark_time) to human readable
-format and places in formatted_var_name</li>
-          <li>See examples/mark_time_demo.txt<br>
+          <li>Use a colon to indicate length of sleep, e.g. 10.5 seconds<br>
+:10.5<br>
+          </li>
+          <li>Progress <span style="font-style: italic;">dots</span>
+to show script is sleeping, including logging<br>
+Sleeping: ....+....10.</li>
+          <li>Sleep value can be a variable<br>
+:$sleeper</li>
+        </ul>
+        <li>Progress <span style="font-style: italic;">dots</span>
+added to <span style="font-weight: bold;">expect</span> lines (&lt;,
+&lt;&lt;, ~&lt;) to provide better feedback on how long the script
+waited for expected value <br>
+        </li>
+        <ul>
+          <li>information output can be suppressed with *NOINFO
+directive<br>
           </li>
         </ul>
       </ul>
@@ -106,7 +112,7 @@ X, *nix, and Windows(with cygwin).</li>
       <p>ssh to a remote host</p>
       <pre>&gt;ssh root@host-021<br>&lt;assword:<br>&gt;&gt;secret_password<br># issue a command once logged in<br>&gt;ls<br>&gt;exit</pre>
 While loops using code blocks<br>
-      <pre>$i=1<br>[ $i &lt; 5<br>	&gt;echo hello times $i<br>	&lt;times $i<br>	+$i<br>]<br></pre>
+      <pre>$i=1<br>[ $i &lt; 5<br>	&gt;echo hello times $i<br>	&lt;times $i<br>        # sleep 2.2 seconds<br>        :2.2<br>	+$i<br>]<br></pre>
 Conditional using code blocks<br>
       <pre>? $IP == 2001:db8::f00d ? [<br>	&gt;echo future of the internet is here<br>]::[<br>	&gt;echo time to upgrade to IPv6<br>]<br></pre>
       <br>
@@ -125,14 +131,14 @@ expect-lite</big></a></p>
     </tr>
   </tbody>
 </table>
-<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">31
-May 2015<br>
+<hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15
+August 2015<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span
  style="font-style: italic;"><br>
 </span><br>
 <small><span style="font-style: italic;">this
 document for version
-4.8.1 and above</span><br style="font-style: italic;">
+4.9.0 and above</span><br style="font-style: italic;">
 </small>
 <br>
 </body>

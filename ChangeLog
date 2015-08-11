@@ -2,6 +2,17 @@
 All changes by Craig Miller cvmiller at gmail dot com
 
 
+Released 15 August 2015 v4.9.0
+	Added Native Sleep support (finally!)
+		Use colon and number to indicate sleep duration
+			:5.5
+		Supports mili-second resolution
+		Prints progress "dots" while sleeping
+			Sleeping: ....+....10.
+	Added progress "dots" to expect lines (<, <<, ~<)
+		Disable with *NOINFO
+		
+
 Released 31 May 2015 v4.8.1
 	Minor fixes
 		Unpaired user defined help ';;;' caused crash

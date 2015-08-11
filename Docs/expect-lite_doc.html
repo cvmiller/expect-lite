@@ -44,8 +44,7 @@ This creates many lines of expect with minimal "code" (<a
  href="#special_characters">table of interpreted characters</a>)</li>
         <li><a href="#fuzzy_expect"><span style="font-weight: bold;">Fuzzy
 Expect</span></a> '~&lt;' expect an approximate value&nbsp;<span
- style="background-color: orange; font-weight: normal;"> in 4.7.0</span>
-        </li>
+ style="background-color: orange; font-weight: normal;"></span> </li>
         <li><a href="expect-lite_doc.html#executable_script"><span
  style="font-weight: bold;">Scripts
 can
@@ -76,8 +75,13 @@ showing complex actions easily scripted</li>
         </li>
         <li><a href="#directive_managing_logging"><span
  style="font-weight: bold;">Logging to a file</span></a>, native
-support for saving output to a file&nbsp;<span
- style="background-color: yellow;"></span></li>
+support for saving output to a file <br>
+        </li>
+        <li><a href="#sleep"><span style="font-weight: bold;">Sleep</span></a>,
+native
+support for sleeping with micro-second resolution <span
+ style="background-color: yellow; font-weight: normal;">new in 4.9.0</span>
+        </li>
       </ul>
       <span style="font-weight: bold;">Variables<br>
       </span>
@@ -208,8 +212,8 @@ breakpoints, step/skip, copy/paste lines into running script <br>
  style="background-color: white;"><a
  href="expect-lite_tips.html#pasting"><span style="font-weight: bold;">Debugger
 improvements</span></a> show environment, improved paste support, and
-expect timeout operations&nbsp; </span></span><span
- style="background-color: yellow; font-weight: normal;">new in 4.8.0</span></li>
+expect timeout operations&nbsp;&nbsp;</span></span><span
+ style="background-color: yellow; font-weight: normal;"></span></li>
         </ul>
       </ul>
       <span style="font-weight: bold;"></span><br>
@@ -488,6 +492,14 @@ help</a>)<br>
 the
 expect timeout
 to num of seconds<br>
+                </td>
+              </tr>
+              <tr>
+                <td style="vertical-align: top;">:num<br>
+                </td>
+                <td style="vertical-align: top;">sleeps for num
+seconds. Mili-seconds also supported e.g.&nbsp; :1.005 is 1005
+mili-seconds (see <a href="#sleep">sleep</a>)<br>
                 </td>
               </tr>
               <tr>
@@ -1719,6 +1731,39 @@ be a good idea to set the infinite loop value to something low, when
 first writing code block loops, just in case:<br>
       <pre>*INFINITE_LOOP 20<br></pre>
       <br>
+      <h2><a name="sleep"></a>Slowing Loops with sleep<br>
+      </h2>
+For years, I have resisted putting a sleep function in expect-lite.
+Sleep is often abused by scripters who blindly put in a 60 second sleep
+(or longer). I have seen 5 minute (600 seconds) sleeps put into scripts
+because the scripter didn't want to poll for a change in device status.
+Long sleeps are just bad programming, and should be avoided.<br>
+      <br>
+Version 4.9.0 adds native support for sleep. There are very valid
+reasons why in the polling loop, the scripter may want to slow things
+down, and only check device status, say every 5 seconds. This can
+easily be done with a while loop:<br>
+      <pre>; === while loop with sleep<br>$eth_status=DOWN<br>[ $eth_status == DOWN <br>	&gt;ip link show dev eth0<br>        +$eth_status=(DOWN|UP)<br>	:5<br>]  </pre>
+The script will check eth_status of eth0 every 5 seconds, and continue
+(exit the while loop) after $eth_status is no longer DOWN.<br>
+      <br>
+While the script is sleeping, if *INFO is enabled, expect-lite will
+print out a ticker of "dots" to indicate that the script is sleeping:<br>
+      <pre><br>$ ip link show dev eth0<br>2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP qlen 1000<br><br><span
+ style="color: rgb(0, 153, 0);">Assigned Var:eth_status=UP</span><br
+ style="color: rgb(0, 153, 0);"><br style="color: rgb(0, 153, 0);"><span
+ style="color: rgb(0, 153, 0);">Sleeping: 5 </span><br
+ style="color: rgb(0, 153, 0);"><span style="color: rgb(0, 153, 0);">....+ </span><br></pre>
+Sleep "dots" include dots, plus (every 5 seconds) and a number (every
+10 seconds), to show the progress of the sleep.<br>
+      <pre style="color: rgb(0, 153, 0);">Sleeping: ....+....10....+....20.... </pre>
+Mili-second sleep is also supported by using a decimal value for sleep,
+e.g. 0.005 equals 5 mili-seconds<br>
+      <pre>#sleep 1/10th of a second<br>:.1</pre>
+Of course, sleep value can also be a variable:<br>
+      <pre>#sleep using a variable<br>$sleeper=5.5<br>:$sleeper</pre>
+Please use sleep wisely.<br>
+      <br>
       <h2><a name="script_help"></a>Script Help with --help -h</h2>
 Once the script running, it might be handy to add help to make it more
 user-friendly or refresh the mind when running the script at a later
@@ -2184,7 +2229,8 @@ Example of the different information levels are:<br>
         <li>INFO: Entering FORK sessions, Constant substitution,
 Conditional
 Statement Results, Jumping to labels, Including files, Dynamic Variable
-Assignments, User Defined Prompt assignments and ##Overal Result.<br>
+Assignments, User Defined Prompt assignments, Sleep progress dots and
+##Overal Result.<br>
         </li>
         <li>EXP_INFO: prints "expected" text (lines with &lt; or
 &lt;&lt;). Also enabled with -V flag on the command line.</li>
@@ -2697,7 +2743,7 @@ simple expect scripts using just the &gt; and &lt; characters.<br>
   </tbody>
 </table>
 <hr style="width: 100%; height: 2px;"><span style="font-style: italic;">15
-Jan 2015<br>
+August 2015<br>
 </span><a href="http://expect-lite.sourceforge.net/"><small>http://expect-lite.sourceforge.net/</small></a><span
  style="font-style: italic;"><br>
 </span><br>
@@ -2706,7 +2752,7 @@ Jan 2015<br>
 to expect-list-users</a> Discussion List</small><br>
 <br>
 <small><span style="font-style: italic;">this
-document for version 4.8.0 and above<br>
+document for version 4.9.0 and above<br>
 </span><br style="font-style: italic;">
 </small>
 <br>
