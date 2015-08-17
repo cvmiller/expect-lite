@@ -1497,6 +1497,10 @@ Released 21 Dec 2010 - 4.0.2
 11 August 2015 - 4.9.0d7
 	Updated Documentation with sleep/wait feature, in prep for release
 
+17 August 2015 - 4.9.0
+	Released (was d7)
+	
+
 
 ------------ Future Versions --------------------------
 		
