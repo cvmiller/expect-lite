@@ -1500,13 +1500,23 @@ Released 21 Dec 2010 - 4.0.2
 17 August 2015 - 4.9.0
 	Released (was d7)
 	
+8 January 2016 - no new release
+	Clean up of git repo on github
+		Created dirs examples, self_test, tarballs, sandbox, utils
+
 
 
 ------------ Future Versions --------------------------
 		
 Future
 
-		
+
+o	Add send char(s) without EOL - use >>>
+	# quit screen
+	>>^A
+	>>>\
+	>>y
+
 o	Fix double deref of variable if var is on right side of '='
 		Problem is that proc parse_var is splitting on $, so $$joe become "" + "joe" rather than $joe
 
