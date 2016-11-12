@@ -1,0 +1,68 @@
+#!/usr/bin/env expect-lite
+# make this auto-runnable!
+
+
+# How to use this expect-lite file, Lines that begin with:
+#   '>' send to remote host, implies "wait for prompt"
+#   '<' _MUST_ be received from the remote host, or this config script will fail
+#   # are comment lines, and have no effect
+#   ; are printable (in stdout) comments, and have no other effect
+#   @ change the expect timeout value
+#   ! Embedded Expect commands
+#   ? If statement, use format ?cond?action::else_action
+# For more info see: http://expect-lite.sf.net/
+
+#
+#   expect-lite script
+#	Serial login doughnut script
+#
+#	version=1.04
+#
+
+Assumptions: 
+	DUT is connected via USB to console port (e.g. USB->RS232 cable)
+	sudo is required for access to ttyUSBx device
+	Env Var 'EL_SUDO_PASS' has been set before hand
+		e.g. export EL_SUDO_PASS=my_pass
+
+
+# setup variables for script, these can be overridden by CLI
+
+$serial_linux=/dev/ttyUSB0
+$serial_macosx=/dev/tty.usbserial
+$SPEED=115200
+
+# DUT credentials
+$USER=alarm
+$PASS=alarm
+$ROOTPASS=root
+
+# set expect timeout to 5 seconds
+@5
+
+
+; === Start of Script
+
+; === Determine OS of host (Mac OSX or Linux)
+>uname -a
++$OS=(Darwin|Linux)
+?if $OS == Linux ? $serial=$serial_linux
+?if $OS == Darwin ? $serial=$serial_macosx
+
+; === Serial login
+~serial_con.inc serial=$serial ROOTPASS=$ROOTPASS
+
+; === do your stuff here (doughnut hole)
+>
+
+
+*INTERACT
+
+; === log out of DUT
+>exit
+~serial_discon.inc
+
+; === pau
+
+
+
