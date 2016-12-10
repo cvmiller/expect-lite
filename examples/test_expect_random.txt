@@ -22,7 +22,7 @@
 # Define random functions
 !proc set_random_seed { var } {
 # proc sets the random seed based on expect-lite variable $var
-!	set seed $::user_namespace($var)
+!	set seed $::expectlite::user_namespace($var)
 !	if { $seed == "none" } {
 !		set seed [clock seconds]
 !		expr srand($seed)
@@ -38,29 +38,14 @@
 !}
 !proc randomize { var start end } {
 # proc sets expect-lite variable to random value in range start-end
-!       set ::user_namespace($var) [random $start $end]
+!       set ::expectlite::user_namespace($var) [random $start $end]
 !}
-!proc dec2hex { hex_var_name } {
-!	# A Procedure that converts decimal a hexadecimal value, updates expect-lite variable
-!	set x $::user_namespace($hex_var_name)
-!	set x [format %02X $x]
-!	set ::user_namespace($hex_var_name) $x
-!}
->
-
-!proc bitwise { var oper val } {
-# proc sets expect-lite variable to bitwise operation 'oper' by $val
-!       set ::user_namespace($var) [expr $::user_namespace($var) $oper $val]
-!}
-
-
 
 ; === Start Randomize example
 # Assign some bogus values to variables
 # this declares the variable, so that embedded expect can access this variable
 $x=1
 $y=2
-$w=3
 
 # set the default value of the random number gen (rng) seed to "none"
 $seed=none
@@ -74,32 +59,15 @@ $seed=$seed
 ; === initialize the rng
 !set_random_seed seed
 
-# loop a few times
-$count=0
-$max=3
-*NOINFO
-%TOP_LOOP
-	;; === Randomize expect-lite variables x & y
-	# !randomize <var name> <range_start> <range_end>
+; === Randomize expect-lite variables x & y
+# !randomize <var name> <range_start> <range_end>
 
-	!randomize x 0 255
-	>
-	;; === Display value of x is $x
-	!dec2hex x
-	!randomize w 5 10
-	!randomize y 20 50
-	>
-	;; === Display value of w is $w, x is 0x$x, y is $y
-	>
-	+$count
-?if $count<$max ?%TOP_LOOP
+!randomize x 5 10
+!randomize y 20 50
+>
+; === Display value of x is $x, y is $y
+>
 
-; == do bitwise operation 9 << 2
-$x=9
-!bitwise x << 2
->
-; === show x: $x
->
 
 
 
