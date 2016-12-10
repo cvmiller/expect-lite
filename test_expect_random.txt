@@ -1,0 +1,84 @@
+# How to use this expect-lite file, Lines that begin with:
+#	'>' send to remote host, implies "wait for prompt"
+#	'<' _MUST_ be received from the remote host, or this config script will fail
+#	# are comment lines, and have no effect
+#	; are printable (in stdout) comments, and have no other effect
+#	@ change the expect timeout value
+#	! Embedded Expect commands
+# For more info see: expect-lite.html
+
+#
+#	test of Embedded Expect Random Functions in expect-lite
+#
+# 	Script will print seed.
+# 	To get reproducible random numbers, use seed=<printed_seed>  
+# 		on commandline.
+# 
+
+
+; ==== Set Timeout ====
+@5
+
+# Define random functions
+!proc set_random_seed { var } {
+# proc sets the random seed based on expect-lite variable $var
+!	set seed $::expectlite::user_namespace($var)
+!	if { $seed == "none" } {
+!		set seed [clock seconds]
+!		expr srand($seed)
+!	} else {
+!		expr srand($seed)
+!	}
+!	puts "Seed is:$seed"
+!}
+!proc random { start end } {
+# proc returns random number in range start-end
+!	set range [ expr $end - $start ]
+!	return [expr int(rand()*$range) + $start]
+!}
+!proc randomize { var start end } {
+# proc sets expect-lite variable to random value in range start-end
+!       set ::expectlite::user_namespace($var) [random $start $end]
+!}
+
+; === Start Randomize example
+# Assign some bogus values to variables
+# this declares the variable, so that embedded expect can access this variable
+$x=1
+$y=2
+
+# set the default value of the random number gen (rng) seed to "none"
+$seed=none
+# allow constant to override variable
+# Normally constants will over-ride variables, but 
+# 	because $seed is a user_namespace variable, and referenced that way in 
+# 	the procedure set_random_seed, we use a trick, to set $seed to the value
+# 	of the constant $seed.
+$seed=$seed
+
+; === initialize the rng
+!set_random_seed seed
+
+; === Randomize expect-lite variables x & y
+# !randomize <var name> <range_start> <range_end>
+
+!randomize x 5 10
+!randomize y 20 50
+>
+; === Display value of x is $x, y is $y
+>
+
+
+
+
+
+
+
+
+
+
+
+>
+#Pau!
+
+
