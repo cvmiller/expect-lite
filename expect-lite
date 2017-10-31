@@ -2,7 +2,7 @@
 
 ##################################################################################
 #
-#  Copyright (C) 2008-2015 Craig Miller
+#  Copyright (C) 2008-2017 Craig Miller
 #
 #  Copyright (C) 2005-2007 Freescale Semiconductor, Inc. 
 #
@@ -34,7 +34,7 @@
 namespace eval expectlite {
 
 	# echo version in usage
-	variable version "4.9.0"
+	variable version "4.9.1a"
 
 	#set starting expect timeout 
 	set ::timeout 10 

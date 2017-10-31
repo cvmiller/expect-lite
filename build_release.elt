@@ -14,7 +14,7 @@
 #
 #	by Craig Miller 10 April 2011
 #
-#	Assumes that expect-lite.proj is up to date 
+#	Assumes that expect-lite.d is up to date 
 #		Docs and Self tests will be copied in by this script
 #
 #
@@ -35,7 +35,7 @@ Build CheckList
 # Build version
 $build=4.9.0
 
-$proj_dir=~/Expect-lite/expect-lite.proj
+$proj_dir=~/Expect-lite/expect-lite.d
 $pkg_dir=~/Expect-lite/Pkg
 $pkg_dir_el=usr/share/doc/expect-lite
 $pkg_dir_man=usr/share/man/man1/
@@ -69,7 +69,7 @@ $exp_root=~/Expect-lite
 >
 ; == make tarball
 >cd $exp_root
->tar cvzf expect-lite_$build.tar.gz expect-lite.proj
+>tar cvzf expect-lite_$build.tar.gz $proj_dir
 
 
 ; === update Pkg Dir
